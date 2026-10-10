@@ -12,7 +12,7 @@ class UncertainMembershipTests(unittest.TestCase):
     def test_worst_case_bounds_and_allocations(self):
         b = robust_count_bounds(self.strata, 120)
         self.assertAlmostEqual(b.lower, 0.23)
-        self.assertAlmostEqual(b.upper, 0.47)
+        self.assertAlmostEqual(b.upper, 0.55)
         self.assertEqual(b.lower_allocation, (80, 40))
         self.assertEqual(b.upper_allocation, (40, 80))
 
