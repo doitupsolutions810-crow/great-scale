@@ -1,0 +1,17 @@
+{
+  "rung": "LXXXV",
+  "title": "Diversity of Failure Mechanisms and Robust Replication",
+  "required_surviving_paths": 2,
+  "path_dependencies": {
+    "A": ["calibration", "sensor-A"],
+    "B": ["calibration", "lab-B"],
+    "C": ["independent-reference", "sensor-C"]
+  },
+  "scenario": {
+    "failed_sources": ["calibration"],
+    "surviving_paths": ["C"],
+    "conclusion_supported": false,
+    "minimal_cut_set": ["calibration"]
+  },
+  "note": "Illustrative dependency model only; not an empirical reliability estimate."
+}
