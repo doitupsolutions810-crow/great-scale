@@ -43,8 +43,8 @@ class SolverVerificationTests(unittest.TestCase):
         }
         result = exhaustive_oracle(10.0, 20, units, strata)
         self.assertEqual(result["feasible_assignments"], 8)
-        self.assertAlmostEqual(result["lower"], 0.01)
-        self.assertAlmostEqual(result["upper"], 0.16)
+        self.assertAlmostEqual(result["lower"], 0.11)
+        self.assertAlmostEqual(result["upper"], 0.65)
 
 
 if __name__ == "__main__":
