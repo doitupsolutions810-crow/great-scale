@@ -8,7 +8,7 @@ class AdaptiveStateRefinementTests(unittest.TestCase):
             allowed=(("A", "B"), ("A", "B")),
             contributions=(
                 {"A": (0.0, 0.1), "B": (0.4, 0.5)},
-                {"A": (0.2, 0.3), "B": (0.6, 0.7)},
+                {"A": (0.2, 0.3), "B": (0.8, 0.9)},
             ),
             population=10,
         )
