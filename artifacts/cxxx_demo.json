@@ -3,8 +3,49 @@
   "title": "Independent Calibration and Validation",
   "seed": 20261030,
   "repetitions": 5000,
-  "calibration_population_mean": 0.04375,
-  "selection_rule": "smallest tested margin with empirical containment >= 0.95; fallback to support margin 1.0",
-  "note": "The calibration run below has observed 94.98% at d=0.05, so fallback applies. Exact results are to be confirmed from the execution output.",
-  "caveat": "Empirical calibration is not a formal guarantee."
+  "calibration": {
+    "population_mean": 0.04375,
+    "selected_margin": 0.05,
+    "containment_rate": 0.9522,
+    "monte_carlo_se": 0.0030171231330524103,
+    "mean_interval_width": 0.21109
+  },
+  "validation": [
+    {
+      "scenario": "rarer_extremes",
+      "true_mean": 0.0125,
+      "containment_rate": 1,
+      "monte_carlo_se": 0,
+      "mean_interval_width": 0.09508
+    },
+    {
+      "scenario": "more_midrange",
+      "true_mean": 0.1,
+      "containment_rate": 0.9726,
+      "monte_carlo_se": 0.00230864635663412,
+      "mean_interval_width": 0.311145
+    },
+    {
+      "scenario": "shifted_high",
+      "true_mean": 0.15,
+      "containment_rate": 0.9894,
+      "monte_carlo_se": 0.0014482845024372838,
+      "mean_interval_width": 0.401445
+    },
+    {
+      "scenario": "heldout_skewed",
+      "true_mean": 0.144,
+      "containment_rate": 0.9678,
+      "monte_carlo_se": 0.0024965239834618055,
+      "mean_interval_width": 0.4021784
+    },
+    {
+      "scenario": "heldout_spiky",
+      "true_mean": 0.072,
+      "containment_rate": 0.6714,
+      "monte_carlo_se": 0.006642620567215924,
+      "mean_interval_width": 0.3219944
+    }
+  ],
+  "caveat": "Empirical calibration is not a formal or universal coverage guarantee."
 }
