@@ -35,7 +35,7 @@ supports \([0,0.2]\) and \([0.4,1]\). Thus
 
 Scenario B: observed sums 12 and 18; missing counts 20 and 40 with the same supports.
 Thus \(L(B)=(12+18+20(0)+40(0.4))/100=0.46\) and
-\(U(B)=(12+18+20(0.2)+40(1))/100=0.70\).
+\(U(B)=(12+18+20(0.2)+40(1))/100=0.74\).
 
 Therefore the robust envelope is \([0.42,0.70]\), width \(0.28\). Scenario A
 sets the lower endpoint and scenario B the upper endpoint. (The test suite independently
