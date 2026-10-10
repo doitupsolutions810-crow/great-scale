@@ -12,7 +12,7 @@
     "A": {"lower": 0.0, "upper": 0.2, "min_missing": 1, "max_missing": 2},
     "B": {"lower": 0.4, "upper": 1.0, "min_missing": 1, "max_missing": 2}
   },
-  "expected": {"feasible_assignments": 2, "lower": 0.308, "upper": 0.332, "width": 0.024},
+  "expected": {"feasible_assignments": 2, "lower": 0.308, "upper": 0.322, "width": 0.014},
   "evidence_type": "synthetic deterministic calculation",
   "not_claimed": ["empirical validity", "sampling coverage", "scalable optimization"]
 }
