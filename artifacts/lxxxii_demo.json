@@ -1,0 +1,24 @@
+{
+  "great_scale": "LXXXII",
+  "title": "Calibration Validity and Assumption Drift",
+  "threshold": 1,
+  "examples": [
+    {
+      "residual": 0.5,
+      "uncertainty": 0.1,
+      "expected": "valid"
+    },
+    {
+      "residual": 0.95,
+      "uncertainty": 0.1,
+      "expected": "degraded_or_indeterminate"
+    },
+    {
+      "residual": 1.5,
+      "uncertainty": 0.1,
+      "expected": "invalid"
+    }
+  ],
+  "recovery_checks": 3,
+  "note": "Synthetic examples only; not empirical calibration data."
+}
