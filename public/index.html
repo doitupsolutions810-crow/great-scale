@@ -6,30 +6,42 @@
 <title>Great Scale — three embeddings of one state</title>
 <style>
   :root {
-    --bg: #0a0a0c;
-    --panel: #121218;
-    --gold: #d4a84b;
-    --gray: #8a8a9a;
-    --text: #e8e6e0;
-    --muted: #7a7a88;
-    --accent: #c9a227;
+    --bg: #0a0a0c; --panel: #121218; --gold: #d4a84b; --gray: #8a8a9a;
+    --text: #e8e6e0; --muted: #7a7a88; --accent: #c9a227;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    grid-template-rows: auto 1fr auto;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 340px; grid-template-rows: auto 1fr auto;
   }
   header {
-    grid-column: 1 / -1; padding: 12px 20px; border-bottom: 1px solid #222;
-    display: flex; align-items: center; justify-content: space-between; background: #0e0e12;
+    grid-column: 1 / -1; padding: 10px 20px; border-bottom: 1px solid #222;
+    display: flex; align-items: center; gap: 16px; background: #0e0e12; flex-wrap: wrap;
   }
-  header h1 { font-size: 15px; font-weight: 500; }
+  header h1 { font-size: 15px; font-weight: 500; white-space: nowrap; }
   header h1 span { color: var(--muted); font-weight: 400; }
-  .tabs { display: flex; gap: 6px; }
+  .search-wrap { flex: 1; min-width: 180px; max-width: 420px; position: relative; }
+  .search-wrap input {
+    width: 100%; background: #1a1a22; border: 1px solid #2a2a35; color: var(--text);
+    padding: 7px 12px 7px 32px; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none;
+  }
+  .search-wrap input:focus { border-color: var(--gold); }
+  .search-wrap .icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 13px; pointer-events: none;
+  }
+  .search-results {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #16161c; border: 1px solid #2a2a35; border-radius: 8px;
+    max-height: 280px; overflow-y: auto; z-index: 50; box-shadow: 0 8px 24px #000a;
+  }
+  .search-results.open { display: block; }
+  .search-hit { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #222; font-size: 12px; }
+  .search-hit:hover, .search-hit.active { background: #1e1a12; }
+  .search-hit .tag { color: var(--gold); margin-right: 6px; }
+  .search-hit .desc { color: var(--muted); }
+  .tabs { display: flex; gap: 6px; margin-left: auto; }
   .tab {
     background: #1a1a22; border: 1px solid #2a2a35; color: var(--muted);
     padding: 5px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
@@ -50,6 +62,7 @@
   #panel .note { color: var(--muted); margin-top: 14px; font-size: 11px; }
   #panel .row { display: flex; justify-content: space-between; gap: 8px; }
   #panel .val { color: var(--gold); }
+  #panel .highlight { outline: 1px solid var(--gold); outline-offset: 2px; border-radius: 4px; padding: 2px 4px; }
   footer {
     grid-column: 1 / -1; border-top: 1px solid #222; padding: 10px 20px;
     display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: #0e0e12; font-size: 12px;
@@ -72,12 +85,18 @@
   @media (max-width: 900px) {
     body { grid-template-columns: 1fr; grid-template-rows: auto 50vh auto auto; }
     #panel { border-left: none; border-top: 1px solid #222; }
+    .tabs { margin-left: 0; width: 100%; }
   }
 </style>
 </head>
 <body>
 <header>
   <h1>Great Scale <span>— three embeddings of one state</span></h1>
+  <div class="search-wrap">
+    <span class="icon">⌕</span>
+    <input type="search" id="search" placeholder="Search geometry, laws, layers…" autocomplete="off" />
+    <div class="search-results" id="searchResults"></div>
+  </div>
   <div class="tabs" id="views">
     <button class="tab active" data-view="Watch">Watch</button>
     <button class="tab" data-view="Observer">Observer</button>
@@ -93,17 +112,17 @@
   <div class="eq">The other eigenvalue −1/φ repels — why every finite cone still carries residual.</div>
   <br/>
   <div class="eq">S(h) = h(1 − h)</div>
-  <div class="row"><span>S</span><span class="val" id="vS">0.0000</span></div>
-  <div class="row"><span>H = r · S</span><span class="val" id="vH">0.0000</span></div>
-  <div class="row"><span>level n</span><span class="val" id="vN">8.00</span></div>
-  <div class="row"><span>λ = φ^(−n)</span><span class="val" id="vLam">0.0213</span></div>
-  <div class="row"><span>Ψ = heat gap + residual</span><span class="val" id="vPsi">0.2361</span></div>
-  <div class="row"><span>cone √5−2</span><span class="val">0.236068</span></div>
-  <div class="row"><span>φ</span><span class="val">1.618034</span></div>
-  <div class="row"><span>−1/φ</span><span class="val">−0.618034</span></div>
-  <div class="row"><span>inward fold</span><span class="val">0.80</span></div>
-  <div class="row"><span>partition</span><span class="val">4 + 3 + 1</span></div>
-  <div class="note">
+  <div class="row" data-key="heat"><span>S</span><span class="val" id="vS">0.0000</span></div>
+  <div class="row" data-key="heat"><span>H = r · S</span><span class="val" id="vH">0.0000</span></div>
+  <div class="row" data-key="radial"><span>level n</span><span class="val" id="vN">8.00</span></div>
+  <div class="row" data-key="radial"><span>λ = φ^(−n)</span><span class="val" id="vLam">0.0213</span></div>
+  <div class="row" data-key="psi"><span>Ψ = heat gap + residual</span><span class="val" id="vPsi">0.2361</span></div>
+  <div class="row" data-key="cone"><span>cone √5−2</span><span class="val">0.236068</span></div>
+  <div class="row" data-key="phi"><span>φ</span><span class="val">1.618034</span></div>
+  <div class="row" data-key="phi"><span>−1/φ</span><span class="val">−0.618034</span></div>
+  <div class="row" data-key="fold"><span>inward fold</span><span class="val">0.80</span></div>
+  <div class="row" data-key="partition"><span>partition</span><span class="val">4 + 3 + 1</span></div>
+  <div class="note" id="note">
     The steady gold ray is the attracting fixed direction φ.
     The short gray ray is the repeller −1/φ.
     Flux is not the signal — mean, partition, and cone floor are.
@@ -151,6 +170,81 @@ window.addEventListener('resize', resize);
 resize();
 let rate = 0.85, gen = 0, playing = true;
 const layers = new Set(['Orbit','Heat','Ninefold','Cylinder','Residual','Sequence']);
+const SEARCH_INDEX = [
+  { id: 'phi', tag: 'φ', title: 'Zero-mode / attractor', desc: 'Mean ≈ 1.618034 — gold ray; only φ attracts', keys: 'phi golden mean zero-mode attractor gold ray', action: () => highlightKeys(['phi']) },
+  { id: 'repeller', tag: '−1/φ', title: 'Repeller', desc: 'Gray ray; product with φ is −1', keys: 'repeller gray ray eigenvalue -1/phi', action: () => highlightKeys(['phi']) },
+  { id: 'cone', tag: 'cone', title: 'Residual cone √5−2', desc: 'Ψ floor; orbit closure failure becomes geometry', keys: 'cone residual sqrt5 floor psi orbit failure', action: () => { ensureLayer('Residual'); highlightKeys(['cone','psi']); } },
+  { id: 'heat', tag: 'Heat', title: 'Heat S = h(1−h)', desc: 'Height function; max 1/4; opens the cone', keys: 'heat height S residual drive', action: () => { ensureLayer('Heat'); highlightKeys(['heat']); } },
+  { id: 'psi', tag: 'Ψ', title: 'Ψ = cone + S', desc: 'Never reaches zero; oscillates above the floor', keys: 'psi heat gap residual', action: () => highlightKeys(['psi','cone']) },
+  { id: 'radial', tag: 'λ', title: 'Radial step λ = φ^(−n)', desc: 'n = 8 − 4S; shrinks as heat rises', keys: 'lambda radial level n phi power', action: () => highlightKeys(['radial']) },
+  { id: 'ninefold', tag: 'Ninefold', title: 'Involution pairs', desc: 'f(x)=9−(x mod 9); f∘f=id; pairs 0–9 … 4–5', keys: 'ninefold involution pairs mod9 discrete', action: () => { ensureLayer('Ninefold'); setView('Adjacent'); } },
+  { id: 'fold', tag: 'Fold', title: 'Inward fold 0.8', desc: '17.2 → 8.2 → 0.8; quotient, not two fixed points', keys: 'fold inward probe 17.2 0.8 quotient', action: () => { setView('Down'); highlightKeys(['fold']); } },
+  { id: 'partition', tag: '4+3+1', title: 'Residual partition', desc: 'Parseval energy split; fixed while phase walks', keys: 'partition residual dims 4 3 1 parseval', action: () => highlightKeys(['partition']) },
+  { id: 'spindle', tag: 'Spindle', title: 'Gold–gray spindle', desc: 'Axis [−1/φ, φ] + cone residual', keys: 'spindle gold gray axis eigen-pair', action: () => { setView('Watch'); highlightKeys(['phi','cone']); } },
+  { id: 'orbit', tag: 'Orbit', title: 'Orbit section', desc: 'phase = (t·rate) mod 1; period 20 under r=0.85', keys: 'orbit phase period rate walk section', action: () => { ensureLayer('Orbit'); setView('Watch'); } },
+  { id: 'sequence', tag: 'Sequence', title: 'Sequence lattice', desc: 'Phase-time points t=1,2,… on the size axis', keys: 'sequence lattice size phase-time points', action: () => { ensureLayer('Sequence'); setView('Forward'); } },
+  { id: 'cylinder', tag: 'Cylinder', title: 'Cylinder layer', desc: 'Residual channel embedding', keys: 'cylinder residual channel', action: () => ensureLayer('Cylinder') },
+  { id: 'mean', tag: 'Law', title: 'Keep the mean', desc: 'Zero-mode conserved; flux is not the signal', keys: 'mean law conserved invariant keep', action: () => { setView('Observer'); highlightKeys(['phi']); } },
+  { id: 'descent', tag: '1→2', title: 'Descent 1→2', desc: 'Residual structure under conserved mean', keys: 'descent 1 2 residual differentiation', action: () => setView('Observer') },
+];
+function ensureLayer(name) {
+  if (!layers.has(name)) {
+    layers.add(name);
+    const b = document.querySelector('.layer[data-l="'+name+'"]');
+    if (b) b.classList.add('on');
+  }
+}
+function setView(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+}
+function highlightKeys(keys) {
+  document.querySelectorAll('#panel .row').forEach(r => r.classList.toggle('highlight', keys.includes(r.dataset.key)));
+  setTimeout(() => document.querySelectorAll('#panel .row').forEach(r => r.classList.remove('highlight')), 2200);
+}
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('searchResults');
+let activeHit = -1;
+function filterHits(q) {
+  q = (q || '').trim().toLowerCase();
+  if (!q) return [];
+  return SEARCH_INDEX.filter(item =>
+    item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) ||
+    item.keys.includes(q) || item.tag.toLowerCase().includes(q));
+}
+function runSearch(q) {
+  const hits = filterHits(q);
+  if (!q.trim()) { searchResults.classList.remove('open'); searchResults.innerHTML = ''; return; }
+  searchResults.innerHTML = hits.length
+    ? hits.map((h, i) => '<div class="search-hit'+(i===0?' active':'')+'" data-i="'+i+'"><span class="tag">'+h.tag+'</span> <strong>'+h.title+'</strong><div class="desc">'+h.desc+'</div></div>').join('')
+    : '<div class="search-hit"><span class="desc">No match — try cone, fold, ninefold, φ, heat…</span></div>';
+  searchResults.classList.add('open');
+  activeHit = hits.length ? 0 : -1;
+}
+searchInput.addEventListener('input', () => runSearch(searchInput.value));
+searchInput.addEventListener('focus', () => { if (searchInput.value) runSearch(searchInput.value); });
+searchInput.addEventListener('keydown', (e) => {
+  const hits = filterHits(searchInput.value);
+  if (e.key === 'ArrowDown') {
+    e.preventDefault(); activeHit = Math.min(activeHit + 1, hits.length - 1);
+    [...searchResults.querySelectorAll('.search-hit')].forEach((el, i) => el.classList.toggle('active', i === activeHit));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault(); activeHit = Math.max(activeHit - 1, 0);
+    [...searchResults.querySelectorAll('.search-hit')].forEach((el, i) => el.classList.toggle('active', i === activeHit));
+  } else if (e.key === 'Enter' && activeHit >= 0 && hits[activeHit]) {
+    e.preventDefault(); hits[activeHit].action(); searchResults.classList.remove('open'); searchInput.blur();
+  } else if (e.key === 'Escape') { searchResults.classList.remove('open'); searchInput.blur(); }
+});
+searchResults.addEventListener('mousedown', (e) => {
+  const hit = e.target.closest('.search-hit');
+  if (!hit || hit.dataset.i === undefined) return;
+  const hits = filterHits(searchInput.value);
+  const i = parseInt(hit.dataset.i, 10);
+  if (hits[i]) hits[i].action();
+  searchResults.classList.remove('open');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) searchResults.classList.remove('open');
+});
 function heat(h) { return h * (1 - h); }
 function stateAt(t) {
   const phase = (t * rate) % 1;
@@ -168,10 +262,8 @@ function drawWire(x, y, r) {
     if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
   ctx.closePath(); ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x, y - r); ctx.lineTo(x, y + r);
-  ctx.moveTo(x - r, y); ctx.lineTo(x + r, y);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r);
+  ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.stroke();
 }
 function draw() {
   ctx.clearRect(0, 0, W, H);
@@ -182,8 +274,7 @@ function draw() {
   for (let i = -4; i <= 4; i++) {
     ctx.beginPath();
     ctx.moveTo(cx + i * 40, 0); ctx.lineTo(cx + i * 40, H);
-    ctx.moveTo(0, cy + i * 40); ctx.lineTo(W, cy + i * 40);
-    ctx.stroke();
+    ctx.moveTo(0, cy + i * 40); ctx.lineTo(W, cy + i * 40); ctx.stroke();
   }
   ctx.strokeStyle = '#d4a84b'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(cx, cy - R * 1.4); ctx.lineTo(cx, cy + R * 0.3); ctx.stroke();
@@ -207,28 +298,24 @@ function draw() {
     for (let i = 0; i < 5; i++) {
       const yy = cy - R * 0.5 + i * (R * 0.25);
       ctx.beginPath();
-      ctx.ellipse(cx + R * 0.15, yy, R * 0.22, R * 0.08, 0, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.ellipse(cx + R * 0.15, yy, R * 0.22, R * 0.08, 0, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.beginPath();
     ctx.moveTo(cx + R * 0.15 - R * 0.22, cy - R * 0.5);
     ctx.lineTo(cx + R * 0.15 - R * 0.22, cy + R * 0.5);
     ctx.moveTo(cx + R * 0.15 + R * 0.22, cy - R * 0.5);
-    ctx.lineTo(cx + R * 0.15 + R * 0.22, cy + R * 0.5);
-    ctx.stroke();
+    ctx.lineTo(cx + R * 0.15 + R * 0.22, cy + R * 0.5); ctx.stroke();
   }
   if (layers.has('Orbit') || layers.has('Residual')) {
     ctx.strokeStyle = '#d4a84b'; ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(cx + R * 0.2, cy + R * 0.55, R * 0.7, Math.PI * 0.15, Math.PI * 0.85);
-    ctx.stroke();
+    ctx.arc(cx + R * 0.2, cy + R * 0.55, R * 0.7, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke();
     ctx.fillStyle = '#c9a227'; ctx.font = '12px monospace';
     ctx.fillText('√5−2', cx + R * 0.35, cy + R * 1.15);
   }
   if (layers.has('Sequence')) {
     for (let i = 0; i < 10; i++) {
-      const x = cx + R * 0.6 + i * 18;
-      const y = cy - R * 0.15;
+      const x = cx + R * 0.6 + i * 18, y = cy - R * 0.15;
       ctx.fillStyle = i === Math.floor(st.phase * 10) % 10 ? '#d4a84b' : '#4a4a55';
       ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
     }
@@ -256,10 +343,7 @@ function draw() {
     't=' + gen + ' · phase=' + st.phase.toFixed(2) + ' · Ψ=' + st.psi.toFixed(4) +
     ' · ' + (onCone ? 'on cone' : 'height ' + st.S.toFixed(3)) + ' · geo 0.3.0';
 }
-function tick() {
-  if (playing) { gen += 1; draw(); }
-  requestAnimationFrame(tick);
-}
+function tick() { if (playing) { gen += 1; draw(); } requestAnimationFrame(tick); }
 draw(); requestAnimationFrame(tick);
 document.getElementById('btnPlay').onclick = () => {
   playing = !playing;
@@ -282,8 +366,7 @@ document.getElementById('views').onclick = (e) => {
   const b = e.target.closest('.tab');
   if (!b) return;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  b.classList.add('active');
-  draw();
+  b.classList.add('active'); draw();
 };
 </script>
 </body>
