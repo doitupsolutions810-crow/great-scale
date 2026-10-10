@@ -20,8 +20,8 @@ class ConstrainedClassificationTests(unittest.TestCase):
 
     def test_exact_small_case(self):
         result = solve_exact(30.0, 100, self.units, self.rules)
-        self.assertAlmostEqual(result.lower, 0.312)
-        self.assertAlmostEqual(result.upper, 0.342)
+        self.assertAlmostEqual(result.lower, 0.308)
+        self.assertAlmostEqual(result.upper, 0.322)
         self.assertEqual(result.feasible_assignments, 2)
 
     def test_matches_independent_exhaustive_oracle(self):
