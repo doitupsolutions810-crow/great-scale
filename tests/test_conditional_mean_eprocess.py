@@ -14,7 +14,7 @@ class ConditionalMeanEProcessTests(unittest.TestCase):
     def test_factors_nonnegative_at_boundary_bet(self):
         values = conditional_mean_e_process([0, 1], 0.5, [2.0], [1.0])
         self.assertEqual(values[1], 0.0)
-        self.assertAlmostEqual(values[2], 1.0)
+        self.assertAlmostEqual(values[2], 0.0)  # zero wealth remains zero after a zero factor
 
     def test_expected_final_e_value_at_most_one_for_iid_nulls(self):
         for q in (0.1, 0.4, 0.6):
