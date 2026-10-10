@@ -27,7 +27,7 @@ Constraints require one or two missing units in each stratum. Supports are
 A=[0,0.2], B=[0.4,1], observed aggregate sum S=30, and G=100.
 Two assignments are feasible: (A,B,B) and (B,A,B). Each has one A and two B units.
 Both yield lower endpoint \((30+1(0)+2(0.4))/100=0.308\) and upper endpoint
-\((30+1(0.2)+2(1))/100=0.332\). Thus the robust interval is [0.308,0.332].
+\((30+1(0.2)+2(1))/100=0.322\). Thus the robust interval is [0.308,0.322].
 
 ## Finding
 Classification constraints can make a robust interval narrower than an unconstrained
