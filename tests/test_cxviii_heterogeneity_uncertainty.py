@@ -45,7 +45,8 @@ class TestCXVIII(unittest.TestCase):
 
     def test_equal_size_fixture_estimands(self):
         r = analyze_heterogeneity(self.fixture(), reps=500, seed=2)
-        self.assertAlmostEqual(r["trial_weighted_pooled_excess"], 0.125)
+        self.assertAlmostEqual(r["trial_weighted_pooled_excess"], 1.0/12.0)
+        self.assertNotAlmostEqual(r["trial_weighted_pooled_excess"], r["equal_cluster_mean_excess"])
 
 if __name__ == "__main__":
     unittest.main()
