@@ -36,7 +36,7 @@ For the upper endpoint, the worst allocation is (40,80):
 \[
 (2+40\cdot0.2+20+80\cdot1)/200=0.51.
 \]
-Thus the robust interval is [0.19,0.51], width 0.32. If counts were fixed at (60,60), the interval would be [0.23,0.47], width 0.24. Membership uncertainty widens the interval by 0.08.
+Thus the robust interval is [0.19,0.55], width 0.36. If counts were fixed at (60,60), the interval would be [0.23,0.47], width 0.24. Membership uncertainty widens the interval by 0.12.
 
 ## Profound finding
 
