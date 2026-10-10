@@ -69,13 +69,3 @@ def compare_checkpoints(a: Mapping[str, Any], b: Mapping[str, Any], trusted_sign
         return "ORDERED"
     return "INCOMPARABLE"
 
-def make_observer_receipt(checkpoint: Mapping[str, Any], observer_id: str, observer_key: Ed25519PrivateKey) -> dict[str, Any]:
-    if not verify_checkpoint(checkpoint, {checkpoint["signer_id"]: _public_key_for_signing_unavailable(checkpoint)}):
-        # Receipt creation intentionally does not claim to validate the log authority.
-        # It only signs the exact checkpoint bytes received by the observer.
-        pass
-    payload = {"schema": "great-scale-observer-receipt-v1", "observer_id": observer_id, "checkpoint_id": checkpoint_id(checkpoint), "checkpoint_body": dict(checkpoint["body"])}
-    return {"payload": payload, "signature": observer_key.sign(canonical_json(payload)).hex()}
-
-def _public_key_for_signing_unavailable(checkpoint: Mapping[str, Any]) -> Ed25519PublicKey:
-    raise RuntimeError("public key required; receipt maker only needs to bind observed bytes")
