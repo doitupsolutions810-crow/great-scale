@@ -20,7 +20,7 @@ Statuses:
 
 ## Synthetic fixture
 
-Twelve equally sized clusters: six balanced clusters with Δ=0 and six perfectly paired two-row clusters with Δ=0.25. The equal-cluster mean is 0.125 and the range is [0, 0.25]. Since cluster sizes are equal, the pooled trial-weighted contrast is also 0.125 in this fixture. These are constructed values, not observed field evidence.
+Twelve clusters: six balanced clusters of four rows each with Δ=0 and six perfectly paired clusters of two rows each with Δ=0.25. The equal-cluster mean is 0.125 and the range is [0, 0.25]. The pooled trial-weighted contrast is 1/12 ≈ 0.0833, demonstrating that unequal cluster sizes change the estimand. These are constructed values, not observed field evidence.
 
 ## Limits
 
