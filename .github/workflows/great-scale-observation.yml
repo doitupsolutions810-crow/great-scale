@@ -15,4 +15,4 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run observation certificate tests
-        run: python -m unittest -v tests/test_observation.py
+        run: python -m unittest discover -s tests -p 'test_observation.py' -v
