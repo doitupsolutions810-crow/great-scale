@@ -1,0 +1,10 @@
+{
+  "system": "Great Scale CXXX",
+  "title": "Independent Calibration and Validation",
+  "seed": 20261030,
+  "repetitions": 5000,
+  "calibration_population_mean": 0.04375,
+  "selection_rule": "smallest tested margin with empirical containment >= 0.95; fallback to support margin 1.0",
+  "note": "The calibration run below has observed 94.98% at d=0.05, so fallback applies. Exact results are to be confirmed from the execution output.",
+  "caveat": "Empirical calibration is not a formal guarantee."
+}
