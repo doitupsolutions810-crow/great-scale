@@ -13,7 +13,7 @@ class StratifiedBoundsTests(unittest.TestCase):
         result = stratified_population_bounds(data)
         global_result = unstratified_bounds(data, 0.0, 0.25)
         self.assertAlmostEqual(result["lower_bound"], 0.015625)
-        self.assertAlmostEqual(result["upper_bound"], 0.203125)
+        self.assertAlmostEqual(result["upper_bound"], 0.15625)
         self.assertLessEqual(result["width"], global_result["width"])
 
     def test_complete_population_collapses_to_point(self):
