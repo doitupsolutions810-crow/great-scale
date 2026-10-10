@@ -1,0 +1,30 @@
+name: Daily Tavily Research
+on:
+  schedule:
+    - cron: '17 12 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run search and crawl
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          TAVILY_QUERY: Great Scale mathematics symmetry predictive closure phase-aware invariants
+          TAVILY_MAX_RESULTS: '5'
+        run: python scripts/research_crawl.py
+      - name: Upload research snapshot
+        if: always() && hashFiles('artifacts/research/*.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: great-scale-research-${{ github.run_id }}
+          path: artifacts/research/*.json
+          if-no-files-found: warn
+          retention-days: 30
