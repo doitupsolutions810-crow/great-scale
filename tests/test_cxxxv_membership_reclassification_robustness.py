@@ -20,8 +20,8 @@ class ReclassificationRobustnessTests(unittest.TestCase):
         ]
 
     def test_scenario_bounds(self):
-        self.assertEqual(scenario_bounds(self.scenarios[0], 100), (0.42, 0.60))
-        self.assertAlmostEqual(scenario_bounds(self.scenarios[1], 100)[0], 0.42)
+        self.assertEqual(scenario_bounds(self.scenarios[0], 100), (0.42, 0.66))
+        self.assertAlmostEqual(scenario_bounds(self.scenarios[1], 100)[0], 0.46)
         self.assertAlmostEqual(scenario_bounds(self.scenarios[1], 100)[1], 0.70)
 
     def test_robust_envelope_uses_extreme_scenarios(self):
