@@ -1,0 +1,10 @@
+{
+  "rung": "CXX",
+  "title": "Selection Stress Tests and Recovery",
+  "synthetic_only": true,
+  "true_target": "finite-population equal-cluster mean excess joint failure",
+  "mechanisms": ["size_correlated", "effect_correlated"],
+  "estimators": ["observed_equal_cluster", "ipw_hajek"],
+  "metrics": ["bias", "rmse", "empirical_sd", "interval_coverage"],
+  "note": "This artifact describes the simulation design, not a claimed run result. Execute the harness to generate numerical outcomes."
+}
