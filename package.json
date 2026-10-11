@@ -1,8 +1,11 @@
 {
   "name": "great-scale",
-  "version": "0.3.0",
-  "private": true,
+  "version": "0.4.2",
+  "description": "Test environment — three embeddings of one state. Geometry lab + involution discrete layer.",
   "scripts": {
-    "build": "mkdir -p dist && cp -r public/* dist/"
-  }
+    "test": "node test.js",
+    "descent": "python3 test_descent.py",
+    "all": "npm test && python3 test_descent.py"
+  },
+  "license": "UNLICENSED"
 }
