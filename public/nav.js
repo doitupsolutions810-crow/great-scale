@@ -1,6 +1,6 @@
-/* Great Scale phase-time camera atlas — scale-generated navigation */
+/** Great Scale phase-time camera atlas */
 export const PHI = (1 + Math.sqrt(5)) / 2;
-export const CONE = (PHI - 1) - (PHI - 1) ** 2;
+export const CONE = (PHI - 1) ** 2;
 export const VIEW_PRESETS = {
   Watch: { az: 35, el: 25 },
   Observer: { az: 0, el: 80 },

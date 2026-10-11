@@ -4,5 +4,45 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Great Scale — three embeddings of one state</title>
-<!-- content truncated for tool; full file already written locally and will be re-pushed via full content -->
+<style>
+  html,body{margin:0;height:100%;background:#0a0e17;color:#c9d6e3;font-family:ui-monospace,monospace;overflow:hidden}
+  #c{display:block;width:100vw;height:100vh}
+  .hud{position:absolute;top:12px;left:12px;font-size:12px;opacity:.85}
+  .views{position:absolute;bottom:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap}
+  .views button{background:#122033;border:1px solid #2a3f55;color:#9ec9e8;padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+  .views button:hover{background:#1a2d44}
+</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="800"></canvas>
+<div class="hud">Great Scale v0.4.2 · three embeddings of one state</div>
+<div class="views">
+  <button onclick="GreatScaleAtlas.setView('Watch')">Watch</button>
+  <button onclick="GreatScaleAtlas.setView('Observer')">Observer</button>
+  <button onclick="GreatScaleAtlas.setView('Forward')">Forward</button>
+  <button onclick="GreatScaleAtlas.setView('Adjacent')">Adjacent</button>
+  <button onclick="GreatScaleAtlas.setView('Down')">Down</button>
+</div>
+<script type="module">
+  import { stateAt, heat, FIXED, softContract, stressResidual, HYPOTHESIS } from './scale.js';
+  import './atlas.js';
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let t = 0, x = 1.0;
+  function frame() {
+    t += 0.02;
+    x = softContract(x, 0.97);
+    const st = stateAt(t);
+    ctx.fillStyle = '#0a0e17';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#4fc3f7';
+    ctx.font = '13px monospace';
+    ctx.fillText(`h=${st.h.toFixed(3)}  S=${st.S.toFixed(4)}  Ψ=${st.psi.toFixed(4)}  λ=${st.lam.toFixed(4)}`, 20, 40);
+    ctx.fillText(`descent x=${x.toFixed(4)}  residual=${stressResidual(x).toFixed(4)}  → 4.5`, 20, 58);
+    ctx.fillText(HYPOTHESIS.statements[0], 20, 80);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
 </html>
