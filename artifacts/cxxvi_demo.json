@@ -1,0 +1,25 @@
+{
+  "system": "Great Scale CXXVI",
+  "title": "Auxiliary Bounds Can Miss Rare Extremes",
+  "synthetic": true,
+  "auxiliary_sample": [
+    0,
+    0,
+    0
+  ],
+  "naive_auxiliary_min": 0,
+  "naive_auxiliary_max": 0,
+  "true_finite_population": [
+    0,
+    0,
+    0,
+    1
+  ],
+  "true_population_mean": 0.25,
+  "naive_identified_interval": [
+    0,
+    0
+  ],
+  "contains_true_mean": false,
+  "lesson": "Observed auxiliary extrema are not guaranteed population limits without additional assumptions or calibration."
+}
