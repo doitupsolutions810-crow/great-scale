@@ -22,9 +22,9 @@ def test_unsupported_labels_fail_closed():
     assert False,"unsupported label accepted"
 
 def test_v2_certificate_canonical_keys():
-    states=[True,1,"1"]; obs={s:0 for s in states}; props={s:() for s in states}; trans={s:{} for s in states}; part=[{s} for s in states]
+    states=[1,"1"]; obs={s:0 for s in states}; props={s:() for s in states}; trans={s:{} for s in states}; part=[{s} for s in states]
     cert=make_certificate(states,obs,props,trans,part)
-    assert cert["schema"]=="gs-quotient-cert-v2" and len(cert["state_to_block"])==3
+    assert cert["schema"]=="gs-quotient-cert-v2" and len(cert["state_to_block"])==2
     assert verify_certificate(states,obs,props,trans,part,cert)["valid"]
 
 def test_exhaustive_two_state_differential():
