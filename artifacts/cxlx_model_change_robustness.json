@@ -1,0 +1,21 @@
+{
+  "rung": "CXLX",
+  "title": "Robustness Under Model Change",
+  "status": "implementation-authored-tests-not-executed",
+  "question": "Does incremental refinement of a prior quotient preserve current observations, properties, enabled actions and successor classes after model changes?",
+  "claim": "Refinement terminates on a finite state space because iterations only split blocks.",
+  "key_finding": "Soundness and minimality are distinct: retaining old distinctions can be conservative, but may prevent the new quotient from being coarsest.",
+  "test_cases": [
+    "transition change compared with full recomputation",
+    "new state insertion",
+    "property mutation",
+    "observation mutation",
+    "retention of old distinctions",
+    "invalid successor rejection"
+  ],
+  "limitations": [
+    "Unit tests have not been executed in this integration.",
+    "Partition equality is stricter than behavioral equivalence when prior distinctions remain after a model change.",
+    "Finite deterministic transition systems only; not a physical validation."
+  ]
+}
