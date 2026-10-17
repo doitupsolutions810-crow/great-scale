@@ -1,0 +1,11 @@
+{
+  "rung": "CXLIX",
+  "title": "Joint Behavioral–Property Fixed Point",
+  "status": "implementation_authored_tests_not_yet_executed",
+  "model": "Finite deterministic transition system with observations, enabled actions, successors, and Boolean state properties",
+  "initial_signature": "observation plus required property values",
+  "refinement_signature": "initial signature plus enabled actions and successor quotient classes",
+  "termination": "Finite monotone splitting terminates after finitely many strict refinements",
+  "fixed_point_checks": ["observation consistency", "property constancy", "enabled-action consistency", "successor-class consistency"],
+  "scope_limit": "Does not cover nondeterministic or probabilistic transitions or arbitrary temporal properties."
+}

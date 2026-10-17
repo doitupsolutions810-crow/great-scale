@@ -1,0 +1,11 @@
+{
+  "depth": "LXXXI",
+  "title": "Bias Floors and the Boundary of Certifiable Knowledge",
+  "status": "illustrative_model",
+  "model": "epsilon_n = b + s/sqrt(n)",
+  "examples": [
+    {"gap": 0.05, "bias_floor": 0.05, "noise_scale": 0.2, "planned_n": null, "interpretation": "not certifiable at any finite n under the stated strict-bound model"},
+    {"gap": 0.2, "bias_floor": 0.1, "noise_scale": 0.2, "planned_n": 5, "interpretation": "n must be strictly greater than 4; planned minimum is 5"}
+  ],
+  "warning": "Illustrative model, not empirical data. The error bound must be justified."
+}
