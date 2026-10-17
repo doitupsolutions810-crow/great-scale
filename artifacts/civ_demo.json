@@ -1,0 +1,10 @@
+{
+  "title": "Great Scale CIV — Auditable Predictability",
+  "q0": 0.5,
+  "observations": [1, 0, 1],
+  "strategy": "lambda(history) = 0.5 for even history length, otherwise 1.0",
+  "expected_final_wealth": 0.78125,
+  "trace_schema": "great-scale-audit-trace-v1",
+  "checks": ["bet-before-outcome record order", "history digest binding", "SHA-256 chain integrity", "wealth replay consistency"],
+  "limitations": ["no trusted timestamp", "no external append-only witness", "does not prove the strategy had no hidden state", "does not validate the statistical null"]
+}
