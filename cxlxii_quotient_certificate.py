@@ -13,14 +13,16 @@ def _validate(states, observations, properties, transitions):
     state_keys=[repr(s) for s in states]
     if len(set(state_keys)) != len(state_keys):
         raise ValueError("state repr keys must be unique for certificate serialization")
-    action_keys=[]
+    action_keys={}
     for state, edges in transitions.items():
         if not isinstance(edges, Mapping): raise ValueError("each transition entry must be a mapping")
-        action_keys.extend(repr(a) for a in edges)
+        for action in edges:
+            key=repr(action)
+            if key in action_keys and action_keys[key] != action:
+                raise ValueError("action repr keys must uniquely identify distinct actions")
+            action_keys[key]=action
         for nxt in edges.values():
             if nxt is not None and nxt not in domain: raise ValueError("successor outside state domain")
-    if len(set(action_keys)) != len(action_keys):
-        raise ValueError("action repr keys must be globally unique for signature serialization")
 
 def make_certificate(states, observations, properties, transitions, partition):
     """Serialize a proposed partition as a state-to-block certificate."""
