@@ -8,10 +8,19 @@ def _validate(states, observations, properties, transitions):
     if len(domain)!=len(states): raise ValueError("states must be unique")
     if set(observations)!=domain or set(properties)!=domain or set(transitions)!=domain:
         raise ValueError("maps must cover exactly the state domain")
+    # repr is the serialized key format for this certificate schema. Reject
+    # collisions rather than silently overwriting distinct states or actions.
+    state_keys=[repr(s) for s in states]
+    if len(set(state_keys)) != len(state_keys):
+        raise ValueError("state repr keys must be unique for certificate serialization")
+    action_keys=[]
     for state, edges in transitions.items():
         if not isinstance(edges, Mapping): raise ValueError("each transition entry must be a mapping")
+        action_keys.extend(repr(a) for a in edges)
         for nxt in edges.values():
             if nxt is not None and nxt not in domain: raise ValueError("successor outside state domain")
+    if len(set(action_keys)) != len(action_keys):
+        raise ValueError("action repr keys must be globally unique for signature serialization")
 
 def make_certificate(states, observations, properties, transitions, partition):
     """Serialize a proposed partition as a state-to-block certificate."""
