@@ -5,6 +5,9 @@ from collections.abc import Iterable, Mapping
 from cxlxiv_canonical_typed_encoding import canonical_encode
 
 
+TERMINAL = object()
+
+
 class ModelError(ValueError):
     """Raised when a model record is ambiguous or unsupported."""
 
@@ -45,7 +48,7 @@ def build_model(records: Iterable[Mapping]):
             if aid in seen_actions:
                 raise ModelError("duplicate canonical action identity within state")
             seen_actions.add(aid)
-            if successor_label is None:
+            if successor_label is TERMINAL:
                 successor_id = None
             else:
                 successor_id = canonical_encode(successor_label)
