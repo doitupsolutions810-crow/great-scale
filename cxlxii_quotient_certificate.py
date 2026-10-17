@@ -4,11 +4,21 @@ from typing import Mapping
 from cxlxiv_canonical_typed_encoding import canonical_encode
 
 def _validate(states, observations, properties, transitions):
+    # Check before constructing a set/dict: Python considers True == 1 and gives
+    # them equal hashes, even though the typed encoder intentionally distinguishes them.
+    ids=[canonical_encode(s) for s in states]
+    if len(set(ids))!=len(ids): raise ValueError("canonical state identities must be unique")
+    for i, left in enumerate(states):
+        for j in range(i + 1, len(states)):
+            right = states[j]
+            if left == right and ids[i] != ids[j]:
+                raise ValueError(
+                    "Python equality/hash collision between distinct canonical state labels; "
+                    "use distinct external canonical IDs as model states"
+                )
     domain=set(states)
     if len(domain)!=len(states): raise ValueError("states must be unique")
     if set(observations)!=domain or set(properties)!=domain or set(transitions)!=domain: raise ValueError("maps must cover exactly the state domain")
-    ids=[canonical_encode(s) for s in states]
-    if len(set(ids))!=len(ids): raise ValueError("canonical state identities must be unique")
     for state,edges in transitions.items():
         if not isinstance(edges,Mapping): raise ValueError("each transition entry must be a mapping")
         keys=[canonical_encode(a) for a in edges]
