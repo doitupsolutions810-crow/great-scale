@@ -1,0 +1,11 @@
+{
+  "rung": "CXXXIX",
+  "title": "State Sufficiency and Compression Audit",
+  "cases": [
+    {"name": "asymmetric_allowed_sets", "assignments": 3, "count_states": 2, "lower": 0.304, "upper": 0.322},
+    {"name": "binary_12_units", "assignments": 4096, "count_states": 13, "lower": 0.10, "upper": 0.22}
+  ],
+  "claim": "Count-state compression preserves endpoints for stratum-homogeneous additive objectives and count-only constraints.",
+  "limits": ["unit-specific outcome contributions", "assignment interactions", "history-dependent eligibility"],
+  "repository_tests_executed": false
+}
