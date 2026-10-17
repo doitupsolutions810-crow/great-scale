@@ -35,7 +35,7 @@ class CanonicalQuotientRepairTests(unittest.TestCase):
 
     def test_partition_comparison_ignores_block_order(self):
         p = canonical_quotient(self.states, self.obs, self.props, self.edges)
-        self.assertEqual(partition_signature(p), partition_signature(list(reversed([list(b) for b in p])))
+        self.assertEqual(partition_signature(p), partition_signature(list(reversed([list(b) for b in p]))))
 
 if __name__ == "__main__":
     unittest.main()
