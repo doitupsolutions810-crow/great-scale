@@ -53,6 +53,7 @@ def joint_refinement(
         return tuple(tuple(bucket) for bucket in buckets.values())
 
     blocks = group_by({s: initial_signature(s) for s in state_list})
+    initial_block_count = len(blocks)
     iterations = 0
     while True:
         block_id = {s: i for i, block in enumerate(blocks) for s in block}
@@ -94,7 +95,7 @@ def joint_refinement(
     return FixedPointReport(
         blocks=blocks,
         iterations=iterations,
-        initial_block_count=len(group_by({s: observations[s] for s in state_list})),
+        initial_block_count=initial_block_count,
         final_block_count=len(blocks),
         stable=True,
         properties_preserved=prop_ok,
