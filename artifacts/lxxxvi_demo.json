@@ -1,0 +1,24 @@
+{
+  "great_scale_rung": "LXXXVI",
+  "title": "Residual Risk Under Uncertainty",
+  "assumptions": {
+    "path_failure_rule": "any declared dependency failure compromises its path",
+    "source_failures": "mutually independent within modeled calculation",
+    "model_completeness": "not guaranteed"
+  },
+  "paths": {
+    "A": ["calibration", "sensor_a"],
+    "B": ["calibration", "lab_b"],
+    "C": ["reference", "sensor_c"]
+  },
+  "failure_probability_intervals": {
+    "calibration": [0.02, 0.08],
+    "sensor_a": [0.01, 0.05],
+    "lab_b": [0.02, 0.06],
+    "reference": [0.005, 0.02],
+    "sensor_c": [0.01, 0.04]
+  },
+  "required_surviving_paths": 2,
+  "unmodeled_scenario_probability_cap_eta": 0.05,
+  "note": "Illustrative values only; not measured reliability data."
+}
