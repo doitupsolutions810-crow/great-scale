@@ -45,7 +45,7 @@ def make_records(obs_bits, targets):
 
 def test_generated_three_state_models_match_reference_refinement():
     # Exhaust all binary observations and each state's absent/terminal/s0/s1/s2 edge.
-    # 2^3 * 4^3 = 512 deterministic finite models.
+    # 2^3 * 5^3 = 1000 deterministic finite models.
     labels = ["s0", "s1", "s2"]
     cases = 0
     for obs in product((0, 1), repeat=3):
@@ -54,7 +54,7 @@ def test_generated_three_state_models_match_reference_refinement():
             records = []
             for i, label in enumerate(labels):
                 target = targets[i]
-                edges = [] if target == -2 else [("go", TERMINAL if target == -1 else labels[target]]
+                edges = [] if target == -2 else [("go", TERMINAL if target == -1 else labels[target])]
                 records.append({"label": label, "observation": obs[i], "properties": (), "transitions": edges})
             model = build_model(records)
             got = {frozenset(block) for block in quotient_partition(model)}
