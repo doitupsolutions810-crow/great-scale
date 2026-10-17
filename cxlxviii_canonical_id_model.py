@@ -8,6 +8,9 @@ from cxlxiv_canonical_typed_encoding import canonical_encode
 TERMINAL = object()
 
 
+TERMINAL = object()
+
+
 class ModelError(ValueError):
     """Raised when a model record is ambiguous or unsupported."""
 
