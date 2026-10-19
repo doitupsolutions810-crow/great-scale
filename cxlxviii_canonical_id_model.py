@@ -70,7 +70,11 @@ def quotient_partition(model):
         raise ModelError("states must be a mapping")
     groups = defaultdict(set)
     for sid, state in states.items():
-        groups[(state["observation"], state["properties"])].add(sid)
+        # Typed semantic keys avoid Python's True == 1 collision and allow
+        # supported structured observations without relying on hashability.
+        observation_id = canonical_encode(state["observation"])
+        properties_id = canonical_encode(state["properties"])
+        groups[(observation_id, properties_id)].add(sid)
     partition = list(groups.values())
     while True:
         block_of = {sid: i for i, block in enumerate(partition) for sid in block}
