@@ -59,7 +59,7 @@ test('orIR cannot reset aggregate formula-node budget',()=>{
   assert.throws(()=>check(p),/input node limit exceeded/);
 });
 test('large truth-table formulas remain under one global evaluation budget',()=>{
-  const leaves=Array.from({length:2400},()=>['imp','A','A']);
+  const leaves=Array.from({length:2400},()=>['imp','P0','P0']);
   function balancedOr(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['or',balancedOr(xs.slice(0,m)),balancedOr(xs.slice(m))];}
   const largeTautology=balancedOr(leaves);
   const context=[largeTautology,...Array.from({length:16},(_,i)=>['imp','P'+i,'P'+i])];
