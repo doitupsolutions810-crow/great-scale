@@ -6,6 +6,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 VERIFY_JS_STATUS=not_run
+VERIFY_FEASIBILITY_STATUS=not_run
 VERIFY_PY_STATUS=not_run
 VERIFY_EXIT_STATUS=running
 VERIFY_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unavailable)"
@@ -13,12 +14,12 @@ VERIFY_NODE="$(node --version 2>&1 || echo unavailable)"
 VERIFY_NPM="$(npm --version 2>&1 || echo unavailable)"
 VERIFY_PYTHON="$(python3 --version 2>&1 || echo unavailable)"
 VERIFY_RECEIPT="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/great-scale-verification-receipt.json"
-export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
 
 write_receipt() {
   local exit_code=$?
   if [ "$exit_code" -eq 0 ]; then VERIFY_EXIT_STATUS=passed; else VERIFY_EXIT_STATUS=failed; fi
-  export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+  export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
   python3 - <<'PY'
 import json, os, datetime
 record = {
@@ -28,6 +29,7 @@ record = {
   "npm": os.environ.get("VERIFY_NPM", "unavailable"),
   "python": os.environ.get("VERIFY_PYTHON", "unavailable"),
   "javascript_suite": os.environ.get("VERIFY_JS_STATUS", "not_run"),
+  "robust_feasibility_suite": os.environ.get("VERIFY_FEASIBILITY_STATUS", "not_run"),
   "python_descent_suite": os.environ.get("VERIFY_PY_STATUS", "not_run"),
   "overall": os.environ.get("VERIFY_EXIT_STATUS", "unknown"),
   "created_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -39,16 +41,17 @@ record = {
 }
 with open(os.environ["VERIFY_RECEIPT"], "w", encoding="utf-8") as f:
     json.dump(record, f, indent=2, sort_keys=True)
-    f.write("\n")
+    f.write("\\n")
 summary = os.environ.get("GITHUB_STEP_SUMMARY")
 if summary:
     with open(summary, "a", encoding="utf-8") as f:
-        f.write("## Great Scale verification receipt\n\n")
-        f.write(f"- Commit: `{record['commit']}`\n")
-        f.write(f"- JavaScript suite: **{record['javascript_suite']}**\n")
-        f.write(f"- Python descent suite: **{record['python_descent_suite']}**\n")
-        f.write(f"- Overall: **{record['overall']}**\n")
-        f.write(f"- Receipt: `{os.environ['VERIFY_RECEIPT']}`\n")
+        f.write("## Great Scale verification receipt\\n\\n")
+        f.write(f"- Commit: `{record['commit']}`\\n")
+        f.write(f"- JavaScript suite: **{record['javascript_suite']}**\\n")
+        f.write(f"- Robust-feasibility suite: **{record['robust_feasibility_suite']}**\\n")
+        f.write(f"- Python descent suite: **{record['python_descent_suite']}**\\n")
+        f.write(f"- Overall: **{record['overall']}**\\n")
+        f.write(f"- Receipt: `{os.environ['VERIFY_RECEIPT']}`\\n")
 PY
   echo "verification_receipt=$VERIFY_RECEIPT"
   echo "verification_status=$VERIFY_EXIT_STATUS"
@@ -76,10 +79,15 @@ if npm test; then VERIFY_JS_STATUS=passed; else VERIFY_JS_STATUS=failed; exit 1;
 export VERIFY_JS_STATUS
 echo "::endgroup::"
 
+echo "::group::Robust-feasibility regression suite"
+if python3 -m unittest -v test_robust_feasibility.py; then VERIFY_FEASIBILITY_STATUS=passed; else VERIFY_FEASIBILITY_STATUS=failed; exit 1; fi
+export VERIFY_FEASIBILITY_STATUS
+echo "::endgroup::"
+
 echo "::group::Python descent suite"
 if python3 test_descent.py; then VERIFY_PY_STATUS=passed; else VERIFY_PY_STATUS=failed; exit 1; fi
 export VERIFY_PY_STATUS
 echo "::endgroup::"
 
 echo "LOCAL_VERIFICATION=PASS"
-echo "NOTE=Receipt binds outcomes to the commit/runtime metadata; it does not by itself prove test correctness or hosted execution."
+echo "NOTE=Receipt binds outcomes to commit/runtime metadata; it does not by itself prove test correctness or hosted execution."
