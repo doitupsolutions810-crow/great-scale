@@ -80,6 +80,7 @@ function evaluatePromotionEvidence(evidence) {
 
   const candidate = plainDataRecord(env.candidate, ['repo', 'sha'], 'candidate', reasons);
   const pullRequest = plainDataRecord(env.pullRequest, ['number', 'state', 'headRepository', 'headSha'], 'pull request snapshot', reasons);
+  const pullRequest = plainDataRecord(env.pullRequest, ['number', 'state', 'headRepository', 'headSha'], 'pull request snapshot', reasons);
   const run = plainDataRecord(env.run, ['source', 'repository', 'workflowPath', 'id', 'headSha', 'conclusion'], 'run', reasons);
   const job = plainDataRecord(env.job, ['id', 'conclusion', 'runnerId', 'runnerName', 'logsUrl', 'steps'], 'job', reasons);
   const receipt = plainDataRecord(env.receipt, ['schema', 'commit', 'overall', 'javascript_suite', 'python_descent_suite', 'github_run_id', 'github_repository'], 'receipt', reasons);
@@ -92,6 +93,10 @@ function evaluatePromotionEvidence(evidence) {
       typeof candidate.sha !== 'string' || !SHA_RE.test(candidate.sha)) {
     reasons.push('candidate repository and full 40-character SHA are required');
   }
+  if (!Number.isSafeInteger(pullRequest.number) || pullRequest.number <= 0) reasons.push('valid pull request number is required');
+  if (pullRequest.state !== 'open') reasons.push('pull request must still be open at evidence collection time');
+  if (typeof pullRequest.headRepository !== 'string' || pullRequest.headRepository !== candidate.repo) reasons.push('pull request head repository does not match candidate repository');
+  if (typeof pullRequest.headSha !== 'string' || !SHA_RE.test(pullRequest.headSha) || pullRequest.headSha !== candidate.sha) reasons.push('current pull request head SHA does not equal candidate SHA');
   if (!Number.isSafeInteger(pullRequest.number) || pullRequest.number <= 0) reasons.push('valid pull request number is required');
   if (pullRequest.state !== 'open') reasons.push('pull request must still be open at evidence collection time');
   if (typeof pullRequest.headRepository !== 'string' || pullRequest.headRepository !== candidate.repo) reasons.push('pull request head repository does not match candidate repository');
