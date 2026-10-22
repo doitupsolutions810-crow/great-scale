@@ -14,13 +14,28 @@ const MAX_EVAL_STEPS = 2000000;
 function validate(ast, budget={nodes:0}, depth=0) {
   if (depth > MAX_DEPTH) throw new RangeError('formula depth limit exceeded');
   if (++budget.nodes > MAX_NODES) throw new RangeError('claim AST node limit exceeded');
-  if (!ast || typeof ast !== 'object' || Array.isArray(ast)) throw new TypeError('malformed formula');
+  if (!ast || typeof ast !== 'object' || Array.isArray(ast) || Object.getPrototypeOf(ast)!==Object.prototype) throw new TypeError('malformed formula');
+  const keys=Reflect.ownKeys(ast);
+  if (keys.some(k=>typeof k!=='string')) throw new TypeError('malformed formula schema');
+  for (const key of keys) {
+    const descriptor=Object.getOwnPropertyDescriptor(ast,key);
+    if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor,'value')) throw new TypeError('formula accessors are not allowed');
+  }
+  const requireKeys=expected=>{
+    const actual=[...keys].sort(), wanted=[...expected].sort();
+    if (JSON.stringify(actual)!==JSON.stringify(wanted)) throw new TypeError('malformed formula schema');
+  };
   if (ast.op === 'var') {
+    requireKeys(['op','name']);
     if (typeof ast.name !== 'string' || !/^[A-Za-z][A-Za-z0-9_]*$/.test(ast.name)) throw new TypeError('invalid variable');
     return true;
   }
-  if (ast.op === 'not') return validate(ast.arg,budget,depth+1);
+  if (ast.op === 'not') {
+    requireKeys(['op','arg']);
+    return validate(ast.arg,budget,depth+1);
+  }
   if (['and', 'or', 'imp'].includes(ast.op)) {
+    requireKeys(['op','left','right']);
     validate(ast.left,budget,depth+1); validate(ast.right,budget,depth+1); return true;
   }
   throw new TypeError('unknown operator');
@@ -47,9 +62,18 @@ function evaluate(ast, valuation, steps={count:0}) {
   throw new TypeError('unknown operator');
 }
 function checkEntailment(claim) {
-  if (!claim || !Array.isArray(claim.assumptions) || !claim.conclusion) throw new TypeError('malformed claim');
+  if (!claim || typeof claim!=='object' || Array.isArray(claim) ||
+      !Object.prototype.hasOwnProperty.call(claim,'assumptions') ||
+      !Object.prototype.hasOwnProperty.call(claim,'conclusion') ||
+      !Array.isArray(claim.assumptions) || !claim.conclusion) throw new TypeError('malformed claim');
+  const assumptionDescriptors=Object.getOwnPropertyDescriptors(claim.assumptions);
+  if (claim.assumptions.length > MAX_NODES) throw new RangeError('assumption count limit exceeded');
+  for(let i=0;i<claim.assumptions.length;i++) {
+    if (!Object.prototype.hasOwnProperty.call(assumptionDescriptors,String(i))) throw new TypeError('sparse assumptions are not allowed');
+  }
   const budget={nodes:0};
-  claim.assumptions.forEach(a=>validate(a,budget)); validate(claim.conclusion,budget);
+  for(const a of claim.assumptions) validate(a,budget);
+  validate(claim.conclusion,budget);
   const names = [...new Set([...claim.assumptions.flatMap(a => [...vars(a)]), ...vars(claim.conclusion)])].sort();
   if (names.length > MAX_VARIABLES) throw new RangeError('too many variables for exhaustive checker');
   const rows = 2 ** names.length, steps={count:0};
@@ -148,6 +172,19 @@ test('evaluator rejects inherited and non-Boolean assignments', () => {
   assert.throws(()=>evaluate(V('toString'),{}),/missing Boolean assignment/);
   assert.throws(()=>evaluate(V('P'),{P:'false'}),/assignment must be Boolean/);
   assert.equal(evaluate(V('P'),{P:false}),false);
+});
+
+
+test('formula schema rejects inherited fields and extra keys', () => {
+  assert.throws(()=>checkEntailment({assumptions:[],conclusion:Object.assign(V('P'),{extra:true})}),/malformed formula schema/);
+  const inherited=Object.create({op:'var',name:'P'});
+  assert.throws(()=>checkEntailment({assumptions:[],conclusion:inherited}),/malformed formula/);
+});
+test('claim rejects sparse assumptions and oversized assumption lists', () => {
+  const sparse=[];sparse.length=2;sparse[1]=V('P');
+  assert.throws(()=>checkEntailment({assumptions:sparse,conclusion:V('P')}),/sparse assumptions/);
+  const many=Array.from({length:MAX_NODES+1},()=>V('P'));
+  assert.throws(()=>checkEntailment({assumptions:many,conclusion:V('P')}),/assumption count limit/);
 });
 
 for (const t of tests) console.log(`${t.ok?'PASS':'FAIL'} ${t.name}${t.error?` — ${t.error}`:''}`);
