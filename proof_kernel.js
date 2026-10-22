@@ -17,6 +17,9 @@ function readDataObject(value, label) {
     throw new Error(`${label} must be a plain object`);
   }
   const keys = Reflect.ownKeys(value);
+  // Every supported proof rule has at most four fields; reject width before
+  // descriptor reads and normalization of attacker-supplied extra fields.
+  if (keys.length > 4) throw new Error('proof fields do not match rule schema');
   if (keys.some(key => typeof key !== 'string')) {
     throw new Error(`${label} has a non-string field`);
   }
