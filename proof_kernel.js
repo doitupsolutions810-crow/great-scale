@@ -6,6 +6,7 @@ const MAX_ATOMS = 16;
 const MAX_EVAL_STEPS = 2000000;
 const MAX_KERNEL_WORK = 2000000;
 const MAX_ATOM_LENGTH = 4096;
+const MAX_INPUT_BYTES = 1048576;
 const MAX_RULE_LENGTH = 32;
 const eq = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 function tickKernelWork(budget, amount=1) {
@@ -234,6 +235,41 @@ function checkBound(proof, expectedConclusion, expectedContext) {
   if (!sameFormulaMultiset(result.context,contextValues,budget)) throw new Error('assumption context mismatch');
   return result;
 }
+
+function parseBoundedJson(input) {
+  if (typeof input !== 'string') throw new Error('serialized input must be a string');
+  // Bound code units before the UTF-8 scan, then enforce the actual byte limit.
+  if (input.length > MAX_INPUT_BYTES || Buffer.byteLength(input, 'utf8') > MAX_INPUT_BYTES) {
+    throw new Error('serialized input byte limit exceeded');
+  }
+  try {
+    return JSON.parse(input);
+  } catch {
+    throw new Error('serialized input is not valid JSON');
+  }
+}
+function requireEnvelopeKeys(envelope, expected, label) {
+  const data = readDataObject(envelope, label);
+  const keys = Object.keys(data).sort();
+  if (JSON.stringify(keys) !== JSON.stringify([...expected].sort())) {
+    throw new Error(label + ' fields do not match schema');
+  }
+  return data;
+}
+function checkSerialized(input) {
+  return check(parseBoundedJson(input));
+}
+function checkBoundSerialized(input) {
+  const envelope = requireEnvelopeKeys(parseBoundedJson(input),
+    ['proof','expectedConclusion','expectedContext'], 'claim envelope');
+  return checkBound(envelope.proof, envelope.expectedConclusion, envelope.expectedContext);
+}
+function tautologyUnderContextSerialized(input) {
+  const envelope = requireEnvelopeKeys(parseBoundedJson(input),
+    ['conclusion','context'], 'truth-table envelope');
+  return tautologyUnderContext(envelope.conclusion, envelope.context);
+}
+
 function atoms(formula,out=new Set(),budget={nodes:0}) {
   validateFormulaInternal(formula,0,budget);
   function walk(f){if(typeof f==='string')out.add(f);else {walk(f[1]);walk(f[2]);}}
@@ -286,4 +322,4 @@ function tautologyUnderContext(conclusion,context) {
   }
   return true;
 }
-module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,eq,evalF,tautologyUnderContext};
+module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
