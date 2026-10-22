@@ -130,5 +130,15 @@ test('proof schema cannot hide an own __proto__ field during normalization',()=>
   assert.throws(()=>check(p),/fields do not match/);
 });
 
+
+test('formula AST arrays reject custom keys, custom prototypes, and sparse slots',()=>{
+  const extra=['and',A,B];extra.note='unexpected';
+  assert.throws(()=>validateFormula(extra),/no custom properties/);
+  const sparse=['and',A,B];delete sparse[1];
+  assert.throws(()=>validateFormula(sparse),/dense/);
+  const custom=Object.setPrototypeOf(['and',A,B],Object.create(Array.prototype));
+  assert.throws(()=>validateFormula(custom),/ordinary array/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
