@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,tautologyUnderContext,tautologyUnderContextSerialized,evalF}=require('./proof_kernel');
+const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,tautologyUnderContext,tautologyUnderContextSerialized,evalF}=require('./proof_kernel');
 const A='A',B='B',C='C';
 let passed=0,failed=0;const results=[];
 function test(name,fn){try{fn();passed++;results.push({name,ok:true})}catch(e){failed++;results.push({name,ok:false,error:e.message})}}
@@ -221,6 +221,11 @@ test('serialized proof ingress rejects over-limit input before parsing',()=>{
 });
 test('serialized proof ingress rejects malformed JSON',()=>{
   assert.throws(()=>checkSerialized('{"rule":'),/not valid JSON/);
+});
+test('serialized ingress rejects excessive nesting before semantic proof checks',()=>{
+  const depth=MAX_SERIALIZED_JSON_DEPTH+1;
+  const input='['.repeat(depth)+'0'+']'.repeat(depth);
+  assert.throws(()=>checkSerialized(input),/serialized JSON depth limit exceeded/);
 });
 test('serialized ingress rejects duplicate JSON keys, including escaped-equivalent keys',()=>{
   const duplicateEnvelope='{"proof":{"rule":"assume","formula":"A"},"expectedConclusion":"B","expectedConclu\\u0073ion":"A","expectedContext":["A"]}';
