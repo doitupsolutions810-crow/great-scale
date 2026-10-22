@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,tautologyUnderContext,evalF}=require('./proof_kernel');
+const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,tautologyUnderContext,tautologyUnderContextSerialized,evalF}=require('./proof_kernel');
 const A='A',B='B',C='C';
 let passed=0,failed=0;const results=[];
 function test(name,fn){try{fn();passed++;results.push({name,ok:true})}catch(e){failed++;results.push({name,ok:false,error:e.message})}}
@@ -208,6 +208,33 @@ test('aggregate kernel work budget bounds repeated long-formula context discharg
   let proof=balanced(atoms);
   for(let i=count-1;i>=count-100;i--) proof={rule:'impI',assumption:atoms[i],proof};
   assert.throws(()=>check(proof),/kernel work budget exceeded/);
+});
+
+test('serialized proof ingress accepts valid bounded JSON',()=>{
+  assert.equal(checkSerialized(JSON.stringify({rule:'assume',formula:A})).conclusion,A);
+});
+test('serialized proof ingress rejects non-string input',()=>{
+  assert.throws(()=>checkSerialized({rule:'assume',formula:A}),/must be a string/);
+});
+test('serialized proof ingress rejects over-limit input before parsing',()=>{
+  assert.throws(()=>checkSerialized(' '.repeat(MAX_INPUT_BYTES+1)),/byte limit exceeded/);
+});
+test('serialized proof ingress rejects malformed JSON',()=>{
+  assert.throws(()=>checkSerialized('{"rule":'),/not valid JSON/);
+});
+test('serialized claim envelope binds proof conclusion and context',()=>{
+  const input=JSON.stringify({proof:{rule:'assume',formula:A},expectedConclusion:A,expectedContext:[A]});
+  assert.deepEqual(checkBoundSerialized(input).context,[A]);
+});
+test('serialized claim envelope rejects unexpected fields',()=>{
+  const input=JSON.stringify({proof:{rule:'assume',formula:A},expectedConclusion:A,expectedContext:[A],extra:true});
+  assert.throws(()=>checkBoundSerialized(input),/fields do not match schema/);
+});
+test('serialized truth-table envelope validates bounded JSON',()=>{
+  assert.equal(tautologyUnderContextSerialized(JSON.stringify({conclusion:['imp',A,A],context:[]})),true);
+});
+test('serialized truth-table envelope rejects unexpected fields',()=>{
+  assert.throws(()=>tautologyUnderContextSerialized(JSON.stringify({conclusion:A,context:[],extra:1})),/fields do not match schema/);
 });
 
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
