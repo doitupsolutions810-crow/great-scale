@@ -75,15 +75,16 @@ function evaluatePromotionEvidence(evidence) {
   if (!evidence || typeof evidence !== 'object' || Array.isArray(evidence)) {
     return { eligible: false, state: 'BLOCKED', reasons: ['evidence envelope missing or malformed'] };
   }
-  const env = plainDataRecord(evidence, ['candidate', 'run', 'job', 'receipt', 'artifact'], 'evidence envelope', reasons);
+  const env = plainDataRecord(evidence, ['candidate', 'pullRequest', 'run', 'job', 'receipt', 'artifact'], 'evidence envelope', reasons);
   if (!env) return { eligible: false, state: 'BLOCKED', reasons };
 
   const candidate = plainDataRecord(env.candidate, ['repo', 'sha'], 'candidate', reasons);
+  const pullRequest = plainDataRecord(env.pullRequest, ['number', 'state', 'headRepository', 'headSha'], 'pull request snapshot', reasons);
   const run = plainDataRecord(env.run, ['source', 'repository', 'workflowPath', 'id', 'headSha', 'conclusion'], 'run', reasons);
   const job = plainDataRecord(env.job, ['id', 'conclusion', 'runnerId', 'runnerName', 'logsUrl', 'steps'], 'job', reasons);
   const receipt = plainDataRecord(env.receipt, ['schema', 'commit', 'overall', 'javascript_suite', 'python_descent_suite', 'github_run_id', 'github_repository'], 'receipt', reasons);
   const artifact = plainDataRecord(env.artifact, ['id', 'name', 'workflowRunId', 'expired'], 'artifact', reasons);
-  if (!candidate || !run || !job || !receipt || !artifact) {
+  if (!candidate || !pullRequest || !run || !job || !receipt || !artifact) {
     return { eligible: false, state: 'BLOCKED', reasons };
   }
 
@@ -91,6 +92,10 @@ function evaluatePromotionEvidence(evidence) {
       typeof candidate.sha !== 'string' || !SHA_RE.test(candidate.sha)) {
     reasons.push('candidate repository and full 40-character SHA are required');
   }
+  if (!Number.isSafeInteger(pullRequest.number) || pullRequest.number <= 0) reasons.push('valid pull request number is required');
+  if (pullRequest.state !== 'open') reasons.push('pull request must still be open at evidence collection time');
+  if (typeof pullRequest.headRepository !== 'string' || pullRequest.headRepository !== candidate.repo) reasons.push('pull request head repository does not match candidate repository');
+  if (typeof pullRequest.headSha !== 'string' || !SHA_RE.test(pullRequest.headSha) || pullRequest.headSha !== candidate.sha) reasons.push('current pull request head SHA does not equal candidate SHA');
   if (run.source !== 'github-actions-api') reasons.push('run evidence must come from the GitHub Actions API collector');
   if (typeof run.repository !== 'string' || run.repository !== candidate.repo) reasons.push('run repository does not match candidate repository');
   if (run.workflowPath !== '.github/workflows/ci.yml') reasons.push('expected CI workflow path is not bound to this run');
@@ -147,8 +152,8 @@ function evaluatePromotionEvidence(evidence) {
     eligible: true,
     state: 'ELIGIBLE_FOR_PROMOTION_REVIEW',
     reasons: [],
-    binding: { repository: candidate.repo, sha: candidate.sha, runId: run.id, jobId: job.id, artifactId: artifact.id },
-    caveat: 'Structural gate only: authenticated evidence collection, semantic test adequacy, human review, and deployment authorization remain separate obligations.',
+    binding: { repository: candidate.repo, sha: candidate.sha, pullRequestNumber: pullRequest.number, runId: run.id, jobId: job.id, artifactId: artifact.id },
+    caveat: 'Structural gate only: the pull-request head is bound at collection time, but a later merge must recheck and require this exact head SHA; authenticated collection, test adequacy, human review, and deployment authorization remain separate obligations.',
   };
 }
 
