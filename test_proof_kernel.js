@@ -197,5 +197,18 @@ test('bounded validation collects truth-table atoms without a second AST walk',(
   assert.equal(tautologyUnderContext(formula,[]),true);
 });
 
+test('aggregate kernel work budget bounds repeated long-formula context discharge',()=>{
+  const count=2100;
+  const atoms=Array.from({length:count},(_,i)=>String(i).padStart(4,'0')+'X'.repeat(MAX_ATOM_LENGTH-4));
+  function balanced(xs){
+    if(xs.length===1)return {rule:'assume',formula:xs[0]};
+    const m=Math.floor(xs.length/2);
+    return {rule:'andI',left:balanced(xs.slice(0,m)),right:balanced(xs.slice(m))};
+  }
+  let proof=balanced(atoms);
+  for(let i=count-1;i>=count-100;i--) proof={rule:'impI',assumption:atoms[i],proof};
+  assert.throws(()=>check(proof),/kernel work budget exceeded/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
