@@ -1,5 +1,5 @@
 /** CJS mirror of residual-ops.js for node test runner — v0.5.1 */
-const { PHI, CONE, FIXED } = require('./scale.cjs);
+const { PHI, CONE, FIXED } = require('./scale.cjs');
 
 const TAU = 2 * Math.log(PHI);
 const PSI = -1 / PHI;
