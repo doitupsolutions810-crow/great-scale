@@ -105,7 +105,6 @@ function atoms(formula,out=new Set(),budget={nodes:0}) {
 function evalF(formula,env,steps={count:0}) {
   validateFormula(formula);
   function tick(){if(++steps.count>MAX_EVAL_STEPS)throw new Error('truth-table evaluation budget exceeded');}
-  function tick(){if(++steps.count>MAX_EVAL_STEPS)throw new Error('truth-table evaluation budget exceeded');}
   function walk(f) {
     tick();
     if(typeof f==='string') return !!env[f];
@@ -122,7 +121,8 @@ function tautologyUnderContext(conclusion,context) {
   validateFormula(conclusion,0,inputBudget);
   if(!Array.isArray(context)) throw new Error('context must be an array');
   for(const f of context) validateFormula(f,0,inputBudget);
-  const names=[...new Set([...atoms(conclusion,new Set(),inputBudget),...context.flatMap(f=>[...atoms(f,new Set(),inputBudget)])])];
+  const collect=f=>{const out=new Set();(function walk(x){if(typeof x==='string')out.add(x);else{walk(x[1]);walk(x[2]);}})(f);return out;};
+  const names=[...new Set([...collect(conclusion),...context.flatMap(f=>[...collect(f)])])];
   if(names.length>MAX_ATOMS) throw new Error('truth-table atom limit exceeded');
   const steps={count:0};
   for(let mask=0;mask<(1<<names.length);mask++){
