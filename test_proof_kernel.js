@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_SERIALIZED_OBJECT_KEYS,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,tautologyUnderContext,tautologyUnderContextSerialized,evalF}=require('./proof_kernel');
+const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_SERIALIZED_OBJECT_KEYS,MAX_SERIALIZED_ARRAY_ITEMS,MAX_SERIALIZED_JSON_VALUES,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,tautologyUnderContext,tautologyUnderContextSerialized,evalF}=require('./proof_kernel');
 const A='A',B='B',C='C';
 let passed=0,failed=0;const results=[];
 function test(name,fn){try{fn();passed++;results.push({name,ok:true})}catch(e){failed++;results.push({name,ok:false,error:e.message})}}
@@ -230,6 +230,17 @@ test('serialized ingress rejects excessive nesting before semantic proof checks'
   const depth=MAX_SERIALIZED_JSON_DEPTH+1;
   const input='['.repeat(depth)+'0'+']'.repeat(depth);
   assert.throws(()=>checkSerialized(input),/serialized JSON depth limit exceeded/);
+});
+test('serialized ingress rejects an oversized array before JSON materialization',()=>{
+  const input='['+Array(MAX_SERIALIZED_ARRAY_ITEMS+1).fill('0').join(',')+']';
+  assert.throws(()=>checkSerialized(input),/serialized JSON array item limit exceeded/);
+});
+test('serialized ingress bounds aggregate values across individually bounded arrays',()=>{
+  const inner='['+Array(9999).fill('0').join(',')+']';
+  const input='['+Array(5).fill(inner).join(',')+']';
+  assert.ok(input.length<MAX_INPUT_BYTES);
+  assert.ok(5*10000+6>MAX_SERIALIZED_JSON_VALUES);
+  assert.throws(()=>checkSerialized(input),/serialized JSON value limit exceeded/);
 });
 test('serialized ingress rejects over-wide objects before JSON materialization',()=>{
   assert.equal(MAX_SERIALIZED_OBJECT_KEYS,4);
