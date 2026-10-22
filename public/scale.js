@@ -1,4 +1,4 @@
-/** Great Scale laws + discrete involution — geometry v0.5.0 */
+/** Great Scale laws + discrete involution — geometry v0.5.1 */
 export const PHI = (1 + Math.sqrt(5)) / 2;
 export const PHI_INV = PHI - 1;
 /** Cone floor φ⁻² ≈ 0.382 — Ψ = CONE + S never below CONE */
@@ -6,6 +6,11 @@ export const CONE = PHI_INV * PHI_INV;
 export const RATE = 0.85;
 export const RESIDUAL_DIMS = [4, 3, 1];
 export const FIXED = 4.5;
+
+/** CONE-matrix: companion of x²-3x+1. Eigenvalues φ², CONE. det +1. */
+export const CONE_MATRIX = [[2, -1], [-1, 1]];
+/** Fibonacci companion: eigenvalues φ, ψ. det -1. */
+export const FIB_MATRIX = [[1, 1], [1, 0]];
 
 export function heat(h) {
   return h * (1 - h);
@@ -79,7 +84,7 @@ export function descentStep(x, k = CONE) {
 
 /**
  * Phase-time state. Ψ = CONE + S is the cone-respecting height;
- * λ = φ^(−n) is radial scale and may dip below CONE at low heat — that is allowed.
+ * λ = φ^(-⁹) is radial scale and may dip below CONE at low heat — that is allowed.
  */
 export function stateAt(t, rate = RATE) {
   const phase = (t * rate) % 1;
@@ -153,7 +158,7 @@ export class DescentEngine {
 
   snapshot() {
     return {
-      schema: 'great-scale.descent/v0.5.0',
+      schema: 'great-scale.descent/v0.5.1',
       running: this.running,
       t: this.t,
       x: this.x,
@@ -177,6 +182,7 @@ export const HYPOTHESIS = Object.freeze([
       'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
       'Never claim certainty — always another perspective',
       'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
+      'CONE-matrix M=[[2,-1],[-1,1]] has char poly x²-3x+1; scalar CONE and matrix M are the same contraction rate; M³ = CONE³ = three steps',
     ],
   },
 ]);
@@ -185,6 +191,8 @@ export default {
   PHI,
   CONE,
   FIXED,
+  CONE_MATRIX,
+  FIB_MATRIX,
   heat,
   involution,
   twoCycles,

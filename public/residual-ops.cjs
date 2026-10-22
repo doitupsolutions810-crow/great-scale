@@ -1,8 +1,11 @@
-/** CJS mirror of residual-ops.js for node test runner — v0.5.0 */
+/** CJS mirror of residual-ops.js for node test runner — v0.5.1 */
 const { PHI, CONE, FIXED } = require('./scale.cjs);
 
 const TAU = 2 * Math.log(PHI);
 const PSI = -1 / PHI;
+
+const CONE_MATRIX = [[2, -1], [-1, 1]];
+const FIB_MATRIX = [[1, 1], [1, 0]];
 
 function residualStep(r) { return r * CONE; }
 
@@ -26,9 +29,9 @@ function mul(A, B) {
   ];
 }
 
-function matrixPower(n) {
+function matrixPower(n, matrix = CONE_MATRIX) {
   let result = [[1, 0], [0, 1]];
-  let base = [[2, -1], [-1, 1]];
+  let base = matrix.map((row) => row.slice());
   let exp = n;
   while (exp > 0) {
     if (exp & 1) result = mul(result, base);
@@ -47,7 +50,14 @@ function verifyResidualOps() {
   checks.push({ id: 'SC4', name: 'continuous flow r(t)=r0·e^(−tτ)', pass: Math.abs(residualFlow(1, 0) - 1) < 1e-12 });
   checks.push({ id: 'SC5', name: 'Unity never finite-time', pass: Math.pow(CONE, 50) > 0 });
   const M3 = matrixPower(3);
-  checks.push({ id: 'SC6', name: 'Fibonacci matrix powers', pass: M3[0][0] === 13 && M3[1][1] === 13 && M3[0][0] * M3[1][1] - M3[0][1] * M3[1][0] === 1 });
+  const detM3 = M3[0][0] * M3[1][1] - M3[0][1] * M3[1][0];
+  checks.push({ id: 'SC6', name: 'CONE-matrix powers (M^3=[[13,-8],[-8,5]], det 1)', pass: M3[0][0] === 13 && M3[1][1] === 5 && detM3 === 1 });
+  const F3 = matrixPower(3, FIB_MATRIX);
+  checks.push({ id: 'SC6b', name: 'Fibonacci companion F^3=[[3,2],[2,1]]', pass: F3[0][0] === 3 && F3[1][1] === 1 && F3[0][0] * F3[1][1] - F3[0][1] * F3[1][0] === -1 });
+  const M = CONE_MATRIX;
+  const M2 = mul(M, M);
+  const charZero = M2[0][0] - 3 * M[0][0] + 1 === 0 && M2[0][1] - 3 * M[0][1] === 0 && M2[1][0] - 3 * M[1][0] === 0 && M2[1][1] - 3 * M[1][1] + 1 === 0;
+  checks.push({ id: 'SC6c', name: 'CONE-matrix satisfies x^2-3x+1=0', pass: charZero });
   let r = 1, d = 1, cons = true;
   for (let i = 0; i < 20; i++) { r *= CONE; d /= CONE; if (Math.abs(r * d - 1) > 1e-12) cons = false; }
   checks.push({ id: 'CONS', name: '20-step norm conservation', pass: cons });
@@ -57,5 +67,5 @@ function verifyResidualOps() {
 }
 
 module.exports = {
-  TAU, PSI, residualStep, agentResidualStep, healthCheck, residualFlow, matrixPower, verifyResidualOps,
+  TAU, PSI, CONE_MATRIX, FIB_MATRIX, residualStep, agentResidualStep, healthCheck, residualFlow, matrixPower, verifyResidualOps,
 };
