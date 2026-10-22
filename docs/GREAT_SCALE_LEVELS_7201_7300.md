@@ -71,9 +71,10 @@ Then \(R(x+9)=R(x)\), and \(R(x)=0\) exactly at the circle fixed points \(x\equi
 
 - **Source analysis:** confirmed the Python residual used line distance while JS/CJS used circular distance.
 - **Integrated patch:** all five files updated on branch `research/cross-runtime-circle-invariants`; README and this level map added/updated.
-- **Remote source read:** the parent files were read from the preceding research branch before applying edits. The new branch must be read back at its final head to verify the integrated content.
+- **Remote source read-back:** all six changed files were read from `research/cross-runtime-circle-invariants` after integration. A follow-up read caught and corrected an interval-boundary mistake in the Python fixed-set regression (`[0,9)` must exclude the duplicate representative 9).
+- **Targeted local checks:** 20 reconstructed Python descent assertions and 32 targeted JavaScript invariant assertions passed. Python syntax compilation also passed. These are focused formula checks, not a full run of the repository's exact files.
 - **Local full repository run:** not available in this environment; outbound GitHub clone failed because the host could not be resolved. Do not interpret that as a test failure.
-- **Hosted CI:** must be inspected on the exact new head; a successful commit write or local formula check is not equivalent to a green full test/build.
+- **Hosted CI:** exact-head status shows CodeRabbit success and Vercel deployment failure due to the daily deployment quota (`api-deployments-free-per-day`). No PR-triggered GitHub Actions runs were returned. This is not a passing test/build result and does not show that assertions failed.
 - **Scientific scope:** this establishes mathematical consistency of the software model only. It does not validate a physical or quantum hypothesis.
 
 ## Conclusion
