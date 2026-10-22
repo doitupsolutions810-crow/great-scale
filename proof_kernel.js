@@ -8,6 +8,7 @@ const MAX_KERNEL_WORK = 2000000;
 const MAX_ATOM_LENGTH = 4096;
 const MAX_INPUT_BYTES = 1048576;
 const MAX_SERIALIZED_JSON_DEPTH = MAX_DEPTH * 2 + 8;
+const MAX_SERIALIZED_OBJECT_KEYS = 4;
 const MAX_RULE_LENGTH = 32;
 const eq = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 function tickKernelWork(budget, amount=1) {
@@ -264,6 +265,7 @@ function rejectDuplicateJsonKeys(input) {
       const key = JSON.parse(input.slice(i, end));
       if (frame.keys.has(key)) throw new Error('duplicate JSON object key');
       frame.keys.add(key);
+      if (frame.keys.size > MAX_SERIALIZED_OBJECT_KEYS) throw new Error('serialized JSON object key limit exceeded');
       frame.state = 'colon';
       i = end;
       continue;
@@ -323,7 +325,8 @@ function parseBoundedJson(input) {
     rejectDuplicateJsonKeys(input);
   } catch (error) {
     if (error && (error.message === 'duplicate JSON object key' ||
-        error.message === 'serialized JSON depth limit exceeded')) throw error;
+        error.message === 'serialized JSON depth limit exceeded' ||
+        error.message === 'serialized JSON object key limit exceeded')) throw error;
     throw new Error('serialized input is not valid JSON');
   }
   try {
@@ -406,4 +409,4 @@ function tautologyUnderContext(conclusion,context) {
   }
   return true;
 }
-module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
+module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_SERIALIZED_OBJECT_KEYS,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
