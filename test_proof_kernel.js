@@ -140,5 +140,28 @@ test('formula AST arrays reject custom keys, custom prototypes, and sparse slots
   assert.throws(()=>validateFormula(custom),/ordinary array/);
 });
 
+
+test('checked conclusion is detached from caller-owned formula arrays',()=>{
+  const source=['and',A,B];
+  const result=check({rule:'assume',formula:source});
+  source[1]='MUTATED';
+  assert.deepEqual(result.conclusion,['and',A,B]);
+  assert.deepEqual(result.context[0],['and',A,B]);
+});
+test('checked derivation result is recursively frozen',()=>{
+  const result=check(assume(['and',A,B]));
+  assert.equal(Object.isFrozen(result),true);
+  assert.equal(Object.isFrozen(result.conclusion),true);
+  assert.equal(Object.isFrozen(result.context),true);
+  assert.equal(Object.isFrozen(result.context[0]),true);
+  assert.throws(()=>{result.conclusion[1]='MUTATED';},TypeError);
+});
+test('disjunction introduction copies auxiliary formula before returning result',()=>{
+  const other=['and',A,B];
+  const result=check({rule:'orIR',proof:assume(A),other});
+  other[1]='MUTATED';
+  assert.deepEqual(result.conclusion,['or',['and',A,B],A]);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
