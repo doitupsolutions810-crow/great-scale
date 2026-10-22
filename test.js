@@ -74,6 +74,19 @@ test('stress residual is periodic across the circle seam', () => {
 });
 test('stress residual positive at non-fixed point x=2', () => assert.ok(stressResidual(2) > 0.5));
 
+test('softContract rejects factors outside the strict contraction domain', () => {
+  for (const k of [-2, -1, 1, 2, NaN, Infinity, -Infinity]) assert.throws(() => softContract(1, k), /contraction factor/);
+  assert.throws(() => softContract(NaN, 0.5), /coordinate must be finite/);
+});
+test('DescentEngine canonicalizes circle starts and rejects invalid k', () => {
+  assert.strictEqual(new DescentEngine({start: 0}).x, new DescentEngine({start: 9}).x);
+  assert.throws(() => new DescentEngine({start: 1, k: 1}), /contraction factor/);
+  assert.throws(() => new DescentEngine({start: NaN}), /circle coordinate/);
+  const eng = new DescentEngine({start: 19});
+  assert.strictEqual(eng.x, 1);
+  for (let i = 0; i < 40; i++) eng.tick();
+  assert.ok(eng.history.every(r => r.S >= 0 && r.S <= 0.25));
+});
 test('soft contraction converges to 4.5 from 1.0', () => {
   let x = 1.0;
   for (let i = 0; i < 40; i++) x = softContract(x, 0.5);
