@@ -74,5 +74,29 @@ test('oversized rule label rejected',()=>{
   assert.throws(()=>check({rule:'R'.repeat(MAX_RULE_LENGTH+1),formula:A}),/rule length limit exceeded/);
 });
 
+
+test('truth assignment requires an own Boolean value',()=>{
+  assert.equal(evalF(A,{A:false}),false);
+  assert.equal(evalF(A,{A:true}),true);
+  assert.throws(()=>evalF('toString',{}),/missing truth assignment/);
+  assert.throws(()=>evalF(A,Object.create({A:true})),/missing truth assignment/);
+  assert.throws(()=>evalF(A,{A:'false'}),/truth assignment must be boolean/);
+  assert.throws(()=>evalF(A,null),/environment must be an object/);
+  assert.throws(()=>evalF(A,[true]),/environment must be an object/);
+});
+test('cyclic formula AST fails closed at depth limit',()=>{
+  const f=['and','A','A'];f[1]=f;
+  assert.throws(()=>validateFormula(f),/formula depth limit exceeded/);
+});
+test('cyclic proof object fails closed at depth limit',()=>{
+  const p={rule:'andEL'};p.proof=p;
+  assert.throws(()=>check(p),/proof depth limit exceeded/);
+});
+test('very wide proof object is rejected by schema-size gate',()=>{
+  const p={rule:'assume',formula:A};
+  for(let i=0;i<1000;i++)p['extra'+i]=i;
+  assert.throws(()=>check(p),/proof fields do not match rule schema/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
