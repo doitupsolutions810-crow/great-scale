@@ -64,10 +64,6 @@ test('missing evidence fails closed', () => {
   assert.equal(evaluatePromotionEvidence(null).eligible, false);
 });
 test('current pull request head must equal candidate SHA', () => blocked(x => { x.pullRequest.headSha = 'b'.repeat(40); }));
-test('pull request from another repository blocks', () => blocked(x => { x.pullRequest.headRepository = 'attacker/fork'; }));
-test('closed pull request blocks', () => blocked(x => { x.pullRequest.state = 'closed'; }));
-test('invalid pull request number blocks', () => blocked(x => { x.pullRequest.number = 0; }));
-test('current pull request head must equal candidate SHA', () => blocked(x => { x.pullRequest.headSha = 'b'.repeat(40); }));
 test('pull request head repository mismatch blocks', () => blocked(x => { x.pullRequest.headRepository = 'other/repository'; }));
 test('closed pull request blocks', () => blocked(x => { x.pullRequest.state = 'closed'; }));
 test('invalid pull request number blocks', () => blocked(x => { x.pullRequest.number = 0; }));
