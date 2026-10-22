@@ -59,6 +59,13 @@ test('softMap is involution: softMap(softMap(x))=x', () => {
 });
 test('softMap(4.5)=4.5', () => assert.ok(Math.abs(softMap(4.5) - 4.5) < 1e-9));
 test('stress residual zero at fixed point', () => assert.ok(stressResidual(4.5) < 1e-9));
+test('stress residual respects circle boundary 0 ≡ 9', () => {
+  assert.ok(stressResidual(0) < 1e-9);
+  assert.ok(stressResidual(9) < 1e-9);
+});
+test('stress residual is periodic under x → x + 9', () => {
+  assert.ok(Math.abs(stressResidual(1.25) - stressResidual(10.25)) < 1e-9);
+});
 test('stress residual positive off fixed point', () => assert.ok(stressResidual(2) > 0.5));
 
 test('soft contraction converges to 4.5 from 1.0', () => {
