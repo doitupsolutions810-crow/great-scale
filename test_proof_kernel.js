@@ -237,5 +237,11 @@ test('serialized truth-table envelope rejects unexpected fields',()=>{
   assert.throws(()=>tautologyUnderContextSerialized(JSON.stringify({conclusion:A,context:[],extra:1})),/fields do not match schema/);
 });
 
+test('serialized proof ingress enforces UTF-8 bytes independently of code-unit length',()=>{
+  const input='{"rule":"assume","formula":"A","extra":"'+'é'.repeat(Math.floor(MAX_INPUT_BYTES/2))+'"}';
+  assert.ok(input.length<=MAX_INPUT_BYTES);
+  assert.throws(()=>checkSerialized(input),/byte limit exceeded/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
