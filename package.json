@@ -3,7 +3,7 @@
   "version": "0.4.2",
   "description": "Test environment — three embeddings of one state. Geometry lab + involution discrete layer.",
   "scripts": {
-    "test": "node test.js && node test_scope_transfer.js",
+    "test": "node test.js && node test_scope_transfer.js && node test_truth_table_kernel.js",
     "descent": "python3 test_descent.py",
     "all": "npm test && python3 test_descent.py"
   },
