@@ -152,6 +152,21 @@ test('stateAt: λ may be below CONE at low heat (allowed)', () => {
   assert.ok(s.lam < CONE || s.S > 0.1);
 });
 
+test('stateAt phase is canonical for negative time and periodic', () => {
+  const negative = stateAt(-1, 0.85);
+  const equivalent = stateAt(0.15 / 0.85, 0.85);
+  assert.ok(negative.phase >= 0 && negative.phase < 1, 'phase=' + negative.phase);
+  assert.ok(Math.abs(negative.phase - equivalent.phase) < 1e-12);
+  assert.ok(Math.abs(negative.h - equivalent.h) < 1e-12);
+  assert.ok(Math.abs(negative.S - equivalent.S) < 1e-12);
+});
+
+test('stateAt rejects non-finite inputs and overflowed phase products', () => {
+  for (const t of [NaN, Infinity, -Infinity]) assert.throws(() => stateAt(t), /finite/);
+  for (const rate of [NaN, Infinity, -Infinity]) assert.throws(() => stateAt(1, rate), /finite/);
+  assert.throws(() => stateAt(Number.MAX_VALUE, 2), /phase product/);
+});
+
 test('hypothesis present', () => {
   assert.ok(HYPOTHESIS.statements.length >= 4);
   assert.ok(HYPOTHESIS.statements.some((s) => s.includes('h(1-h)')));

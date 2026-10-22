@@ -49,7 +49,12 @@ def run_descent(start=1.0, steps=40, k=0.5):
     return trail
 
 def state_at(t, rate=0.85):
-    phase = (t * rate) % 1
+    if not math.isfinite(t) or not math.isfinite(rate):
+        raise ValueError("phase time t and rate must be finite")
+    cycles = t * rate
+    if not math.isfinite(cycles):
+        raise ValueError("phase product t * rate must be finite")
+    phase = ((cycles % 1) + 1) % 1
     h = 0.5 - 0.5 * math.cos(2 * math.pi * phase)
     S = heat(h)
     n = 8 - 4 * S
@@ -118,6 +123,18 @@ def main():
     s = state_at(0)
     checks.append(("stateAt Ψ ≥ CONE", s["psi"] + 1e-12 >= CONE))
     checks.append(("stateAt λ may be < CONE at low heat", s["lam"] < CONE or s["S"] > 0.1))
+    negative = state_at(-1, 0.85)
+    equivalent = state_at(0.15 / 0.85, 0.85)
+    checks.append(("stateAt canonical phase for negative time", 0 <= negative["phase"] < 1))
+    checks.append(("stateAt negative-time periodic parity", abs(negative["phase"] - equivalent["phase"]) < 1e-12 and abs(negative["h"] - equivalent["h"]) < 1e-12))
+    invalid_phase_rejected = True
+    for bad_t, bad_rate in [(float("nan"), 0.85), (float("inf"), 0.85), (1, float("nan")), (1, float("inf")), (float("1.7976931348623157e308"), 2)]:
+        try:
+            state_at(bad_t, bad_rate)
+            invalid_phase_rejected = False
+        except ValueError:
+            pass
+    checks.append(("stateAt rejects non-finite and overflowed phase inputs", invalid_phase_rejected))
 
     for name, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  {name}")
