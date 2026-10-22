@@ -49,7 +49,7 @@ The local receipt is also not independent attestation. Its purpose is outcome ca
 
 ## Actual hosted run status
 
-Latest known hosted execution for the previous candidate failed after retry with no executed step summaries, no logs, and no artifact. The PR head has now advanced again due to the promotion gate and tests. It must be checked afresh for the new exact SHA. The available connector supports re-running failed jobs but does not expose a workflow-dispatch action or runner/billing administration. Re-running the latest exact-head job once again failed without steps, logs, or artifacts. Re-running a no-runner failure does not create a runner.
+Latest known hosted execution for the previous candidate failed after retry with no executed step summaries, no logs, and no artifact. The PR head has now advanced again due to the promotion gate and tests. It must be checked afresh for the new exact SHA. The available connector supports re-running failed jobs but does not expose a workflow-dispatch action or runner/billing administration. An actionable tracker was created at [issue #90](https://github.com/doitupsolutions810-crow/great-scale/issues/90), with exact evidence and runner recovery criteria. Re-running the latest exact-head job again reproduced the no-runner failure. Re-running a no-runner failure does not create a runner.
 
 Therefore the new gate is integrated and locally reference-tested, but **it is not yet able to accept a real hosted execution receipt** because the required independent platform evidence has not been produced. Keep PR #89 draft and unmerged.
 
