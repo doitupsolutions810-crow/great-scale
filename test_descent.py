@@ -99,10 +99,11 @@ def main():
     checks.append(("circle starts canonicalize 0 ≡ 9", canonicalize_circle_coordinate(0) == canonicalize_circle_coordinate(9) == 0))
     checks.append(("out-of-range circle starts normalize", canonicalize_circle_coordinate(19) == 1))
     checks.append(("single descent step is periodic and heat-bounded", all(
-        abs(descent_step(x) - descent_step(canonicalize_circle_coordinate(x))) < 1e-12
-        and 0 <= descent_step(x) <= 9
-        and 0 <= heat(descent_step(x) / 9) <= 0.25
+        abs(descent_step(x, k) - descent_step(canonicalize_circle_coordinate(x), k)) < 1e-12
+        and 0 <= descent_step(x, k) < 9
+        and 0 <= heat(descent_step(x, k) / 9) <= 0.25
         for x in [-17, -8, 0, 1, 4.5, 8, 9, 10, 19, 28]
+        for k in [-0.9, -0.5, 0, 0.5, 0.9]
     )))
     checks.append(("single descent step identifies x=1 and x=19", descent_step(1) == descent_step(19)))
     rejected = True
