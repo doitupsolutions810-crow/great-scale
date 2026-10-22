@@ -74,7 +74,7 @@ export function softMap(x) {
  * Computational "moment of now" between continuous position and discrete structure.
  */
 export function stressResidual(x) {
-  return Math.abs(x - involution(x));
+  return modDist(x, involution(x));
 }
 
 /** One descent step: soft contraction toward 4.5 at residual rate CONE */
@@ -178,7 +178,7 @@ export const HYPOTHESIS = Object.freeze([
       'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
       'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
       'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point; default k = CONE = φ⁻² (residual rate)',
-      'Stress residual |x−f(x)| is the computational moment of now',
+      'Stress residual d₉(x,f(x)) is the circular computational moment of now',
       'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
       'Never claim certainty — always another perspective',
       'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
