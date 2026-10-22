@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('node:fs');
+
 // Structural promotion policy. This does not authenticate GitHub evidence itself.
 // The caller must obtain platform fields from an authenticated GitHub API/client,
 // bind them to the exact candidate commit, and pass the fetched data here.
@@ -151,3 +153,22 @@ function evaluatePromotionEvidence(evidence) {
 }
 
 module.exports = { evaluatePromotionEvidence, REQUIRED_STEPS };
+
+if (require.main === module) {
+  const evidencePath = process.argv[2];
+  if (!evidencePath) {
+    console.error('Usage: node promotion_gate.js <authenticated-platform-evidence.json>');
+    process.exitCode = 2;
+  } else {
+    try {
+      const raw = fs.readFileSync(evidencePath, 'utf8');
+      const evidence = JSON.parse(raw);
+      const result = evaluatePromotionEvidence(evidence);
+      console.log(JSON.stringify(result, null, 2));
+      if (!result.eligible) process.exitCode = 1;
+    } catch (error) {
+      console.error(`Promotion evidence could not be read or parsed: ${error.message}`);
+      process.exitCode = 2;
+    }
+  }
+}
