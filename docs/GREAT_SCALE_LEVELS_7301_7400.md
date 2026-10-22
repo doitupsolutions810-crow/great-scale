@@ -22,7 +22,7 @@ A second contract mismatch existed in the engine's heat coordinate. It records \
 0\le S\le\frac14
 \]
 
-holds for \(h\in[0,1]\), hence for engine circle representatives \(x\in[0,9]\). But the engine accepted arbitrary starts. For example, \(x=19\) gives \(h=19/9>1\), so \(S=(19/9)(-10/9)=-190/81<0\); consequently \(\Psi=\mathrm{CONE}+S\) can fall below the stated cone floor. This is a concrete runtime counterexample to an unconditional invariant claim.
+holds for \(h\in[0,1]\), hence for engine circle representatives \(x\in[0,9]\). But the engine accepted arbitrary starts. With the default \\(k=0.5\\), starting at \\(x=19\\) makes the first tick produce \\(x'=11.75=47/4\\), so \\(h=x'/9=47/36>1\\) and \\(S=(47/36)(-11/36)=-517/1296<0\\). Consequently \\(\\Psi=\\mathrm{CONE}+S\\) falls below the stated cone floor. More generally, evaluating the heat law directly at an out-of-domain coordinate such as \\(x=19\\) also gives \\(S=-190/81\\). This is a concrete runtime counterexample to an unconditional invariant claim.
 
 ## Integration
 
