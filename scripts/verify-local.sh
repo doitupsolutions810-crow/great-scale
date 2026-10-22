@@ -52,6 +52,7 @@ if summary:
 PY
   echo "verification_receipt=$VERIFY_RECEIPT"
   echo "verification_status=$VERIFY_EXIT_STATUS"
+  exit "$exit_code"
 }
 trap write_receipt EXIT
 
