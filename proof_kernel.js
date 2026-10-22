@@ -112,7 +112,12 @@ function evaluateValidated(formula,env,steps) {
   function tick(){if(++steps.count>MAX_EVAL_STEPS)throw new Error('truth-table evaluation budget exceeded');}
   function walk(f) {
     tick();
-    if(typeof f==='string') return !!env[f];
+    if(typeof f==='string') {
+      if(!env || typeof env!=='object' || Array.isArray(env)) throw new Error('truth assignment environment must be an object');
+      if(!Object.prototype.hasOwnProperty.call(env,f)) throw new Error('missing truth assignment for atom');
+      if(typeof env[f]!=='boolean') throw new Error('truth assignment must be boolean');
+      return env[f];
+    }
     const [op,a,b]=f;
     if(op==='and') return walk(a)&&walk(b);
     if(op==='or') return walk(a)||walk(b);
@@ -122,6 +127,7 @@ function evaluateValidated(formula,env,steps) {
   return walk(formula);
 }
 function evalF(formula,env,steps={count:0}) {
+  if(!env || typeof env!=='object' || Array.isArray(env)) throw new Error('truth assignment environment must be an object');
   validateFormula(formula);
   return evaluateValidated(formula,env,steps);
 }
