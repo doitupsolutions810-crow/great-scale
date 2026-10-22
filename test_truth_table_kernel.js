@@ -62,14 +62,20 @@ function evaluate(ast, valuation, steps={count:0}) {
   throw new TypeError('unknown operator');
 }
 function checkEntailment(claim) {
-  if (!claim || typeof claim!=='object' || Array.isArray(claim) ||
-      !Object.prototype.hasOwnProperty.call(claim,'assumptions') ||
-      !Object.prototype.hasOwnProperty.call(claim,'conclusion') ||
-      !Array.isArray(claim.assumptions) || !claim.conclusion) throw new TypeError('malformed claim');
-  const assumptionDescriptors=Object.getOwnPropertyDescriptors(claim.assumptions);
+  if (!claim || typeof claim!=='object' || Array.isArray(claim) || Object.getPrototypeOf(claim)!==Object.prototype) throw new TypeError('malformed claim');
+  const claimKeys=Reflect.ownKeys(claim);
+  if (claimKeys.length!==2 || !claimKeys.includes('assumptions') || !claimKeys.includes('conclusion')) throw new TypeError('malformed claim schema');
+  for(const key of claimKeys) {
+    const descriptor=Object.getOwnPropertyDescriptor(claim,key);
+    if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor,'value')) throw new TypeError('claim accessors are not allowed');
+  }
+  if (!Array.isArray(claim.assumptions) || !claim.conclusion) throw new TypeError('malformed claim');
   if (claim.assumptions.length > MAX_NODES) throw new RangeError('assumption count limit exceeded');
+  const assumptionDescriptors=Object.getOwnPropertyDescriptors(claim.assumptions);
   for(let i=0;i<claim.assumptions.length;i++) {
-    if (!Object.prototype.hasOwnProperty.call(assumptionDescriptors,String(i))) throw new TypeError('sparse assumptions are not allowed');
+    const descriptor=assumptionDescriptors[String(i)];
+    if (!descriptor) throw new TypeError('sparse assumptions are not allowed');
+    if (!Object.prototype.hasOwnProperty.call(descriptor,'value')) throw new TypeError('assumption accessors are not allowed');
   }
   const budget={nodes:0};
   for(const a of claim.assumptions) validate(a,budget);
@@ -185,6 +191,15 @@ test('claim rejects sparse assumptions and oversized assumption lists', () => {
   assert.throws(()=>checkEntailment({assumptions:sparse,conclusion:V('P')}),/sparse assumptions/);
   const many=Array.from({length:MAX_NODES+1},()=>V('P'));
   assert.throws(()=>checkEntailment({assumptions:many,conclusion:V('P')}),/assumption count limit/);
+});
+
+
+test('claim schema rejects inherited and accessor-backed fields', () => {
+  const inherited=Object.create({assumptions:[],conclusion:V('P')});
+  assert.throws(()=>checkEntailment(inherited),/malformed claim/);
+  const accessor={};Object.defineProperty(accessor,'assumptions',{enumerable:true,get(){throw Error('getter invoked')}});
+  Object.defineProperty(accessor,'conclusion',{enumerable:true,value:V('P')});
+  assert.throws(()=>checkEntailment(accessor),/claim accessors are not allowed/);
 });
 
 for (const t of tests) console.log(`${t.ok?'PASS':'FAIL'} ${t.name}${t.error?` — ${t.error}`:''}`);
