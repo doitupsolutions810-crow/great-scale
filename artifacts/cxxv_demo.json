@@ -1,0 +1,23 @@
+{
+  "system": "Great Scale CXXV",
+  "title": "Robust Bounds Under Uncertain Stratum Limits",
+  "synthetic": true,
+  "seed": 20261010,
+  "population_count": 240,
+  "observed_count": 111,
+  "true_population_mean": 0.09375,
+  "nominal_bounds": {
+    "lower": 0.043229166666666666,
+    "upper": 0.15260416666666668,
+    "width": 0.109375
+  },
+  "robust_bounds": {
+    "lower": 0.043229166666666666,
+    "upper": 0.1794791666666667,
+    "width": 0.13625000000000004
+  },
+  "upper_limit_expansion_per_stratum": 0.05,
+  "width_increase": 0.026875,
+  "true_mean_contained_in_both": true,
+  "interpretation": "One seeded synthetic draw; illustrative, not empirical. Identification bounds, not confidence intervals."
+}
