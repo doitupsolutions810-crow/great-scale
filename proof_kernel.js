@@ -168,7 +168,7 @@ function checkInternal(proof, budget={nodes:0}) {
       }
       case 'orIR': {
         requireKeys(['rule','proof','other']);
-        validateFormula(data.other,0,budget);
+        validateFormulaInternal(data.other,0,budget);
         const other=copyFormula(data.other);
         const a=visit(data.proof,depth+1);
         return {conclusion:['or',other,a.conclusion],context:a.context};
