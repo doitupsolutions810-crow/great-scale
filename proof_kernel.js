@@ -313,14 +313,20 @@ function parseBoundedJson(input) {
   if (input.length > MAX_INPUT_BYTES || Buffer.byteLength(input, 'utf8') > MAX_INPUT_BYTES) {
     throw new Error('serialized input byte limit exceeded');
   }
-  let parsed;
+  // Scan before materializing the full object graph, so nesting and duplicate
+  // keys are rejected at the serialized boundary rather than afterward.
   try {
-    parsed = JSON.parse(input);
+    rejectDuplicateJsonKeys(input);
+  } catch (error) {
+    if (error && (error.message === 'duplicate JSON object key' ||
+        error.message === 'serialized JSON depth limit exceeded')) throw error;
+    throw new Error('serialized input is not valid JSON');
+  }
+  try {
+    return JSON.parse(input);
   } catch {
     throw new Error('serialized input is not valid JSON');
   }
-  rejectDuplicateJsonKeys(input);
-  return parsed;
 }
 function requireEnvelopeKeys(envelope, expected, label) {
   const data = readDataObject(envelope, label);
