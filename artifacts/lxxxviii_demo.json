@@ -1,0 +1,18 @@
+{
+  "great_scale_rung": "LXXXVIII",
+  "title": "Sequential Evidence, Multiple Testing, and the Stopping Boundary",
+  "status": "illustrative_design_not_empirical_validation",
+  "family_wise_alpha": 0.05,
+  "candidate_count": 10,
+  "per_candidate_bonferroni_alpha": 0.005,
+  "per_candidate_anytime_valid_e_threshold": 200.0,
+  "single_test_anytime_valid_e_threshold_at_alpha_0_05": 20.0,
+  "crossing_disposition": "ELIGIBLE_FOR_REVIEW_NOT_AUTOMATICALLY_CAUSAL",
+  "non_crossing_disposition": "CONTINUE_OR_INCONCLUSIVE",
+  "assumptions": [
+    "Each tested e-process is valid under its null",
+    "The candidate family and error allocation are defined and versioned",
+    "Causal claims require separate validation and appropriate causal evidence"
+  ],
+  "tests_executed": false
+}
