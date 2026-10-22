@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {MAX_ATOMS,validateFormula,check,checkBound,tautologyUnderContext,evalF}=require('./proof_kernel');
+const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,validateFormula,check,checkBound,tautologyUnderContext,evalF}=require('./proof_kernel');
 const A='A',B='B',C='C';
 let passed=0,failed=0;const results=[];
 function test(name,fn){try{fn();passed++;results.push({name,ok:true})}catch(e){failed++;results.push({name,ok:false,error:e.message})}}
@@ -37,5 +37,19 @@ test('assumption-context substitution rejected',()=>{assert.throws(()=>checkBoun
 test('duplicate assumptions are preserved in context binding',()=>{assert.throws(()=>checkBound({rule:'andI',left:assume(A),right:assume(A)},['and',A,A],[A]),/assumption context mismatch/)});
 test('independent semantic oracle catches mutated invalid conclusion',()=>{assert.equal(tautologyUnderContext(C,[['and',A,B]]),false)});
 test('tampered proof step rejected',()=>{assert.throws(()=>verify({rule:'andEL',proof:assume(A)}),/requires conjunction/)});
+
+test('aggregate proof and embedded-formula node budget enforced',()=>{
+  const leaves=Array.from({length:3000},(_,i)=>'X'+(i%3));
+  function balanced(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['and',balanced(xs.slice(0,m)),balanced(xs.slice(m))];}
+  const big=balanced(leaves);
+  assert.throws(()=>check({rule:'andI',left:{rule:'assume',formula:big},right:{rule:'assume',formula:big}}),/input node limit exceeded/);
+});
+test('truth-table evaluation work budget enforced',()=>{
+  let conclusion='P0';
+  for(let i=1;i<16;i++)conclusion=['or',conclusion,'P'+i];
+  const context=Array.from({length:1800},()=>['imp','A','A']);
+  assert.throws(()=>tautologyUnderContext(conclusion,context),/evaluation budget exceeded/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
