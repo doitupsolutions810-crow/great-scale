@@ -6,15 +6,22 @@ const assert = require('node:assert/strict');
 // This checks truth-table entailment over the variables actually present.
 // It is not a proof assistant for higher-order logic, arithmetic, or quantum physics.
 
-function validate(ast) {
+const MAX_DEPTH = 256;
+const MAX_NODES = 10000;
+const MAX_VARIABLES = 16;
+const MAX_EVAL_STEPS = 2000000;
+
+function validate(ast, budget={nodes:0}, depth=0) {
+  if (depth > MAX_DEPTH) throw new RangeError('formula depth limit exceeded');
+  if (++budget.nodes > MAX_NODES) throw new RangeError('claim AST node limit exceeded');
   if (!ast || typeof ast !== 'object' || Array.isArray(ast)) throw new TypeError('malformed formula');
   if (ast.op === 'var') {
     if (typeof ast.name !== 'string' || !/^[A-Za-z][A-Za-z0-9_]*$/.test(ast.name)) throw new TypeError('invalid variable');
-    return;
+    return true;
   }
-  if (ast.op === 'not') return validate(ast.arg);
+  if (ast.op === 'not') return validate(ast.arg,budget,depth+1);
   if (['and', 'or', 'imp'].includes(ast.op)) {
-    validate(ast.left); validate(ast.right); return;
+    validate(ast.left,budget,depth+1); validate(ast.right,budget,depth+1); return true;
   }
   throw new TypeError('unknown operator');
 }
@@ -24,10 +31,16 @@ function vars(ast, out = new Set()) {
   else { vars(ast.left, out); vars(ast.right, out); }
   return out;
 }
-function evaluate(ast, valuation) {
-  if (ast.op === 'var') return valuation[ast.name];
-  if (ast.op === 'not') return !evaluate(ast.arg, valuation);
-  const l = evaluate(ast.left, valuation), r = evaluate(ast.right, valuation);
+function evaluate(ast, valuation, steps={count:0}) {
+  if (++steps.count > MAX_EVAL_STEPS) throw new RangeError('truth-table evaluation work limit exceeded');
+  if (ast.op === 'var') {
+    if (!valuation || typeof valuation !== 'object' || Array.isArray(valuation)) throw new TypeError('valuation must be an object');
+    if (!Object.prototype.hasOwnProperty.call(valuation,ast.name)) throw new TypeError('missing Boolean assignment');
+    if (typeof valuation[ast.name] !== 'boolean') throw new TypeError('assignment must be Boolean');
+    return valuation[ast.name];
+  }
+  if (ast.op === 'not') return !evaluate(ast.arg, valuation, steps);
+  const l = evaluate(ast.left, valuation, steps), r = evaluate(ast.right, valuation, steps);
   if (ast.op === 'and') return l && r;
   if (ast.op === 'or') return l || r;
   if (ast.op === 'imp') return !l || r;
@@ -35,17 +48,18 @@ function evaluate(ast, valuation) {
 }
 function checkEntailment(claim) {
   if (!claim || !Array.isArray(claim.assumptions) || !claim.conclusion) throw new TypeError('malformed claim');
-  claim.assumptions.forEach(validate); validate(claim.conclusion);
+  const budget={nodes:0};
+  claim.assumptions.forEach(a=>validate(a,budget)); validate(claim.conclusion,budget);
   const names = [...new Set([...claim.assumptions.flatMap(a => [...vars(a)]), ...vars(claim.conclusion)])].sort();
-  if (names.length > 16) throw new RangeError('too many variables for exhaustive checker');
-  const rows = 2 ** names.length;
+  if (names.length > MAX_VARIABLES) throw new RangeError('too many variables for exhaustive checker');
+  const rows = 2 ** names.length, steps={count:0};
   for (let mask = 0; mask < rows; mask++) {
     const valuation = Object.fromEntries(names.map((name, i) => [name, Boolean(mask & (1 << i))]));
-    if (claim.assumptions.every(a => evaluate(a, valuation)) && !evaluate(claim.conclusion, valuation)) {
-      return { accepted: false, counterexample: valuation, checkedRows: rows };
+    if (claim.assumptions.every(a => evaluate(a, valuation,steps)) && !evaluate(claim.conclusion, valuation,steps)) {
+      return { accepted: false, counterexample: valuation, checkedRows: rows, evaluationSteps:steps.count };
     }
   }
-  return { accepted: true, checkedRows: rows };
+  return { accepted: true, checkedRows: rows, evaluationSteps:steps.count };
 }
 const V = name => ({op:'var',name});
 const NOT = arg => ({op:'not',arg});
@@ -113,6 +127,27 @@ test('counterexample establishes scope-limited failure', () => {
 });
 test('claim type boundary: truth-table checker only handles propositional AST', () => {
   assert.throws(()=>checkEntailment({assumptions:[],conclusion:{op:'forall',body:V('P')}}),/unknown operator/);
+});
+
+
+test('cyclic AST rejected at the recursion boundary', () => {
+  const ast=NOT(V('P'));ast.arg=ast;
+  assert.throws(()=>checkEntailment({assumptions:[],conclusion:ast}),/formula depth limit exceeded/);
+});
+test('aggregate node budget covers assumptions and conclusion together', () => {
+  const leaves=Array.from({length:3000},(_,i)=>V('P'+(i%3)));
+  function balanced(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return AND(balanced(xs.slice(0,m)),balanced(xs.slice(m)));}
+  const big=balanced(leaves);
+  assert.throws(()=>checkEntailment({assumptions:[big,big],conclusion:V('P0')}),/claim AST node limit exceeded/);
+});
+test('truth-table work budget caps repeated formula evaluation', () => {
+  const tautologies=Array.from({length:1800},(_,i)=>IMP(V('P'+(i%16)),V('P'+(i%16))));
+  assert.throws(()=>checkEntailment({assumptions:tautologies,conclusion:IMP(V('P0'),V('P0'))}),/evaluation work limit exceeded/);
+});
+test('evaluator rejects inherited and non-Boolean assignments', () => {
+  assert.throws(()=>evaluate(V('toString'),{}),/missing Boolean assignment/);
+  assert.throws(()=>evaluate(V('P'),{P:'false'}),/assignment must be Boolean/);
+  assert.equal(evaluate(V('P'),{P:false}),false);
 });
 
 for (const t of tests) console.log(`${t.ok?'PASS':'FAIL'} ${t.name}${t.error?` — ${t.error}`:''}`);
