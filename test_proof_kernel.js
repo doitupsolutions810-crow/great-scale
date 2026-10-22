@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,validateFormula,check,checkBound,tautologyUnderContext,evalF}=require('./proof_kernel');
+const {MAX_ATOMS,MAX_EVAL_STEPS,MAX_NODES,MAX_ATOM_LENGTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,tautologyUnderContext,evalF}=require('./proof_kernel');
 const A='A',B='B',C='C';
 let passed=0,failed=0;const results=[];
 function test(name,fn){try{fn();passed++;results.push({name,ok:true})}catch(e){failed++;results.push({name,ok:false,error:e.message})}}
@@ -64,6 +64,14 @@ test('large truth-table formulas remain under one global evaluation budget',()=>
   const largeTautology=balancedOr(leaves);
   const context=[largeTautology,...Array.from({length:16},(_,i)=>['imp','P'+i,'P'+i])];
   assert.throws(()=>tautologyUnderContext(['imp','P0','P0'],context),/evaluation budget exceeded/);
+});
+
+
+test('oversized atom rejected before proof comparison',()=>{
+  assert.throws(()=>validateFormula('X'.repeat(MAX_ATOM_LENGTH+1)),/atom length limit exceeded/);
+});
+test('oversized rule label rejected',()=>{
+  assert.throws(()=>check({rule:'R'.repeat(MAX_RULE_LENGTH+1),formula:A}),/rule length limit exceeded/);
 });
 
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
