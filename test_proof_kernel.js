@@ -45,9 +45,8 @@ test('aggregate proof and embedded-formula node budget enforced',()=>{
   assert.throws(()=>check({rule:'andI',left:{rule:'assume',formula:big},right:{rule:'assume',formula:big}}),/input node limit exceeded/);
 });
 test('truth-table evaluation work budget enforced',()=>{
-  let conclusion='P0';
-  for(let i=1;i<16;i++)conclusion=['or',conclusion,'P'+i];
-  const context=Array.from({length:1800},()=>['imp','P0','P0']);
+  const conclusion=['imp','P0','P0'];
+  const context=Array.from({length:1800},(_,i)=>{const atom='P'+(i%16);return ['imp',atom,atom]});
   assert.throws(()=>tautologyUnderContext(conclusion,context),/evaluation budget exceeded/);
 });
 
