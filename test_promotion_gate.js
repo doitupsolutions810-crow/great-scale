@@ -18,7 +18,7 @@ const fixture = () => ({
     event: 'pull_request',
     id: 12345,
     runAttempt: 1,
-    headSha: MERGE_SHA,
+    headSha: SHA,
     conclusion: 'success',
   },
   job: {
@@ -80,7 +80,7 @@ test('current pull request head must equal candidate SHA', () => blocked(x => { 
 test('pull request head repository mismatch blocks', () => blocked(x => { x.pullRequest.headRepository = 'other/repository'; }));
 test('closed pull request blocks', () => blocked(x => { x.pullRequest.state = 'closed'; }));
 test('invalid pull request number blocks', () => blocked(x => { x.pullRequest.number = 0; }));
-test('tested merge SHA mismatch blocks', () => blocked(x => { x.run.headSha = 'b'.repeat(40); }));
+test('workflow API head SHA mismatch blocks', () => blocked(x => { x.run.headSha = 'b'.repeat(40); }));
 test('pull request merge-test SHA mismatch blocks', () => blocked(x => { x.pullRequest.mergeCommitSha = 'b'.repeat(40); }));
 test('run event other than pull_request blocks', () => blocked(x => { x.run.event = 'push'; }));
 test('missing or invalid run attempt blocks', () => blocked(x => { x.run.runAttempt = 0; }));
