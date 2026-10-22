@@ -79,10 +79,10 @@ function evaluatePromotionEvidence(evidence) {
   if (!env) return { eligible: false, state: 'BLOCKED', reasons };
 
   const candidate = plainDataRecord(env.candidate, ['repo', 'sha'], 'candidate', reasons);
-  const pullRequest = plainDataRecord(env.pullRequest, ['number', 'state', 'headRepository', 'headSha'], 'pull request snapshot', reasons);
-  const run = plainDataRecord(env.run, ['source', 'repository', 'workflowPath', 'id', 'headSha', 'conclusion'], 'run', reasons);
+  const pullRequest = plainDataRecord(env.pullRequest, ['number', 'state', 'headRepository', 'headSha', 'mergeCommitSha'], 'pull request snapshot', reasons);
+  const run = plainDataRecord(env.run, ['source', 'repository', 'workflowPath', 'event', 'id', 'runAttempt', 'headSha', 'conclusion'], 'run', reasons);
   const job = plainDataRecord(env.job, ['id', 'conclusion', 'runnerId', 'runnerName', 'logsUrl', 'steps'], 'job', reasons);
-  const receipt = plainDataRecord(env.receipt, ['schema', 'commit', 'overall', 'javascript_suite', 'python_descent_suite', 'github_run_id', 'github_repository'], 'receipt', reasons);
+  const receipt = plainDataRecord(env.receipt, ['schema', 'commit', 'node', 'npm', 'python', 'javascript_suite', 'python_descent_suite', 'overall', 'created_utc', 'github_run_id', 'github_run_attempt', 'github_repository', 'github_sha', 'runner_name'], 'receipt', reasons);
   const artifact = plainDataRecord(env.artifact, ['id', 'name', 'workflowRunId', 'expired'], 'artifact', reasons);
   if (!candidate || !pullRequest || !run || !job || !receipt || !artifact) {
     return { eligible: false, state: 'BLOCKED', reasons };
@@ -95,12 +95,15 @@ function evaluatePromotionEvidence(evidence) {
   if (!Number.isSafeInteger(pullRequest.number) || pullRequest.number <= 0) reasons.push('valid pull request number is required');
   if (pullRequest.state !== 'open') reasons.push('pull request must still be open at evidence collection time');
   if (typeof pullRequest.headRepository !== 'string' || pullRequest.headRepository !== candidate.repo) reasons.push('pull request head repository does not match candidate repository');
-  if (typeof pullRequest.headSha !== 'string' || !SHA_RE.test(pullRequest.headSha) || pullRequest.headSha !== candidate.sha) reasons.push('current pull request head SHA does not equal candidate SHA');
+  if (typeof pullRequest.headSha !== 'string' || !SHA_RE.test(pullRequest.headSha) || pullRequest.headSha !== candidate.sha) reasons.push('current pull request head SHA does not equal candidate head SHA');
+  if (typeof pullRequest.mergeCommitSha !== 'string' || !SHA_RE.test(pullRequest.mergeCommitSha)) reasons.push('current pull request merge-test SHA is missing or malformed');
   if (run.source !== 'github-actions-api') reasons.push('run evidence must come from the GitHub Actions API collector');
+  if (run.event !== 'pull_request') reasons.push('run must be associated with a pull_request event');
+  if (!Number.isSafeInteger(run.runAttempt) || run.runAttempt <= 0) reasons.push('valid workflow run attempt is required');
   if (typeof run.repository !== 'string' || run.repository !== candidate.repo) reasons.push('run repository does not match candidate repository');
   if (run.workflowPath !== '.github/workflows/ci.yml') reasons.push('expected CI workflow path is not bound to this run');
   if (!Number.isSafeInteger(run.id) || run.id <= 0) reasons.push('valid workflow run ID is required');
-  if (run.headSha !== candidate.sha) reasons.push('workflow run head SHA does not equal candidate SHA');
+  if (run.headSha !== pullRequest.mergeCommitSha) reasons.push('workflow run SHA does not equal the current pull request merge-test SHA');
   if (run.conclusion !== 'success') reasons.push('workflow run conclusion is not success');
   if (!Number.isSafeInteger(job.id) || job.id <= 0) reasons.push('valid job ID is required');
   if (job.conclusion !== 'success') reasons.push('test job conclusion is not success');
@@ -135,7 +138,13 @@ function evaluatePromotionEvidence(evidence) {
   }
 
   if (receipt.schema !== 'great-scale.verification-receipt/v1') reasons.push('verification receipt schema missing or unknown');
-  if (receipt.commit !== candidate.sha) reasons.push('receipt commit does not equal candidate SHA');
+  if (receipt.commit !== run.headSha) reasons.push('receipt commit does not equal the tested workflow SHA');
+  if (receipt.github_sha !== run.headSha) reasons.push('receipt GitHub SHA does not equal the tested workflow SHA');
+  if (String(receipt.github_run_attempt ?? '') !== String(run.runAttempt ?? '')) reasons.push('receipt run attempt does not match platform run attempt');
+  if (typeof receipt.created_utc !== 'string' || !Number.isFinite(Date.parse(receipt.created_utc))) reasons.push('receipt creation timestamp is missing or invalid');
+  for (const key of ['node', 'npm', 'python', 'runner_name']) {
+    if (typeof receipt[key] !== 'string' || !receipt[key].trim() || receipt[key] === 'unavailable') reasons.push('receipt runtime field is missing or unavailable: ' + key);
+  }
   if (receipt.overall !== 'passed' || receipt.javascript_suite !== 'passed' ||
       receipt.python_descent_suite !== 'passed') {
     reasons.push('receipt does not record both required suites and overall status as passed');
@@ -152,8 +161,8 @@ function evaluatePromotionEvidence(evidence) {
     eligible: true,
     state: 'ELIGIBLE_FOR_PROMOTION_REVIEW',
     reasons: [],
-    binding: { repository: candidate.repo, sha: candidate.sha, pullRequestNumber: pullRequest.number, runId: run.id, jobId: job.id, artifactId: artifact.id },
-    caveat: 'Structural gate only: the pull-request head is bound at collection time, but a later merge must recheck and require this exact head SHA; authenticated collection, test adequacy, human review, and deployment authorization remain separate obligations.',
+    binding: { repository: candidate.repo, pullRequestHeadSha: candidate.sha, testedMergeSha: run.headSha, pullRequestNumber: pullRequest.number, runId: run.id, runAttempt: run.runAttempt, jobId: job.id, artifactId: artifact.id },
+    caveat: 'Structural gate only: the pull-request head and merge-test SHA are separately bound at collection time. A later merge must recheck both identities; authenticated collection, test adequacy, human review, and deployment authorization remain separate obligations.',
   };
 }
 
