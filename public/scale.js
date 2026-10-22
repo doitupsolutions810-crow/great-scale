@@ -189,12 +189,17 @@ export const HYPOTHESIS = Object.freeze([
 
 export default {
   PHI,
+  PHI_INV,
   CONE,
+  RATE,
+  RESIDUAL_DIMS,
   FIXED,
   CONE_MATRIX,
   FIB_MATRIX,
   heat,
   involution,
+  modDist,
+  involutionIdentity,
   twoCycles,
   fixedPoint,
   softMap,
