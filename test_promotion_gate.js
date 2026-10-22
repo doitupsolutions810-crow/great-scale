@@ -58,6 +58,7 @@ test('complete evidence is eligible for review only', () => {
   assert.equal(r.eligible, true);
   assert.equal(r.state, 'ELIGIBLE_FOR_PROMOTION_REVIEW');
   assert.match(r.caveat, /Structural gate only/);
+  assert.match(r.caveat, /authenticated collection/);
 });
 test('missing evidence fails closed', () => {
   assert.equal(evaluatePromotionEvidence(null).eligible, false);
