@@ -48,7 +48,7 @@ def main():
     print("=== Great Scale descent test v0.4.2 ===")
     checks = []
 
-    ok = all(mod_dist(involution(involution(x)), x) < 1e-9 for x in [i * 0.25 for i in range(36)])
+    ok = all(mod_dist(involution(involution(x)), x) < 1e-9 for x in [i * 0.25 for i in range(37)])
     checks.append(("involution modular identity", ok))
 
     ok = all(involution(a) == b and involution(b) == a for a, b in [(1, 8), (2, 7), (3, 6), (4, 5)])
@@ -57,7 +57,7 @@ def main():
     ok = involution(0) == 0 and involution(9) == 0
     checks.append(("involution boundary 0≡9 → 0", ok))
 
-    fixed = [x for x in [i * 0.25 for i in range(37)] if mod_dist(involution(x), x) < 1e-9]
+    fixed = [x for x in [i * 0.25 for i in range(36)] if mod_dist(involution(x), x) < 1e-9]
     checks.append(("circle involution fixed points are 0 and 4.5", fixed == [0.0, 4.5]))
 
     checks.append(("circular residual vanishes at both fixed points", stress_residual(0) < 1e-9 and stress_residual(4.5) < 1e-9))
