@@ -11,11 +11,59 @@
   .views{position:absolute;bottom:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap}
   .views button{background:#122033;border:1px solid #2a3f55;color:#9ec9e8;padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
   .views button:hover{background:#1a2d44}
+  .risk-panel{position:absolute;top:12px;right:12px;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 100px);overflow:auto;box-sizing:border-box;padding:12px;background:rgba(10,14,23,.94);border:1px solid #2a3f55;border-radius:8px;font-size:12px;z-index:2}
+  .risk-panel h2{margin:0 0 8px;font-size:14px;color:#9ec9e8}
+  .risk-panel p{line-height:1.45;color:#aab8c5}
+  .risk-panel label{display:block;margin:8px 0 4px;color:#c9d6e3}
+  .risk-panel input,.risk-panel textarea,.risk-panel button{box-sizing:border-box;width:100%;padding:6px;background:#122033;border:1px solid #2a3f55;border-radius:5px;color:#c9d6e3;font:inherit}
+  .risk-panel textarea{resize:vertical}
+  .risk-panel button{margin-top:10px;color:#9ec9e8;cursor:pointer}
+  #risk-result{white-space:pre-wrap;overflow-wrap:anywhere;color:#d6e6f3}
 </style>
 </head>
 <body>
 <canvas id="c" width="1200" height="800"></canvas>
 <div class="hud">Great Scale v0.4.2 · three embeddings of one state</div>
+<section class="risk-panel" aria-labelledby="risk-title">
+  <h2 id="risk-title">Provisional log-loss certificate</h2>
+  <p>Assumes independent groups, repeated Bernoulli trials, and a justified support bound. The support gap is not inferred from these counts. The model uses f(P) = −a ln(1 − P), which increases with P; confirm P's meaning before interpreting this as risk or reliability.</p>
+  <p>The moment interval treats the entered population mean and variance as exact. Its endpoints are sharp over all distributions within the declared support; it is conditional, not a confidence interval.</p>
+  <form id="risk-form">
+    <label for="risk-successes">Observed Bernoulli event counts (comma-separated groups)</label>
+    <textarea id="risk-successes" rows="2" required placeholder="e.g. 500, 510, 495, 505"></textarea>
+    <label for="risk-trials">Trials per group</label>
+    <input id="risk-trials" type="number" min="1" step="1" value="1000" required />
+    <label for="risk-gap">Declared support gap δ (P ≤ 1 − δ)</label>
+    <input id="risk-gap" type="number" min="0.000001" max="0.999999" step="any" value="0.1" required />
+    <label for="risk-confidence">Confidence (0–1)</label>
+    <input id="risk-confidence" type="number" min="0.000001" max="0.999999" step="any" value="0.95" required />
+    <label for="risk-scale">Loss scale a</label>
+    <input id="risk-scale" type="number" min="0.000001" step="any" value="1" required />
+    <label for="risk-mean">Declared population mean of P</label>
+    <input id="risk-mean" type="number" min="0" max="0.999999" step="any" value="0.5" required />
+    <label for="risk-variance">Declared population variance of P</label>
+    <input id="risk-variance" type="number" min="0" step="any" value="0.04" required />
+    <label for="risk-limit">Optional modeled-loss limit</label>
+    <input id="risk-limit" type="number" min="0" step="any" placeholder="Leave blank to show interval only" />
+    <button type="submit">Calculate certificate</button>
+  </form>
+  <p id="risk-result" aria-live="polite">Enter observations to calculate a conditional interval.</p>
+  <hr />
+  <h2 id="descent-title">Robust descent certificate</h2>
+  <p>Assumes each step adds disturbance |w| ≤ ε and clips the state back to [1, 8]. This bounds simulated map error; ε is an assumption, not a measured noise level.</p>
+  <form id="descent-form">
+    <label for="descent-residual">Initial residual R₀ (0–7)</label>
+    <input id="descent-residual" type="number" min="0" max="7" step="any" value="5" required />
+    <label for="descent-k">Contraction k (|k| &lt; 1)</label>
+    <input id="descent-k" type="number" min="-0.999999" max="0.999999" step="any" value="0.5" required />
+    <label for="descent-noise">Per-step disturbance bound ε</label>
+    <input id="descent-noise" type="number" min="0" step="any" value="0.1" required />
+    <label for="descent-steps">Steps</label>
+    <input id="descent-steps" type="number" min="0" step="1" value="10" required />
+    <button type="submit">Calculate descent bound</button>
+  </form>
+  <p id="descent-result" aria-live="polite">Enter bounds to calculate a conditional certificate.</p>
+</section>
 <div class="views">
   <button onclick="GreatScaleAtlas.setView('Watch')">Watch</button>
   <button onclick="GreatScaleAtlas.setView('Observer')">Observer</button>
@@ -23,6 +71,8 @@
   <button onclick="GreatScaleAtlas.setView('Adjacent')">Adjacent</button>
   <button onclick="GreatScaleAtlas.setView('Down')">Down</button>
 </div>
+<script src="./risk-certificate.js"></script>
+<script src="./descent-certificate.js"></script>
 <script type="module">
   import { stateAt, heat, FIXED, softContract, stressResidual, HYPOTHESIS } from './scale.js';
   import './atlas.js';
@@ -43,6 +93,76 @@
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  const riskForm = document.getElementById('risk-form');
+  const riskResult = document.getElementById('risk-result');
+  riskForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    try {
+      const rawCounts = document.getElementById('risk-successes').value.trim();
+      const countTokens = rawCounts.split(/[\s,]+/);
+      if (!rawCounts || countTokens.some((token) => !/^\d+$/.test(token))) {
+        throw new Error('Enter whole-number success counts separated by commas or spaces.');
+      }
+      const successes = countTokens.map(Number);
+      const supportGap = Number(document.getElementById('risk-gap').value);
+      const scale = Number(document.getElementById('risk-scale').value);
+      const certificate = window.GreatScaleRisk.computeRiskCertificate({
+        successes,
+        trialsPerGroup: Number(document.getElementById('risk-trials').value),
+        supportGap,
+        confidence: Number(document.getElementById('risk-confidence').value),
+        scale,
+      });
+      const momentBound = window.GreatScaleRisk.computeMomentLogLossBound({
+        mean: Number(document.getElementById('risk-mean').value),
+        variance: Number(document.getElementById('risk-variance').value),
+        supportGap,
+        scale,
+      });
+      const limitField = document.getElementById('risk-limit').value.trim();
+      const status = limitField === ''
+        ? 'No threshold decision requested.'
+        : window.GreatScaleRisk.classifyRisk(certificate, Number(limitField));
+      riskResult.textContent = [
+        `Groups: ${certificate.groupCount} · confidence: ${(certificate.confidence * 100).toFixed(1)}%`,
+        `Expected modeled log-loss interval: [${certificate.lowerBound.toFixed(6)}, ${certificate.upperBound.toFixed(6)}]`,
+        `Error radii — measurement: ${certificate.measurementRadius.toFixed(6)}; group sampling: ${certificate.samplingRadius.toFixed(6)}`,
+        `Sharp moment-based population interval (exact moments + declared support; not confidence): [${momentBound.lowerBound.toFixed(6)}, ${momentBound.upperBound.toFixed(6)}]`,
+        `Great Scale placement: ${momentBound.greatScaleStatus}`,
+        `Sharp lower witness: ${momentBound.lowerExtremizer.map(point => `${point.probability.toFixed(6)} at P=${point.value.toFixed(6)}`).join(', ')}`,
+        `Sharp upper witness: ${momentBound.upperExtremizer.map(point => `${point.probability.toFixed(6)} at P=${point.value.toFixed(6)}`).join(', ')}`,
+        `Upper-witness mass at current support boundary: ${momentBound.boundaryMass.toFixed(6)} · as δ→0, sharp upper = C ln(1/δ) + O(1), C=${momentBound.asymptoticLogLossCoefficient.toFixed(6)} (diverges iff variance > 0)`,
+        `Other valid upper bounds — chord: ${momentBound.chordUpperBound.toFixed(6)}; curvature: ${momentBound.curvatureUpperBound.toFixed(6)}; second-moment series: ${momentBound.secondMomentUpperBound.toFixed(6)}`,
+        `Assumed P ≤ ${certificate.supportMaximum.toFixed(6)} · maximum modeled loss: ${certificate.maximumLoss.toFixed(6)}`,
+        `Sampling-model classification (not evidence verification or system authorization): ${status}`,
+      ].join('\n');
+    } catch (error) {
+      riskResult.textContent = `Cannot certify: ${error.message}`;
+    }
+  });
+
+  const descentForm = document.getElementById('descent-form');
+  const descentResult = document.getElementById('descent-result');
+  descentForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    try {
+      const certificate = window.GreatScaleDescent.computeRobustDescentCertificate({
+        initialResidual: Number(document.getElementById('descent-residual').value),
+        k: Number(document.getElementById('descent-k').value),
+        disturbanceBound: Number(document.getElementById('descent-noise').value),
+        steps: Number(document.getElementById('descent-steps').value),
+      });
+      descentResult.textContent = [
+        `After ${certificate.steps} steps: R ≤ ${certificate.residualUpperBound.toFixed(6)} · normalized ≤ ${certificate.normalizedResidualUpperBound.toFixed(6)}`,
+        `Long-run bound: R ≤ ${certificate.ultimateResidualUpperBound.toFixed(6)} · normalized ≤ ${certificate.normalizedUltimateResidualUpperBound.toFixed(6)}`,
+        `Assumptions: |k|=${certificate.contraction} · |w|≤${certificate.disturbanceBound} · projection to [1, 8] after every step.`,
+        'Conditional software-model certificate; not an empirical noise estimate or physical claim.',
+      ].join('\n');
+    } catch (error) {
+      descentResult.textContent = `Cannot certify: ${error.message}`;
+    }
+  });
 </script>
 </body>
 </html>
