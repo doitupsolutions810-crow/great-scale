@@ -29,7 +29,7 @@ function readDataObject(value, label) {
     if (!descriptor.enumerable) {
       throw new Error(`${label} fields must be enumerable`);
     }
-    out[key] = descriptor.value;
+    Object.defineProperty(out, key, { value: descriptor.value, enumerable: true, configurable: true, writable: true });
   }
   return out;
 }
