@@ -82,5 +82,13 @@ test('all required step names are unique in the contract', () => {
 test('gate is not an auto-merge instruction', () => {
   assert.equal(evaluatePromotionEvidence(fixture()).state, 'ELIGIBLE_FOR_PROMOTION_REVIEW');
 });
+
+test('failed non-required workflow step also blocks', () => blocked(x => { x.job.steps.push({ name: 'Unexpected diagnostic step', conclusion: 'failure' }); }));
+test('duplicate step names block instead of taking last value', () => blocked(x => { x.job.steps.push({ ...x.job.steps[0] }); }));
+test('malformed platform step record blocks', () => blocked(x => { x.job.steps.push({ conclusion: 'success' }); }));
+test('malformed full commit SHA blocks', () => blocked(x => { x.candidate.sha = 'abc'; }));
+test('runner ID missing blocks', () => blocked(x => { delete x.job.runnerId; }));
+test('platform run without SHA blocks', () => blocked(x => { delete x.run.headSha; }));
+
 console.log(JSON.stringify({ passed, failed, total: passed + failed, results }, null, 2));
 if (failed) process.exitCode = 1;
