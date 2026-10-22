@@ -1,0 +1,18 @@
+{
+  "rung": "CXXXIII",
+  "population": 200,
+  "observed": 80,
+  "missing": 120,
+  "robust_bounds": [0.215, 0.47],
+  "robust_width": 0.255,
+  "global_bounds": [0.11, 0.71],
+  "global_width": 0.6,
+  "width_reduction_fraction": 0.575,
+  "width_condition": {
+    "robust_width": 0.255,
+    "global_width": 0.6,
+    "strictly_tighter": true,
+    "equal_width": false
+  },
+  "status": "deterministic synthetic example; support validity is assumed"
+}
