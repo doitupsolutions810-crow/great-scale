@@ -41,17 +41,17 @@ record = {
 }
 with open(os.environ["VERIFY_RECEIPT"], "w", encoding="utf-8") as f:
     json.dump(record, f, indent=2, sort_keys=True)
-    f.write("\\n")
+    f.write("\n")
 summary = os.environ.get("GITHUB_STEP_SUMMARY")
 if summary:
     with open(summary, "a", encoding="utf-8") as f:
-        f.write("## Great Scale verification receipt\\n\\n")
-        f.write(f"- Commit: `{record['commit']}`\\n")
-        f.write(f"- JavaScript suite: **{record['javascript_suite']}**\\n")
-        f.write(f"- Robust-feasibility suite: **{record['robust_feasibility_suite']}**\\n")
-        f.write(f"- Python descent suite: **{record['python_descent_suite']}**\\n")
-        f.write(f"- Overall: **{record['overall']}**\\n")
-        f.write(f"- Receipt: `{os.environ['VERIFY_RECEIPT']}`\\n")
+        f.write("## Great Scale verification receipt\n\n")
+        f.write(f"- Commit: `{record['commit']}`\n")
+        f.write(f"- JavaScript suite: **{record['javascript_suite']}**\n")
+        f.write(f"- Robust-feasibility suite: **{record['robust_feasibility_suite']}**\n")
+        f.write(f"- Python descent suite: **{record['python_descent_suite']}**\n")
+        f.write(f"- Overall: **{record['overall']}**\n")
+        f.write(f"- Receipt: `{os.environ['VERIFY_RECEIPT']}`\n")
 PY
   echo "verification_receipt=$VERIFY_RECEIPT"
   echo "verification_status=$VERIFY_EXIT_STATUS"
