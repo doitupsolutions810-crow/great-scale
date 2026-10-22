@@ -41,8 +41,14 @@ export function twoCycles() {
   ];
 }
 
+/** Contraction target (not the full fixed set of the circle involution). */
 export function fixedPoint() {
   return FIXED;
+}
+
+/** Fixed points of x ↦ −x mod 9 on the ninefold circle: 0 and 4.5. */
+export function involutionFixedPoints() {
+  return [0, 4.5];
 }
 
 /**
@@ -65,7 +71,7 @@ export function softMap(x) {
 
 /**
  * Stress residual: distance between a point and its involution image.
- * Zero at the fixed point; maximal on two-cycle extremes.
+ * Zero at both involution fixed points (0 and 4.5); maximal on two-cycle extremes.
  * Computational "moment of now" between continuous position and discrete structure.
  */
 export function stressResidual(x) {
@@ -170,7 +176,7 @@ export const HYPOTHESIS = Object.freeze({
   id: 'great-scale.main',
   statements: [
     'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
-    'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
+    'f(x)=(9-(x mod 9)) mod 9 has circle fixed points 0 and 4.5, plus two-cycles 1↔8,2↔7,3↔6,4↔5',
     'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point',
     'Stress residual is the circular distance d₉(x,f(x)); interpret it on the ninefold circle',
     'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
@@ -186,6 +192,7 @@ export default {
   involution,
   twoCycles,
   fixedPoint,
+  involutionFixedPoints,
   softMap,
   softContract,
   stressResidual,
