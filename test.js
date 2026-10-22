@@ -1,7 +1,7 @@
 const assert = require('assert');
 const {
   PHI, CONE, FIXED, heat, involution, involutionIdentity, modDist,
-  twoCycles, fixedPoint, softMap, softContract, stressResidual,
+  twoCycles, fixedPoint, involutionFixedPoints, softMap, softContract, stressResidual,
   descentStep, stateAt, DescentEngine, HYPOTHESIS,
 } = require('./public/scale.cjs');
 
@@ -42,9 +42,10 @@ test('two-cycles preserved', () => {
     assert.strictEqual(involution(b), a);
   }
 });
-test('fixed point 4.5', () => {
+test('contraction target is 4.5; circle involution fixed set is {0, 4.5}', () => {
   assert.strictEqual(fixedPoint(), 4.5);
-  assert.ok(Math.abs(involution(4.5) - 4.5) < 1e-9);
+  assert.deepStrictEqual(involutionFixedPoints(), [0, 4.5]);
+  for (const x of involutionFixedPoints()) assert.ok(modDist(involution(x), x) < 1e-9);
 });
 
 test('softMap is involution: softMap(softMap(x))=x', () => {
@@ -53,7 +54,10 @@ test('softMap is involution: softMap(softMap(x))=x', () => {
   }
 });
 test('softMap(4.5)=4.5', () => assert.ok(Math.abs(softMap(4.5) - 4.5) < 1e-9));
-test('stress residual zero at fixed point', () => assert.ok(stressResidual(4.5) < 1e-9));
+test('stress residual vanishes at both circle fixed points', () => {
+  assert.ok(stressResidual(0) < 1e-9);
+  assert.ok(stressResidual(4.5) < 1e-9);
+});
 test('stress residual is circular distance to involution image', () => {
   assert.strictEqual(stressResidual(0), 0);
   assert.strictEqual(stressResidual(9), 0);
