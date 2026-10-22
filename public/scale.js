@@ -182,7 +182,7 @@ export const HYPOTHESIS = Object.freeze([
       'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
       'Never claim certainty — always another perspective',
       'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
-      'CONE-matrix M=[[2,-1],[-1,1]] has char poly x²-3x+1; scalar CONE and matrix M are the same contraction rate; M³ = CONE³ = three steps',
+      'CONE-matrix M=[[2,-1],[-1,1]] has characteristic polynomial x²-3x+1 and eigenvalues φ² and CONE=φ⁻²; one eigendirection expands and one contracts, so M is not a global contraction by CONE',
     ],
   },
 ]);
