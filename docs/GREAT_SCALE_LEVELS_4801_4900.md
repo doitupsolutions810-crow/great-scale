@@ -11,7 +11,8 @@ The mitigation has two distinct targets: eliminate drift between local and hoste
 - The truth-table checker now requires the assumptions value to be an ordinary dense array with the standard Array prototype and only numeric own entries plus `length`. It rejects sparse arrays, custom array properties, and custom prototypes.
 - The sparse-array regression was updated to accept the stricter schema rejection. During adversarial review, the first equivalent harness exposed a mismatch between the old test's expected error and the new earlier schema gate. The expectation was corrected, and the subsequent reference harness passed all 15 checks.
 - Added `scripts/verify-local.sh`, a single canonical entry point that checks Node 20 and Python 3.11, runs `npm test` (including `test_truth_table_kernel.js`), then runs `python3 test_descent.py`, stopping on any failure.
-- Updated `.github/workflows/ci.yml` to invoke the same canonical script. This reduces local/CI command drift; it does not itself make a runner available.
+- Updated `.github/workflows/ci.yml` to invoke the same canonical script and upload its receipt artifact even on test failure. This reduces local/CI command drift and preserves outcome evidence when a runner actually executes; it does not itself make a runner available.
+- The receipt schema `great-scale.verification-receipt/v1` binds the commit, runtime versions, JS/Python suite states, overall exit status, UTC creation time, and GitHub run metadata. The script preserves a failing exit code after writing the receipt.
 
 ## Executed reference test
 
@@ -32,11 +33,11 @@ The equivalent JavaScript adversarial harness passed **15/15 checks**:
 14. custom assumption-array keys rejected;
 15. custom assumption-array prototype rejected.
 
-This is a reference execution of equivalent checker logic, not execution of the committed repository's full test suite. A separate 10/10 repository-source/configuration inspection confirmed the guards and test-command wiring are present on the branch.
+This is a reference execution of equivalent checker logic, not execution of the committed repository's full test suite. A separate 10/10 repository-source/configuration inspection confirmed the guards and test-command wiring are present on the branch. The current equivalent-logic harness passed 15/15; it does not execute the shell script, npm suite, or Python suite.
 
 ## Hosted execution remains unresolved
 
-The latest inspected hosted run still has a failed job with no step summaries or log URL. The runner issue is external to the source-level checks. The workflow is already manually dispatchable, but the available GitHub connector does not expose a workflow-dispatch operation, and the failed run provides no usable logs to diagnose billing or authorization.
+The latest inspected hosted run for the preceding head still had a failed job with no step summaries or log URL. Further commits now add a receipt artifact step, but no runner execution has been observed for the updated head yet. The runner issue is external to the source-level checks. The workflow is already manually dispatchable, but the available GitHub connector does not expose a workflow-dispatch operation, and the failed run provides no usable logs to diagnose billing or authorization.
 
 Do not claim that the local fallback is enabled or that hosted CI is fixed. To close this connection:
 1. Inspect GitHub Actions/Billing diagnostics in repository/account settings.
