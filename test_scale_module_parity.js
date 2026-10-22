@@ -43,7 +43,12 @@ const cjs = require('./public/scale.cjs');
     assert.deepEqual(esm.heat(h), cjs.heat(h), 'heat differs at h=' + h);
   }
 
+  assert.equal(esm.stressResidual(0), 0, 'circle origin residual must be zero');
+  assert.equal(esm.stressResidual(9), 0, 'equivalent boundary representative must have zero residual');
+  assert.equal(esm.stressResidual(1), 2, 'residual must use shortest-arc distance on the ninefold circle');
   for (const x of [-1, 0, 1, 4.5, 8, 9, 10]) {
+    assert.ok(Math.abs(esm.stressResidual(x + 9) - esm.stressResidual(x)) < 1e-12,
+      'circular residual must be periodic at x=' + x);
     for (const name of ['involution', 'modDist', 'involutionIdentity',
       'softContract', 'softMap', 'stressResidual', 'descentStep']) {
       const args = name === 'modDist' ? [x, 4.5] : [x];
