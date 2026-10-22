@@ -35,6 +35,7 @@ function sameFormulaMultiset(a,b,budget) {
   for (const formula of a) {
     let found = -1;
     for (let i=0;i<b.length;i++) {
+      tickKernelWork(budget);
       if (!used[i] && formulaEquals(formula,b[i],budget)) { found=i; break; }
     }
     if (found < 0) return false;
