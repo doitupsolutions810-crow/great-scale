@@ -163,5 +163,23 @@ test('disjunction introduction copies auxiliary formula before returning result'
   assert.deepEqual(result.conclusion,['or',['and',A,B],A]);
 });
 
+
+test('public formula validator does not accept caller-controlled node budgets',()=>{
+  function full(depth){return depth===0?A:['and',full(depth-1),full(depth-1)];}
+  const large=full(13);
+  assert.throws(()=>validateFormula(large,0,{nodes:-1000000000}),/input node limit exceeded/);
+});
+test('public proof checker does not accept caller-controlled node budgets',()=>{
+  function proof(depth){return depth===0?assume(A):{rule:'andI',left:proof(depth-1),right:proof(depth-1)};}
+  assert.throws(()=>check(proof(13),{nodes:-1000000000}),/input node limit exceeded/);
+});
+test('public evaluator ignores caller-supplied work-counter objects',()=>{
+  let reads=0,writes=0;
+  const steps={get count(){reads++;return 0;},set count(_){writes++;}};
+  assert.equal(evalF(A,{A:true},steps),true);
+  assert.equal(reads,0);
+  assert.equal(writes,0);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
