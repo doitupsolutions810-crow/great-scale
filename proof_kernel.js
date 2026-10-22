@@ -105,7 +105,9 @@ function atoms(formula,out=new Set(),budget={nodes:0}) {
 function evalF(formula,env,steps={count:0}) {
   validateFormula(formula);
   function tick(){if(++steps.count>MAX_EVAL_STEPS)throw new Error('truth-table evaluation budget exceeded');}
+  function tick(){if(++steps.count>MAX_EVAL_STEPS)throw new Error('truth-table evaluation budget exceeded');}
   function walk(f) {
+    tick();
     if(typeof f==='string') return !!env[f];
     const [op,a,b]=f;
     if(op==='and') return walk(a)&&walk(b);
