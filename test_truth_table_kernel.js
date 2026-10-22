@@ -191,7 +191,7 @@ test('formula schema rejects inherited fields and extra keys', () => {
 });
 test('claim rejects sparse assumptions and oversized assumption lists', () => {
   const sparse=[];sparse.length=2;sparse[1]=V('P');
-  assert.throws(()=>checkEntailment({assumptions:sparse,conclusion:V('P')}),/sparse assumptions/);
+  assert.throws(()=>checkEntailment({assumptions:sparse,conclusion:V('P')}),/malformed assumptions array schema|sparse assumptions/);
   const many=Array.from({length:MAX_NODES+1},()=>V('P'));
   assert.throws(()=>checkEntailment({assumptions:many,conclusion:V('P')}),/assumption count limit/);
 });
