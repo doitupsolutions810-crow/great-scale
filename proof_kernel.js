@@ -86,12 +86,13 @@ function freezeResult(value) {
   return value;
 }
 
-function validateFormulaInternal(formula, depth=0, budget={nodes:0}) {
+function validateFormulaInternal(formula, depth=0, budget={nodes:0}, atomSet=null) {
   if (depth > MAX_DEPTH) throw new Error('formula depth limit exceeded');
   if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
   if (typeof formula === 'string') {
     if (formula.length === 0) throw new Error('empty atom');
     if (formula.length > MAX_ATOM_LENGTH) throw new Error('atom length limit exceeded');
+    if (atomSet) atomSet.add(formula);
     return true;
   }
   if (!Array.isArray(formula)) throw new Error('malformed formula AST');
@@ -99,8 +100,8 @@ function validateFormulaInternal(formula, depth=0, budget={nodes:0}) {
   if (parts.length !== 3) throw new Error('malformed formula AST');
   const [op,left,right] = parts;
   if (!['and','or','imp'].includes(op)) throw new Error('unknown formula operator');
-  validateFormulaInternal(left,depth+1,budget);
-  validateFormulaInternal(right,depth+1,budget);
+  validateFormulaInternal(left,depth+1,budget,atomSet);
+  validateFormulaInternal(right,depth+1,budget,atomSet);
   return true;
 }
 function validateFormula(formula) {
@@ -229,12 +230,14 @@ function evalF(formula,env) {
 }
 function tautologyUnderContext(conclusion,context) {
   const inputBudget={nodes:0};
-  validateFormulaInternal(conclusion,0,inputBudget);
+  const namesSet=new Set();
+  validateFormulaInternal(conclusion,0,inputBudget,namesSet);
   if(!Array.isArray(context)) throw new Error('context must be an array');
   const contextValues=readDataArray(context, 'context');
-  for(const f of contextValues) validateFormulaInternal(f,0,inputBudget);
-  const collect=f=>{const out=new Set();(function walk(x){if(typeof x==='string')out.add(x);else{walk(x[1]);walk(x[2]);}})(f);return out;};
-  const names=[...new Set([...collect(conclusion),...contextValues.flatMap(f=>[...collect(f)])])];
+  for(const f of contextValues) validateFormulaInternal(f,0,inputBudget,namesSet);
+  // Atom discovery is fused into the bounded validation traversal: no second
+  // recursive walk over attacker-controlled formulas is needed.
+  const names=[...namesSet];
   if(names.length>MAX_ATOMS) throw new Error('truth-table atom limit exceeded');
   const steps={count:0};
   for(let mask=0;mask<(1<<names.length);mask++){
