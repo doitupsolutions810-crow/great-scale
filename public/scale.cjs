@@ -47,7 +47,8 @@ function softContract(x, k = 0.5) {
 function softMap(x) { return 9 - x; }
 // Zero at both circle-involution fixed points: 0 and 4.5.
 function stressResidual(x) { return modDist(x, involution(x)); }
-function descentStep(x, k = 0.5) { return softContract(x, k); }
+/** One circle-domain descent step; equivalent representatives x and x+9 agree. */
+function descentStep(x, k = 0.5) { return softContract(canonicalizeCircleCoordinate(x), k); }
 function stateAt(t, rate = RATE) {
   const phase = (t * rate) % 1;
   const h = 0.5 - 0.5 * Math.cos(2 * Math.PI * phase);
