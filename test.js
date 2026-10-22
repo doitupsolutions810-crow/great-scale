@@ -1,9 +1,13 @@
-const assert = require('assert');
+const assert = require('node:assert/strict');
 const {
   PHI, CONE, FIXED, heat, involution, involutionIdentity, modDist,
   twoCycles, fixedPoint, softMap, softContract, stressResidual,
   descentStep, stateAt, DescentEngine, HYPOTHESIS,
 } = require('./public/scale.cjs');
+const {
+  TAU, PSI, residualStep, agentResidualStep, healthCheck,
+  residualFlow, matrixPower, verifyResidualOps,
+} = require('./public/residual-ops.cjs');
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -17,6 +21,7 @@ function test(name, fn) {
   }
 }
 
+// ── geometry v0.4.2 ──────────────────────────────────────────
 test('PHI golden ratio', () => assert.ok(Math.abs(PHI - 1.618034) < 1e-5));
 test('CONE = φ⁻² ≈ 0.382', () => assert.ok(Math.abs(CONE - 0.381966) < 1e-5));
 test('heat(0.5) = 0.25', () => assert.strictEqual(heat(0.5), 0.25));
@@ -54,28 +59,35 @@ test('softMap is involution: softMap(softMap(x))=x', () => {
 });
 test('softMap(4.5)=4.5', () => assert.ok(Math.abs(softMap(4.5) - 4.5) < 1e-9));
 test('stress residual zero at fixed point', () => assert.ok(stressResidual(4.5) < 1e-9));
+test('stress residual respects circle boundary 0 ≡ 9', () => {
+  assert.ok(stressResidual(0) < 1e-9);
+  assert.ok(stressResidual(9) < 1e-9);
+});
+test('stress residual is periodic under x → x + 9', () => {
+  assert.ok(Math.abs(stressResidual(1.25) - stressResidual(10.25)) < 1e-9);
+});
 test('stress residual positive off fixed point', () => assert.ok(stressResidual(2) > 0.5));
 
 test('soft contraction converges to 4.5 from 1.0', () => {
   let x = 1.0;
-  for (let i = 0; i < 40; i++) x = softContract(x, 0.5);
+  for (let i = 0; i < 40; i++) x = softContract(x, CONE);
   assert.ok(Math.abs(x - 4.5) < 1e-6, 'x=' + x);
 });
 test('soft contraction converges from 8.0', () => {
   let x = 8.0;
-  for (let i = 0; i < 40; i++) x = softContract(x, 0.5);
+  for (let i = 0; i < 40; i++) x = softContract(x, CONE);
   assert.ok(Math.abs(x - 4.5) < 1e-6, 'x=' + x);
 });
 test('soft contraction multi-start', () => {
   for (const start of [0.5, 2, 3, 6, 8.5]) {
     let x = start;
-    for (let i = 0; i < 50; i++) x = softContract(x, 0.5);
+    for (let i = 0; i < 50; i++) x = softContract(x, CONE);
     assert.ok(Math.abs(x - 4.5) < 1e-6, 'start=' + start + ' x=' + x);
   }
 });
 
 test('DescentEngine converges', () => {
-  const eng = new DescentEngine({ start: 1.0, k: 0.5 });
+  const eng = new DescentEngine({ start: 1.0, k: CONE });
   for (let i = 0; i < 40; i++) eng.tick();
   assert.ok(Math.abs(eng.x - 4.5) < 1e-6, 'engine x=' + eng.x);
   assert.ok(eng.t === 40);
@@ -95,9 +107,67 @@ test('stateAt: λ may be below CONE at low heat (allowed)', () => {
 });
 
 test('hypothesis present', () => {
-  assert.ok(HYPOTHESIS.statements.length >= 4);
-  assert.ok(HYPOTHESIS.statements.some((s) => s.includes('h(1-h)')));
+  assert.ok(HYPOTHESIS[0].statements.length >= 4);
+  assert.ok(HYPOTHESIS[0].statements.some((s) => s.includes('h(1-h)')));
 });
 
-console.log('\ngreat-scale tests: ' + passed + ' passed, ' + failed + ' failed');
+// ── residual ops v0.5.0 ──────────────────────────────────────
+test('TAU = 2·log φ', () => assert.ok(Math.abs(TAU - 2 * Math.log(PHI)) < 1e-12));
+test('PSI = −1/φ', () => assert.ok(Math.abs(PSI + 1 / PHI) < 1e-12));
+test('CONE = PSI²', () => assert.ok(Math.abs(CONE - PSI * PSI) < 1e-12));
+test('residualStep contracts', () => assert.ok(residualStep(1) < 1 && residualStep(1) > 0));
+test('agentResidualStep carries residual+dual', () => {
+  const s = agentResidualStep({ residual: 1 });
+  assert.ok(s.residual !== undefined && s.dual !== undefined);
+});
+test('healthCheck: product = norm', () => {
+  const s = agentResidualStep({ residual: 1 });
+  assert.ok(healthCheck(s).ok);
+});
+test('20-step norm conservation', () => {
+  let r = 1, d = 1;
+  for (let i = 0; i < 20; i++) { r = residualStep(r); d = 1 / r; }
+  assert.ok(Math.abs(r * d - 1) < 1e-12);
+});
+test('residualFlow at t=0', () => assert.ok(Math.abs(residualFlow(1, 0) - 1) < 1e-12));
+test('residualFlow contracts', () => assert.ok(residualFlow(1, 1) < 1));
+test('matrixPower(3) = [[13,−8],[−8,5]]', () => {
+  const M = matrixPower(3);
+  assert.strictEqual(M[0][0], 13);
+  assert.strictEqual(M[1][1], 5);
+  assert.strictEqual(M[0][1], -8);
+  assert.strictEqual(M[1][0], -8);
+  assert.strictEqual(M[0][0] * M[1][1] - M[0][1] * M[1][0], 1);
+});
+test('matrixPower(0) = identity', () => {
+  const M = matrixPower(0);
+  assert.deepStrictEqual(M, [[1, 0], [0, 1]]);
+});
+test('matrixPower(1) = M', () => {
+  const M = matrixPower(1);
+  assert.deepStrictEqual(M, [[2, -1], [-1, 1]]);
+});
+test('matrixPower(6): F13 on diagonal', () => {
+  const M = matrixPower(6);
+  assert.strictEqual(M[0][0], 233); // F(13)
+  assert.strictEqual(M[0][1], -144); // -F(12)
+});
+test('verifyResidualOps SC1–SC7', () => {
+  const v = verifyResidualOps();
+  assert.ok(v.allPass, v.checks.filter((c) => !c.pass).map((c) => c.id).join(', '));
+  assert.strictEqual(v.passed, v.total);
+});
+test('default softContract k is CONE not 0.5', () => {
+  // softContract(x) with no k uses CONE
+  const x = softContract(8.0);
+  const manual = 4.5 + CONE * (8.0 - 4.5);
+  assert.ok(Math.abs(x - manual) < 1e-12);
+  assert.ok(Math.abs(x - (4.5 + 0.5 * 3.5)) > 1e-9);
+});
+test('DescentEngine default k = CONE', () => {
+  const eng = new DescentEngine({ start: 1.0 });
+  assert.ok(Math.abs(eng.k - CONE) < 1e-12);
+});
+
+console.log('\ngreat-scale tests: ' + passed + ' passed, ' + failed + ' failed);
 process.exit(failed ? 1 : 0);

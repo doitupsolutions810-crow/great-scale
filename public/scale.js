@@ -1,4 +1,4 @@
-/** Great Scale laws + discrete involution — geometry v0.4.2 */
+/** Great Scale laws + discrete involution — geometry v0.5.1 */
 export const PHI = (1 + Math.sqrt(5)) / 2;
 export const PHI_INV = PHI - 1;
 /** Cone floor φ⁻² ≈ 0.382 — Ψ = CONE + S never below CONE */
@@ -6,6 +6,11 @@ export const CONE = PHI_INV * PHI_INV;
 export const RATE = 0.85;
 export const RESIDUAL_DIMS = [4, 3, 1];
 export const FIXED = 4.5;
+
+/** CONE-matrix: companion of x²-3x+1. Eigenvalues φ², CONE. det +1. */
+export const CONE_MATRIX = [[2, -1], [-1, 1]];
+/** Fibonacci companion: eigenvalues φ, ψ. det -1. */
+export const FIB_MATRIX = [[1, 1], [1, 0]];
 
 export function heat(h) {
   return h * (1 - h);
@@ -47,11 +52,11 @@ export function fixedPoint() {
 
 /**
  * Soft contraction toward the fixed point x*=4.5.
- * |k| < 1 guarantees convergence. Default k=0.5.
+ * |k| < 1 guarantees convergence. Default k = CONE = φ⁻² (residual rate).
  * This is the descent dynamics — not a blend with the involution
  * (which preserves distance from 4.5 and yields two-cycles).
  */
-export function softContract(x, k = 0.5) {
+export function softContract(x, k = CONE) {
   return FIXED + k * (x - FIXED);
 }
 
@@ -69,17 +74,17 @@ export function softMap(x) {
  * Computational "moment of now" between continuous position and discrete structure.
  */
 export function stressResidual(x) {
-  return Math.abs(x - involution(x));
+  return modDist(x, involution(x));
 }
 
-/** One descent step: soft contraction toward 4.5 */
-export function descentStep(x, k = 0.5) {
+/** One descent step: soft contraction toward 4.5 at residual rate CONE */
+export function descentStep(x, k = CONE) {
   return softContract(x, k);
 }
 
 /**
  * Phase-time state. Ψ = CONE + S is the cone-respecting height;
- * λ = φ^(−n) is radial scale and may dip below CONE at low heat — that is allowed.
+ * λ = φ^(-⁹) is radial scale and may dip below CONE at low heat — that is allowed.
  */
 export function stateAt(t, rate = RATE) {
   const phase = (t * rate) % 1;
@@ -103,9 +108,9 @@ export function stateAt(t, rate = RATE) {
   };
 }
 
-/** Background descent engine — contracts toward x*=4.5 */
+/** Background descent engine — contracts toward x*=4.5 at residual rate CONE */
 export class DescentEngine {
-  constructor({ start = 1, k = 0.5, tickMs = 150 } = {}) {
+  constructor({ start = 1, k = CONE, tickMs = 150 } = {}) {
     this.x = start;
     this.k = k;
     this.tickMs = tickMs;
@@ -153,7 +158,7 @@ export class DescentEngine {
 
   snapshot() {
     return {
-      schema: 'great-scale.descent/v0.4.2',
+      schema: 'great-scale.descent/v0.5.1',
       running: this.running,
       t: this.t,
       x: this.x,
@@ -166,24 +171,35 @@ export class DescentEngine {
   }
 }
 
-export const HYPOTHESIS = Object.freeze({
-  id: 'great-scale.main',
-  statements: [
-    'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
-    'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
-    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point',
-    'Stress residual |x−f(x)| is the computational moment of now',
-    'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
-    'Never claim certainty — always another perspective',
-  ],
-});
+export const HYPOTHESIS = Object.freeze([
+  {
+    id: 'great-scale.main',
+    statements: [
+      'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
+      'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
+      'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point; default k = CONE = φ⁻² (residual rate)',
+      'Stress residual d₉(x,f(x)) is the circular computational moment of now',
+      'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
+      'Never claim certainty — always another perspective',
+      'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
+      'CONE-matrix M=[[2,-1],[-1,1]] has characteristic polynomial x²-3x+1 and eigenvalues φ² and CONE=φ⁻²; one eigendirection expands and one contracts, so M is not a global contraction by CONE',
+    ],
+  },
+]);
 
 export default {
   PHI,
+  PHI_INV,
   CONE,
+  RATE,
+  RESIDUAL_DIMS,
   FIXED,
+  CONE_MATRIX,
+  FIB_MATRIX,
   heat,
   involution,
+  modDist,
+  involutionIdentity,
   twoCycles,
   fixedPoint,
   softMap,

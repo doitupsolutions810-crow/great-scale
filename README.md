@@ -15,7 +15,7 @@
 - involution f(x) = (9 − (x mod 9)) mod 9 — identity modular, fixed point 4.5, two-cycles 1↔8…
 - soft contraction x′ = 4.5 + k(x − 4.5), |k|<1 — converges to fixed point
 - softMap g(x) = 9 − x — linear involution shadow
-- stress residual |x − f(x)| — computational moment of now
+- stress residual d₉(x, f(x)) — circular distance to the involution image; periodic under x → x + 9
 
 ## Run
 

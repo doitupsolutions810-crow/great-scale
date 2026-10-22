@@ -1,0 +1,29 @@
+{
+  "version": "0.5.1",
+  "title": "Great Scale Residual Contract",
+  "unit": "φ = (1+√5)/2",
+  "cone": "φ⁻²",
+  "tau": "2·log φ",
+  "psi": "−1/φ",
+  "correction_v0_5_1": "matrixPower defaults to CONE-matrix M=[[2,-1],[-1,1]], companion of x²-3x+1, eigenvalues φ² and CONE=ψ², det +1, trace L₂=3. Scalar CONE step and matrix M step are the SAME rate. M³ contracts by CONE³. Fibonacci companion F=[[1,1],[1,0]] added separately for literal F_n arithmetic.",
+  "success_criteria": {
+    "SC1": "CONE is the unique contraction constant in agent step semantics",
+    "SC2": "Every agent state carries residual size (place_ψ) and dual size (place_φ)",
+    "SC3": "Conserved product residual × dual = norm is monitored as health invariant",
+    "SC4": "Continuous flow r(t)=r(0)·e^(−tτ) available as background clock",
+    "SC5": "Unity (residual → 0) never claimed as finite-time state",
+    "SC6": "CONE-matrix M and Fibonacci companion F both available for exact integer residual arithmetic; M³=[[13,-8],[-8,5]] det 1; F³=[[3,2],[2,1]] det -1",
+    "SC7": "All lattice claims are verified identities or explicitly marked presentation/interpretation"
+  },
+  "dynamical_law": {
+    "residual_step": "r ← CONE·r",
+    "dual_step": "d ← d/CONE",
+    "first_integral": "r·d = norm",
+    "hamiltonian": "H = −τ·log(r·d)",
+    "transfer_eigenvalues": "λ_s = CONE^(s−1)",
+    "spectral_reciprocity": "λ_s^R · λ_s^D = 1",
+    "no_fixed_point": "T(r)=r has no solution in (0,∞)",
+    "cone_matrix": "M=[[2,-1],[-1,1]], char poly x²-3x+1, eigenvalues φ² (expanding) and CONE (contracting), det +1",
+    "matrix_vs_scalar": "scalar CONE per step = matrix M per step; M³ = three scalar steps = CONE³"
+  }
+}

@@ -24,7 +24,7 @@ def soft_map(x):
     return 9 - x
 
 def stress_residual(x):
-    return abs(x - involution(x))
+    return mod_dist(x, involution(x))
 
 def run_descent(start=1.0, steps=40, k=0.5):
     x = start
@@ -66,6 +66,10 @@ def main():
 
     r2 = stress_residual(2.0)
     checks.append((f"stress residual at 2.0 = {r2:.4f} (>0.5)", r2 > 0.5))
+    checks.append(("stress residual is zero at circle-equivalent boundary 0≡9",
+                   stress_residual(0) < 1e-9 and stress_residual(9) < 1e-9))
+    checks.append(("stress residual is periodic under x→x+9",
+                   abs(stress_residual(1.25) - stress_residual(10.25)) < 1e-9))
 
     checks.append(("heat max 0.25", abs(heat(0.5) - 0.25) < 1e-12))
     checks.append((f"CONE floor {CONE:.4f}", abs(CONE - 0.382) < 1e-3))
