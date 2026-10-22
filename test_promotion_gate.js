@@ -9,6 +9,7 @@ const { evaluatePromotionEvidence, REQUIRED_STEPS } = require('./promotion_gate'
 const SHA = 'a'.repeat(40);
 const fixture = () => ({
   candidate: { repo: 'doitupsolutions810-crow/great-scale', sha: SHA },
+  pullRequest: { number: 89, state: 'open', headRepository: 'doitupsolutions810-crow/great-scale', headSha: SHA },
   run: {
     source: 'github-actions-api',
     repository: 'doitupsolutions810-crow/great-scale',
@@ -61,6 +62,10 @@ test('complete evidence is eligible for review only', () => {
 test('missing evidence fails closed', () => {
   assert.equal(evaluatePromotionEvidence(null).eligible, false);
 });
+test('current pull request head must equal candidate SHA', () => blocked(x => { x.pullRequest.headSha = 'b'.repeat(40); }));
+test('pull request from another repository blocks', () => blocked(x => { x.pullRequest.headRepository = 'attacker/fork'; }));
+test('closed pull request blocks', () => blocked(x => { x.pullRequest.state = 'closed'; }));
+test('invalid pull request number blocks', () => blocked(x => { x.pullRequest.number = 0; }));
 test('candidate SHA mismatch with hosted run blocks', () => blocked(x => { x.run.headSha = 'b'.repeat(40); }));
 test('candidate SHA mismatch with receipt blocks', () => blocked(x => { x.receipt.commit = 'b'.repeat(40); }));
 test('unknown evidence source blocks', () => blocked(x => { x.run.source = 'local-json'; }));
