@@ -78,6 +78,19 @@ test('softContract rejects factors outside the strict contraction domain', () =>
   for (const k of [-2, -1, 1, 2, NaN, Infinity, -Infinity]) assert.throws(() => softContract(1, k), /contraction factor/);
   assert.throws(() => softContract(NaN, 0.5), /coordinate must be finite/);
 });
+test('public descentStep respects circle representatives and heat bounds', () => {
+  for (const x of [-17, -8, 0, 1, 4.5, 8, 9, 10, 19, 28]) {
+    const y = descentStep(x, 0.5);
+    const canonical = ((x % 9) + 9) % 9;
+    assert.ok(Math.abs(y - descentStep(canonical, 0.5)) < 1e-12, 'periodic input x=' + x);
+    assert.ok(y >= 0 && y <= 9, 'circle-domain output y=' + y);
+    const S = heat(y / 9);
+    assert.ok(S >= 0 && S <= 0.25, 'heat invariant y=' + y + ' S=' + S);
+  }
+  assert.strictEqual(descentStep(19, 0.5), descentStep(1, 0.5));
+  assert.throws(() => descentStep(Infinity, 0.5), /circle coordinate/);
+});
+
 test('DescentEngine canonicalizes circle starts and rejects invalid k', () => {
   assert.strictEqual(new DescentEngine({start: 0}).x, new DescentEngine({start: 9}).x);
   assert.throws(() => new DescentEngine({start: 1, k: 1}), /contraction factor/);
