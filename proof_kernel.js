@@ -86,7 +86,7 @@ function freezeResult(value) {
   return value;
 }
 
-function validateFormula(formula, depth=0, budget={nodes:0}) {
+function validateFormulaInternal(formula, depth=0, budget={nodes:0}) {
   if (depth > MAX_DEPTH) throw new Error('formula depth limit exceeded');
   if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
   if (typeof formula === 'string') {
@@ -99,11 +99,15 @@ function validateFormula(formula, depth=0, budget={nodes:0}) {
   if (parts.length !== 3) throw new Error('malformed formula AST');
   const [op,left,right] = parts;
   if (!['and','or','imp'].includes(op)) throw new Error('unknown formula operator');
-  validateFormula(left,depth+1,budget);
-  validateFormula(right,depth+1,budget);
+  validateFormulaInternal(left,depth+1,budget);
+  validateFormulaInternal(right,depth+1,budget);
   return true;
 }
-function check(proof, budget={nodes:0}) {
+function validateFormula(formula) {
+  return validateFormulaInternal(formula,0,{nodes:0});
+}
+
+function checkInternal(proof, budget={nodes:0}) {
   function visit(p,depth) {
     if (depth > MAX_DEPTH) throw new Error('proof depth limit exceeded');
     if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
@@ -119,7 +123,7 @@ function check(proof, budget={nodes:0}) {
     switch(data.rule) {
       case 'assume':
         requireKeys(['rule','formula']);
-        validateFormula(data.formula,0,budget);
+        validateFormulaInternal(data.formula,0,budget);
         const formula=copyFormula(data.formula);
         return {conclusion:formula,context:[formula]};
       case 'andI': {
@@ -141,7 +145,7 @@ function check(proof, budget={nodes:0}) {
       }
       case 'impI': {
         requireKeys(['rule','assumption','proof']);
-        validateFormula(data.assumption,0,budget);
+        validateFormulaInternal(data.assumption,0,budget);
         const assumption=copyFormula(data.assumption);
         const a=visit(data.proof,depth+1);
         const i=a.context.findIndex(x=>eq(x,assumption));
@@ -157,7 +161,7 @@ function check(proof, budget={nodes:0}) {
       }
       case 'orIL': {
         requireKeys(['rule','proof','other']);
-        validateFormula(data.other,0,budget);
+        validateFormulaInternal(data.other,0,budget);
         const other=copyFormula(data.other);
         const a=visit(data.proof,depth+1);
         return {conclusion:['or',a.conclusion,other],context:a.context};
@@ -174,20 +178,23 @@ function check(proof, budget={nodes:0}) {
   }
   return freezeResult(visit(proof,0));
 }
+function check(proof) {
+  return checkInternal(proof,{nodes:0});
+}
 function checkBound(proof, expectedConclusion, expectedContext) {
   const budget={nodes:0};
-  validateFormula(expectedConclusion,0,budget);
+  validateFormulaInternal(expectedConclusion,0,budget);
   if (!Array.isArray(expectedContext)) throw new Error('expected context must be an array');
   const contextValues=readDataArray(expectedContext, 'expected context');
-  contextValues.forEach(f=>validateFormula(f,0,budget));
-  const result=check(proof,budget);
+  contextValues.forEach(f=>validateFormulaInternal(f,0,budget));
+  const result=checkInternal(proof,budget);
   if (!eq(result.conclusion,expectedConclusion)) throw new Error('claim conclusion mismatch');
   const canon=xs=>xs.map(x=>JSON.stringify(x)).sort();
   if (!eq(canon(result.context),canon(contextValues))) throw new Error('assumption context mismatch');
   return result;
 }
 function atoms(formula,out=new Set(),budget={nodes:0}) {
-  validateFormula(formula,0,budget);
+  validateFormulaInternal(formula,0,budget);
   function walk(f){if(typeof f==='string')out.add(f);else {walk(f[1]);walk(f[2]);}}
   walk(formula);
   return out;
@@ -212,17 +219,20 @@ function evaluateValidated(formula,env,steps) {
   }
   return walk(formula);
 }
-function evalF(formula,env,steps={count:0}) {
+function evalFInternal(formula,env,steps) {
   if(!env || typeof env!=='object' || Array.isArray(env)) throw new Error('truth assignment environment must be an object');
-  validateFormula(formula);
+  validateFormulaInternal(formula,0,{nodes:0});
   return evaluateValidated(formula,env,steps);
+}
+function evalF(formula,env) {
+  return evalFInternal(formula,env,{count:0});
 }
 function tautologyUnderContext(conclusion,context) {
   const inputBudget={nodes:0};
-  validateFormula(conclusion,0,inputBudget);
+  validateFormulaInternal(conclusion,0,inputBudget);
   if(!Array.isArray(context)) throw new Error('context must be an array');
   const contextValues=readDataArray(context, 'context');
-  for(const f of contextValues) validateFormula(f,0,inputBudget);
+  for(const f of contextValues) validateFormulaInternal(f,0,inputBudget);
   const collect=f=>{const out=new Set();(function walk(x){if(typeof x==='string')out.add(x);else{walk(x[1]);walk(x[2]);}})(f);return out;};
   const names=[...new Set([...collect(conclusion),...contextValues.flatMap(f=>[...collect(f)])])];
   if(names.length>MAX_ATOMS) throw new Error('truth-table atom limit exceeded');
