@@ -72,7 +72,7 @@ test('stress residual is periodic across the circle seam', () => {
     assert.ok(Math.abs(stressResidual(x) - stressResidual(x - 9)) < 1e-9, 'x=' + x);
   }
 });
-test('stress residual positive off fixed point', () => assert.ok(stressResidual(2) > 0.5));
+test('stress residual positive at non-fixed point x=2', () => assert.ok(stressResidual(2) > 0.5));
 
 test('soft contraction converges to 4.5 from 1.0', () => {
   let x = 1.0;
