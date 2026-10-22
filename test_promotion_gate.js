@@ -1,5 +1,9 @@
 'use strict';
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const { evaluatePromotionEvidence, REQUIRED_STEPS } = require('./promotion_gate');
 
 const SHA = 'a'.repeat(40);
@@ -111,6 +115,25 @@ test('step records reject accessors without invoking them', () => {
 });
 test('steps array rejects custom properties', () => blocked(x => { x.job.steps.note = 'unexpected'; }));
 test('artifact expiry must be explicitly false', () => blocked(x => { delete x.artifact.expired; }));
+
+
+test('CLI with no evidence path exits with usage error', () => {
+  const result = spawnSync(process.execPath, ['promotion_gate.js'], { encoding: 'utf8' });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /Usage: node promotion_gate\.js/);
+});
+test('CLI emits BLOCKED and a nonzero exit for invalid evidence', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'great-scale-gate-'));
+  const file = path.join(dir, 'evidence.json');
+  try {
+    fs.writeFileSync(file, JSON.stringify(null), 'utf8');
+    const result = spawnSync(process.execPath, ['promotion_gate.js', file], { encoding: 'utf8' });
+    assert.equal(result.status, 1);
+    assert.equal(JSON.parse(result.stdout).state, 'BLOCKED');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 console.log(JSON.stringify({ passed, failed, total: passed + failed, results }, null, 2));
 if (failed) process.exitCode = 1;
