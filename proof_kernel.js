@@ -4,10 +4,44 @@ const MAX_DEPTH = 256;
 const MAX_NODES = 10000;
 const MAX_ATOMS = 16;
 const MAX_EVAL_STEPS = 2000000;
+const MAX_KERNEL_WORK = 2000000;
 const MAX_ATOM_LENGTH = 4096;
 const MAX_RULE_LENGTH = 32;
 const eq = (a,b) => JSON.stringify(a) === JSON.stringify(b);
-const union = (a,b) => [...a,...b];
+function tickKernelWork(budget, amount=1) {
+  budget.work = (budget.work || 0) + amount;
+  if (budget.work > MAX_KERNEL_WORK) throw new Error('kernel work budget exceeded');
+}
+function formulaEquals(a,b,budget) {
+  if (typeof a === 'string' || typeof b === 'string') {
+    const aLength = typeof a === 'string' ? a.length : 0;
+    const bLength = typeof b === 'string' ? b.length : 0;
+    tickKernelWork(budget, Math.max(aLength,bLength)+1);
+    return typeof a === typeof b && a === b;
+  }
+  tickKernelWork(budget);
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  for (let i=0;i<a.length;i++) if (!formulaEquals(a[i],b[i],budget)) return false;
+  return true;
+}
+function union(a,b,budget) {
+  tickKernelWork(budget,a.length+b.length);
+  return [...a,...b];
+}
+function sameFormulaMultiset(a,b,budget) {
+  if (a.length !== b.length) return false;
+  tickKernelWork(budget,b.length);
+  const used = new Array(b.length).fill(false);
+  for (const formula of a) {
+    let found = -1;
+    for (let i=0;i<b.length;i++) {
+      if (!used[i] && formulaEquals(formula,b[i],budget)) { found=i; break; }
+    }
+    if (found < 0) return false;
+    used[found]=true;
+  }
+  return true;
+}
 
 // Treat proof inputs as inert, JSON-like data. Inspect descriptors before any
 // field read so an accessor cannot execute during validation.
@@ -108,7 +142,7 @@ function validateFormula(formula) {
   return validateFormulaInternal(formula,0,{nodes:0});
 }
 
-function checkInternal(proof, budget={nodes:0}) {
+function checkInternal(proof, budget={nodes:0,work:0}) {
   function visit(p,depth) {
     if (depth > MAX_DEPTH) throw new Error('proof depth limit exceeded');
     if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
@@ -130,7 +164,7 @@ function checkInternal(proof, budget={nodes:0}) {
       case 'andI': {
         requireKeys(['rule','left','right']);
         const a=visit(data.left,depth+1),b=visit(data.right,depth+1);
-        return {conclusion:['and',a.conclusion,b.conclusion],context:union(a.context,b.context)};
+        return {conclusion:['and',a.conclusion,b.conclusion],context:union(a.context,b.context,budget)};
       }
       case 'andEL': {
         requireKeys(['rule','proof']);
@@ -149,16 +183,22 @@ function checkInternal(proof, budget={nodes:0}) {
         validateFormulaInternal(data.assumption,0,budget);
         const assumption=copyFormula(data.assumption,0,budget);
         const a=visit(data.proof,depth+1);
-        const i=a.context.findIndex(x=>eq(x,assumption));
+        let i=-1;
+        for(let j=0;j<a.context.length;j++) {
+          if(formulaEquals(a.context[j],assumption,budget)) { i=j; break; }
+        }
         if(i<0) throw new Error('impI assumption not present for discharge');
-        const ctx=[...a.context];ctx.splice(i,1);
+        tickKernelWork(budget,a.context.length);
+        const ctx=[...a.context];
+        tickKernelWork(budget,Math.max(0,ctx.length-i-1));
+        ctx.splice(i,1);
         return {conclusion:['imp',assumption,a.conclusion],context:ctx};
       }
       case 'impE': {
         requireKeys(['rule','function','argument']);
         const a=visit(data.function,depth+1),b=visit(data.argument,depth+1);
-        if(!Array.isArray(a.conclusion)||a.conclusion[0]!=='imp'||!eq(a.conclusion[1],b.conclusion)) throw new Error('impE antecedent mismatch');
-        return {conclusion:a.conclusion[2],context:union(a.context,b.context)};
+        if(!Array.isArray(a.conclusion)||a.conclusion[0]!=='imp'||!formulaEquals(a.conclusion[1],b.conclusion,budget)) throw new Error('impE antecedent mismatch');
+        return {conclusion:a.conclusion[2],context:union(a.context,b.context,budget)};
       }
       case 'orIL': {
         requireKeys(['rule','proof','other']);
@@ -183,15 +223,14 @@ function check(proof) {
   return checkInternal(proof,{nodes:0});
 }
 function checkBound(proof, expectedConclusion, expectedContext) {
-  const budget={nodes:0};
+  const budget={nodes:0,work:0};
   validateFormulaInternal(expectedConclusion,0,budget);
   if (!Array.isArray(expectedContext)) throw new Error('expected context must be an array');
   const contextValues=readDataArray(expectedContext, 'expected context');
   contextValues.forEach(f=>validateFormulaInternal(f,0,budget));
   const result=checkInternal(proof,budget);
-  if (!eq(result.conclusion,expectedConclusion)) throw new Error('claim conclusion mismatch');
-  const canon=xs=>xs.map(x=>JSON.stringify(x)).sort();
-  if (!eq(canon(result.context),canon(contextValues))) throw new Error('assumption context mismatch');
+  if (!formulaEquals(result.conclusion,expectedConclusion,budget)) throw new Error('claim conclusion mismatch');
+  if (!sameFormulaMultiset(result.context,contextValues,budget)) throw new Error('assumption context mismatch');
   return result;
 }
 function atoms(formula,out=new Set(),budget={nodes:0}) {
