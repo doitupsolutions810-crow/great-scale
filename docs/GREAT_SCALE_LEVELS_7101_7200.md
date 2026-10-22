@@ -35,7 +35,8 @@ No empirical or physical quantum-geometry conclusion follows from this software 
 
 - **Source integration:** scanner guard and regression tests are committed on the research branch.
 - **Regression intent:** malformed delimiters must be rejected with the normalized invalid-JSON error rather than accepted by the preflight scan.
-- **Test execution:** not verified in this session. GitHub Actions runs have repeatedly reported failure without usable step logs or artifacts; those statuses do not establish that assertions executed or failed.
+- **Isolated scanner harness:** 9/9 cases passed for valid nested JSON, duplicate keys, escaped-equivalent keys, malformed delimiters/keys/colon, depth rejection, and canonically distinct Unicode strings. This exercised an equivalent scanner implementation in the available JS execution environment, not the repository file or full `npm test` suite.
+- **Repository test execution:** not verified. GitHub Actions runs have repeatedly reported failure without usable step logs or artifacts; those statuses do not establish that assertions executed or failed.
 - **Build:** not run/verified.
 - **Promotion:** keep the PR draft and unmerged until the exact current SHA has actual runner steps, retrievable logs, both required suites passing, a same-run receipt artifact, and reconciled branch divergence.
 
