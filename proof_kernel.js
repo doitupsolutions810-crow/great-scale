@@ -76,7 +76,7 @@ function check(proof, budget={nodes:0}) {
       }
       case 'orIR': {
         requireKeys(['rule','proof','other']);
-        validateFormula(p.other);
+        validateFormula(p.other,0,budget);
         const a=visit(p.proof,depth+1);
         return {conclusion:['or',p.other,a.conclusion],context:a.context};
       }
@@ -102,8 +102,7 @@ function atoms(formula,out=new Set(),budget={nodes:0}) {
   walk(formula);
   return out;
 }
-function evalF(formula,env,steps={count:0}) {
-  validateFormula(formula);
+function evaluateValidated(formula,env,steps) {
   function tick(){if(++steps.count>MAX_EVAL_STEPS)throw new Error('truth-table evaluation budget exceeded');}
   function walk(f) {
     tick();
@@ -116,6 +115,10 @@ function evalF(formula,env,steps={count:0}) {
   }
   return walk(formula);
 }
+function evalF(formula,env,steps={count:0}) {
+  validateFormula(formula);
+  return evaluateValidated(formula,env,steps);
+}
 function tautologyUnderContext(conclusion,context) {
   const inputBudget={nodes:0};
   validateFormula(conclusion,0,inputBudget);
@@ -127,7 +130,7 @@ function tautologyUnderContext(conclusion,context) {
   const steps={count:0};
   for(let mask=0;mask<(1<<names.length);mask++){
     const env=Object.fromEntries(names.map((n,i)=>[n,!!(mask&(1<<i))]));
-    if(context.every(f=>evalF(f,env,steps))&&!evalF(conclusion,env,steps)) return false;
+    if(context.every(f=>evaluateValidated(f,env,steps))&&!evaluateValidated(conclusion,env,steps)) return false;
   }
   return true;
 }
