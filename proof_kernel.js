@@ -236,17 +236,88 @@ function checkBound(proof, expectedConclusion, expectedContext) {
   return result;
 }
 
+// JSON.parse accepts duplicate object keys and silently keeps the last value.
+// Scan the already-size-bounded, already-syntax-validated JSON iteratively so
+// security-sensitive envelopes have one unambiguous interpretation.
+function rejectDuplicateJsonKeys(input) {
+  const stack = [];
+  let i = 0;
+  let rootDone = false;
+  const skipSpace = () => { while (i < input.length && /\\s/.test(input[i])) i++; };
+  const stringEnd = start => {
+    let j = start + 1;
+    while (j < input.length) {
+      if (input[j] === '\\\\') { j += 2; continue; }
+      if (input[j] === '"') return j + 1;
+      j++;
+    }
+    return input.length;
+  };
+  while (true) {
+    skipSpace();
+    if (i >= input.length) break;
+    const frame = stack[stack.length - 1];
+    if (frame && frame.type === 'object' && (frame.state === 'keyOrEnd' || frame.state === 'key')) {
+      if (input[i] === '}') { stack.pop(); i++; continue; }
+      const end = stringEnd(i);
+      const key = JSON.parse(input.slice(i, end));
+      if (frame.keys.has(key)) throw new Error('duplicate JSON object key');
+      frame.keys.add(key);
+      frame.state = 'colon';
+      i = end;
+      continue;
+    }
+    if (frame && frame.type === 'object' && frame.state === 'colon') {
+      i++; // JSON.parse has already established that this is ':'
+      frame.state = 'value';
+      continue;
+    }
+    if (frame && frame.state === 'commaOrEnd') {
+      if (input[i] === ',') {
+        i++;
+        frame.state = frame.type === 'object' ? 'key' : 'value';
+      } else {
+        stack.pop();
+        i++; // closing brace/bracket, already validated by JSON.parse
+      }
+      continue;
+    }
+    if (frame && frame.type === 'array' && frame.state === 'valueOrEnd' && input[i] === ']') {
+      stack.pop(); i++; continue;
+    }
+    if (!frame && rootDone) break;
+
+    // A value begins here. Mark the containing frame before descending.
+    if (frame) frame.state = 'commaOrEnd';
+    else rootDone = true;
+    if (input[i] === '{') {
+      stack.push({type:'object', state:'keyOrEnd', keys:new Set()});
+      i++;
+    } else if (input[i] === '[') {
+      stack.push({type:'array', state:'valueOrEnd'});
+      i++;
+    } else if (input[i] === '"') {
+      i = stringEnd(i);
+    } else {
+      while (i < input.length && !/[\\s,\\]}]/.test(input[i])) i++;
+    }
+  }
+}
+
 function parseBoundedJson(input) {
   if (typeof input !== 'string') throw new Error('serialized input must be a string');
   // Bound code units before the UTF-8 scan, then enforce the actual byte limit.
   if (input.length > MAX_INPUT_BYTES || Buffer.byteLength(input, 'utf8') > MAX_INPUT_BYTES) {
     throw new Error('serialized input byte limit exceeded');
   }
+  let parsed;
   try {
-    return JSON.parse(input);
+    parsed = JSON.parse(input);
   } catch {
     throw new Error('serialized input is not valid JSON');
   }
+  rejectDuplicateJsonKeys(input);
+  return parsed;
 }
 function requireEnvelopeKeys(envelope, expected, label) {
   const data = readDataObject(envelope, label);
