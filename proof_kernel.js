@@ -7,6 +7,7 @@ const MAX_EVAL_STEPS = 2000000;
 const MAX_KERNEL_WORK = 2000000;
 const MAX_ATOM_LENGTH = 4096;
 const MAX_INPUT_BYTES = 1048576;
+const MAX_SERIALIZED_JSON_DEPTH = MAX_DEPTH * 2 + 8;
 const MAX_RULE_LENGTH = 32;
 const eq = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 function tickKernelWork(budget, amount=1) {
@@ -291,9 +292,11 @@ function rejectDuplicateJsonKeys(input) {
     if (frame) frame.state = 'commaOrEnd';
     else rootDone = true;
     if (input[i] === '{') {
+      if (stack.length >= MAX_SERIALIZED_JSON_DEPTH) throw new Error('serialized JSON depth limit exceeded');
       stack.push({type:'object', state:'keyOrEnd', keys:new Set()});
       i++;
     } else if (input[i] === '[') {
+      if (stack.length >= MAX_SERIALIZED_JSON_DEPTH) throw new Error('serialized JSON depth limit exceeded');
       stack.push({type:'array', state:'valueOrEnd'});
       i++;
     } else if (input[i] === '"') {
@@ -393,4 +396,4 @@ function tautologyUnderContext(conclusion,context) {
   }
   return true;
 }
-module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
+module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
