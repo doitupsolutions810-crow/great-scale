@@ -13,7 +13,7 @@
 
 - heat(h) = h(1−h) ≡ tension(B) = B(1−B)
 - involution f(x) = (9 − (x mod 9)) mod 9 — circle fixed points 0 and 4.5; two-cycles 1↔8…
-- soft contraction x′ = 4.5 + k(x − 4.5), |k|<1 — runtime enforces the factor bound, canonicalizes engine starts modulo 9, and bounds timer delays to [1, 2147483647] ms
+- soft contraction x′ = 4.5 + k(x − 4.5), |k|<1 — the public `descentStep` and engine canonicalize circle coordinates modulo 9 before contraction; runtime enforces the factor bound and bounds timer delays to [1, 2147483647] ms
 - softMap g(x) = 9 − x — linear involution shadow
 - stress residual R(x) = d₉(x, f(x)) — circular distance, periodic under x ↦ x + 9; zero at both circle fixed points
 
