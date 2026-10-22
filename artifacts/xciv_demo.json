@@ -1,0 +1,13 @@
+{
+  "system":"Great Scale",
+  "rung":"XCIV",
+  "title":"Adversarial Model Discovery and Evidence-Driven Revision",
+  "current_models":{"A":0.8,"B":0.6},
+  "candidate_model":{"C":-0.1},
+  "current_worst_case":0.6,
+  "expanded_worst_case":-0.1,
+  "decision_before":"ACCEPT",
+  "decision_after":"NOT_CERTIFIED",
+  "decision_changed":true,
+  "scientific_status":"illustrative mathematical example, not empirical validation"
+}
