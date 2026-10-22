@@ -247,7 +247,7 @@ function rejectDuplicateJsonKeys(input) {
   const stringEnd = start => {
     let j = start + 1;
     while (j < input.length) {
-      if (input[j] === '\\\\') { j += 2; continue; }
+      if (input[j] === '\\') { j += 2; continue; }
       if (input[j] === '"') return j + 1;
       j++;
     }
