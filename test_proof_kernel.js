@@ -189,5 +189,13 @@ test('formula validation and certificate copying share one aggregate budget',()=
   assert.throws(()=>check({rule:'assume',formula}),/input node limit exceeded/);
 });
 
+
+test('bounded validation collects truth-table atoms without a second AST walk',()=>{
+  const leaves=Array.from({length:1500},()=>['imp','P0','P0']);
+  function balancedOr(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['or',balancedOr(xs.slice(0,m)),balancedOr(xs.slice(m))];}
+  const formula=balancedOr(leaves);
+  assert.equal(tautologyUnderContext(formula,[]),true);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
