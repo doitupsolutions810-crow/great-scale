@@ -22,6 +22,21 @@ const cjs = require('./public/scale.cjs');
     assert.deepEqual(esm.default[key], cjs[key], 'default.' + key + ' must match CommonJS');
   }
 
+  const M = esm.CONE_MATRIX;
+  const trace = M[0][0] + M[1][1];
+  const determinant = M[0][0] * M[1][1] - M[0][1] * M[1][0];
+  const discriminant = trace * trace - 4 * determinant;
+  const lambdaPlus = (trace + Math.sqrt(discriminant)) / 2;
+  const lambdaMinus = (trace - Math.sqrt(discriminant)) / 2;
+  assert.equal(trace, 3, 'CONE matrix trace must match its characteristic polynomial');
+  assert.equal(determinant, 1, 'CONE matrix determinant must be +1');
+  assert.ok(Math.abs(lambdaPlus - esm.PHI ** 2) < 1e-12,
+    'expanding eigenvalue must equal phi squared');
+  assert.ok(Math.abs(lambdaMinus - esm.CONE) < 1e-12,
+    'contracting eigenvalue must equal CONE');
+  assert.ok(lambdaPlus > 1 && lambdaMinus > 0 && lambdaMinus < 1,
+    'matrix must have distinct expanding and contracting eigendirections');
+
   assert.deepEqual(esm.twoCycles(), cjs.twoCycles(), 'two-cycle structure must match');
   assert.deepEqual(esm.fixedPoint(), cjs.fixedPoint(), 'fixed point must match');
   for (const h of [0, 0.25, 0.5, 0.75, 1]) {
