@@ -123,5 +123,12 @@ test('claim context rejects sparse arrays',()=>{
   assert.throws(()=>checkBound(assume(A),A,sparse),/dense/);
 });
 
+
+test('proof schema cannot hide an own __proto__ field during normalization',()=>{
+  const p={rule:'assume',formula:A};
+  Object.defineProperty(p,'__proto__',{value:{unexpected:true},enumerable:true,configurable:true,writable:true});
+  assert.throws(()=>check(p),/fields do not match/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
