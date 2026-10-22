@@ -26,7 +26,7 @@ function twoCycles() {
 function fixedPoint() { return FIXED; }
 function softContract(x, k = CONE) { return FIXED + k * (x - FIXED); }
 function softMap(x) { return 9 - x; }
-function stressResidual(x) { return Math.abs(x - involution(x)); }
+function stressResidual(x) { return modDist(x, involution(x)); }
 function descentStep(x, k = CONE) { return softContract(x, k); }
 function stateAt(t, rate = RATE) {
   const phase = (t * rate) % 1;
@@ -92,7 +92,7 @@ const HYPOTHESIS = Object.freeze([
       'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
       'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
       'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point; default k = CONE = φ⁻² (residual rate)',
-      'Stress residual |x−f(x)| is the computational moment of now',
+      'Stress residual d₉(x,f(x)) is the circular computational moment of now',
       'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
       'Never claim certainty — always another perspective',
       'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
