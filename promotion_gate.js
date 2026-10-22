@@ -103,7 +103,7 @@ function evaluatePromotionEvidence(evidence) {
   if (typeof run.repository !== 'string' || run.repository !== candidate.repo) reasons.push('run repository does not match candidate repository');
   if (run.workflowPath !== '.github/workflows/ci.yml') reasons.push('expected CI workflow path is not bound to this run');
   if (!Number.isSafeInteger(run.id) || run.id <= 0) reasons.push('valid workflow run ID is required');
-  if (run.headSha !== pullRequest.mergeCommitSha) reasons.push('workflow run SHA does not equal the current pull request merge-test SHA');
+  if (run.headSha !== candidate.sha) reasons.push('workflow run head SHA does not equal the pull request source head SHA');
   if (run.conclusion !== 'success') reasons.push('workflow run conclusion is not success');
   if (!Number.isSafeInteger(job.id) || job.id <= 0) reasons.push('valid job ID is required');
   if (job.conclusion !== 'success') reasons.push('test job conclusion is not success');
@@ -138,8 +138,8 @@ function evaluatePromotionEvidence(evidence) {
   }
 
   if (receipt.schema !== 'great-scale.verification-receipt/v1') reasons.push('verification receipt schema missing or unknown');
-  if (receipt.commit !== run.headSha) reasons.push('receipt commit does not equal the tested workflow SHA');
-  if (receipt.github_sha !== run.headSha) reasons.push('receipt GitHub SHA does not equal the tested workflow SHA');
+  if (receipt.commit !== pullRequest.mergeCommitSha) reasons.push('receipt checkout commit does not equal the current pull request merge-test SHA');
+  if (receipt.github_sha !== pullRequest.mergeCommitSha) reasons.push('receipt GitHub SHA does not equal the current pull request merge-test SHA');
   if (String(receipt.github_run_attempt ?? '') !== String(run.runAttempt ?? '')) reasons.push('receipt run attempt does not match platform run attempt');
   if (typeof receipt.created_utc !== 'string' || !Number.isFinite(Date.parse(receipt.created_utc))) reasons.push('receipt creation timestamp is missing or invalid');
   for (const key of ['node', 'npm', 'python', 'runner_name']) {
