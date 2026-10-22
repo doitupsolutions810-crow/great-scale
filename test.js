@@ -80,12 +80,14 @@ test('softContract rejects factors outside the strict contraction domain', () =>
 });
 test('public descentStep respects circle representatives and heat bounds', () => {
   for (const x of [-17, -8, 0, 1, 4.5, 8, 9, 10, 19, 28]) {
-    const y = descentStep(x, 0.5);
     const canonical = ((x % 9) + 9) % 9;
-    assert.ok(Math.abs(y - descentStep(canonical, 0.5)) < 1e-12, 'periodic input x=' + x);
-    assert.ok(y >= 0 && y <= 9, 'circle-domain output y=' + y);
-    const S = heat(y / 9);
-    assert.ok(S >= 0 && S <= 0.25, 'heat invariant y=' + y + ' S=' + S);
+    for (const k of [-0.9, -0.5, 0, 0.5, 0.9]) {
+      const y = descentStep(x, k);
+      assert.ok(Math.abs(y - descentStep(canonical, k)) < 1e-12, 'periodic input x=' + x + ' k=' + k);
+      assert.ok(y >= 0 && y < 9, 'circle-domain output y=' + y + ' k=' + k);
+      const S = heat(y / 9);
+      assert.ok(S >= 0 && S <= 0.25, 'heat invariant y=' + y + ' S=' + S);
+    }
   }
   assert.strictEqual(descentStep(19, 0.5), descentStep(1, 0.5));
   assert.throws(() => descentStep(Infinity, 0.5), /circle coordinate/);
