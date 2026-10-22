@@ -54,6 +54,20 @@ test('softMap is involution: softMap(softMap(x))=x', () => {
 });
 test('softMap(4.5)=4.5', () => assert.ok(Math.abs(softMap(4.5) - 4.5) < 1e-9));
 test('stress residual zero at fixed point', () => assert.ok(stressResidual(4.5) < 1e-9));
+test('stress residual is circular distance to involution image', () => {
+  assert.strictEqual(stressResidual(0), 0);
+  assert.strictEqual(stressResidual(9), 0);
+  assert.strictEqual(stressResidual(1), 2);
+  assert.strictEqual(stressResidual(8), 2);
+  assert.strictEqual(stressResidual(4), 1);
+  assert.strictEqual(stressResidual(5), 1);
+});
+test('stress residual is periodic across the circle seam', () => {
+  for (const x of [0, 0.25, 1, 2.5, 4.5, 7.75, 8.99]) {
+    assert.ok(Math.abs(stressResidual(x) - stressResidual(x + 9)) < 1e-9, 'x=' + x);
+    assert.ok(Math.abs(stressResidual(x) - stressResidual(x - 9)) < 1e-9, 'x=' + x);
+  }
+});
 test('stress residual positive off fixed point', () => assert.ok(stressResidual(2) > 0.5));
 
 test('soft contraction converges to 4.5 from 1.0', () => {
