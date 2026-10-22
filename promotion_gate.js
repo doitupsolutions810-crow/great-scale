@@ -57,14 +57,21 @@ function evaluatePromotionEvidence(evidence) {
   if (typeof job?.logsUrl !== 'string' || !/^https:\/\/github\.com\/.+\/actions\/runs\/.+\/job\/.+/.test(job.logsUrl)) {
     fail('platform job logs URL is missing or unrecognized');
   }
-  if (!Array.isArray(job?.steps)) {
+  if (!Array.isArray(job?.steps) || job.steps.length === 0) {
     fail('platform step records are missing');
   } else {
-    const byName = new Map(job.steps.filter(s => s && typeof s.name === 'string').map(s => [s.name, s]));
+    const byName = new Map();
+    for (const step of job.steps) {
+      if (!step || typeof step.name !== 'string' || !step.name.trim()) {
+        fail('malformed platform step record');
+        continue;
+      }
+      if (byName.has(step.name)) fail(`duplicate platform step name: ${step.name}`);
+      byName.set(step.name, step);
+      if (step.conclusion !== 'success') fail(`platform step not successful: ${step.name}`);
+    }
     for (const name of REQUIRED_STEPS) {
-      const step = byName.get(name);
-      if (!step) fail(`required workflow step missing: ${name}`);
-      else if (step.conclusion !== 'success') fail(`required workflow step not successful: ${name}`);
+      if (!byName.has(name)) fail(`required workflow step missing: ${name}`);
     }
   }
   if (!receipt || receipt.schema !== 'great-scale.verification-receipt/v1') {
