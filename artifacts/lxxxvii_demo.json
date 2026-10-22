@@ -1,0 +1,18 @@
+{
+  "great_scale_rung": "LXXXVII",
+  "title": "Adaptive Discovery of Hidden Common Causes",
+  "candidate_id": "shared-calibration-procedure",
+  "illustrative_inputs_only": true,
+  "prior_candidate_probability": 0.1,
+  "discovery_likelihood_ratio": 8.0,
+  "validation_likelihood_ratio": 4.0,
+  "validation_is_independent": true,
+  "predeclared_validation_threshold": 3.0,
+  "interpretation": "Eligible for review only; not automatic causal proof or production graph mutation.",
+  "required_followup": [
+    "preserve discovery and validation data separation",
+    "check alternative explanations and multiple-testing effects",
+    "use a discriminating intervention where feasible",
+    "version the model and rerun LXXXVI residual-risk analysis"
+  ]
+}
