@@ -9,6 +9,8 @@ const MAX_ATOM_LENGTH = 4096;
 const MAX_INPUT_BYTES = 1048576;
 const MAX_SERIALIZED_JSON_DEPTH = MAX_DEPTH * 2 + 8;
 const MAX_SERIALIZED_OBJECT_KEYS = 4;
+const MAX_SERIALIZED_ARRAY_ITEMS = MAX_NODES;
+const MAX_SERIALIZED_JSON_VALUES = MAX_NODES * 4;
 const MAX_RULE_LENGTH = 32;
 const eq = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 function tickKernelWork(budget, amount=1) {
@@ -245,6 +247,7 @@ function rejectDuplicateJsonKeys(input) {
   const stack = [];
   let i = 0;
   let rootDone = false;
+  let valueCount = 0;
   const skipSpace = () => { while (i < input.length && [32,9,10,13].includes(input.charCodeAt(i))) i++; };
   const stringEnd = start => {
     let j = start + 1;
@@ -290,6 +293,14 @@ function rejectDuplicateJsonKeys(input) {
     }
     if (!frame && rootDone) break;
 
+    // Bound aggregate values and each array before the full object graph exists.
+    // Values include container starts and scalar tokens; object keys are bounded
+    // separately by MAX_SERIALIZED_OBJECT_KEYS.
+    if (++valueCount > MAX_SERIALIZED_JSON_VALUES) throw new Error('serialized JSON value limit exceeded');
+    if (frame && frame.type === 'array') {
+      frame.items++;
+      if (frame.items > MAX_SERIALIZED_ARRAY_ITEMS) throw new Error('serialized JSON array item limit exceeded');
+    }
     // A value begins here. Mark the containing frame before descending.
     if (frame) frame.state = 'commaOrEnd';
     else rootDone = true;
@@ -299,7 +310,7 @@ function rejectDuplicateJsonKeys(input) {
       i++;
     } else if (input[i] === '[') {
       if (stack.length >= MAX_SERIALIZED_JSON_DEPTH) throw new Error('serialized JSON depth limit exceeded');
-      stack.push({type:'array', state:'valueOrEnd'});
+      stack.push({type:'array', state:'valueOrEnd', items:0});
       i++;
     } else if (input[i] === '"') {
       i = stringEnd(i);
@@ -326,7 +337,9 @@ function parseBoundedJson(input) {
   } catch (error) {
     if (error && (error.message === 'duplicate JSON object key' ||
         error.message === 'serialized JSON depth limit exceeded' ||
-        error.message === 'serialized JSON object key limit exceeded')) throw error;
+        error.message === 'serialized JSON object key limit exceeded' ||
+        error.message === 'serialized JSON array item limit exceeded' ||
+        error.message === 'serialized JSON value limit exceeded')) throw error;
     throw new Error('serialized input is not valid JSON');
   }
   try {
@@ -409,4 +422,4 @@ function tautologyUnderContext(conclusion,context) {
   }
   return true;
 }
-module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_SERIALIZED_OBJECT_KEYS,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
+module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_INPUT_BYTES,MAX_SERIALIZED_JSON_DEPTH,MAX_SERIALIZED_OBJECT_KEYS,MAX_SERIALIZED_ARRAY_ITEMS,MAX_SERIALIZED_JSON_VALUES,MAX_RULE_LENGTH,validateFormula,check,checkBound,checkSerialized,checkBoundSerialized,eq,evalF,tautologyUnderContext,tautologyUnderContextSerialized};
