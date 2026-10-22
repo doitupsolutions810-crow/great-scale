@@ -302,7 +302,11 @@ function rejectDuplicateJsonKeys(input) {
     } else if (input[i] === '"') {
       i = stringEnd(i);
     } else {
+      const valueStart = i;
       while (i < input.length && !([32,9,10,13].includes(input.charCodeAt(i)) || input[i] === ',' || input[i] === ']' || input[i] === '}')) i++;
+      // Invalid JSON can put a delimiter where a value is required. Never let
+      // the pre-parse scanner retry the same byte indefinitely.
+      if (i === valueStart) throw new Error('serialized input is not valid JSON');
     }
   }
 }
