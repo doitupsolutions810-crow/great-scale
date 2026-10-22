@@ -1,4 +1,4 @@
-/** CJS mirror of scale.js for node test runner */
+/** CJS mirror of scale.js for node test runner — v0.5.0 */
 const PHI = (1 + Math.sqrt(5)) / 2;
 const PHI_INV = PHI - 1;
 const CONE = PHI_INV * PHI_INV;
@@ -21,10 +21,10 @@ function twoCycles() {
   return [[1, 8], [2, 7], [3, 6], [4, 5]];
 }
 function fixedPoint() { return FIXED; }
-function softContract(x, k = 0.5) { return FIXED + k * (x - FIXED); }
+function softContract(x, k = CONE) { return FIXED + k * (x - FIXED); }
 function softMap(x) { return 9 - x; }
 function stressResidual(x) { return Math.abs(x - involution(x)); }
-function descentStep(x, k = 0.5) { return softContract(x, k); }
+function descentStep(x, k = CONE) { return softContract(x, k); }
 function stateAt(t, rate = RATE) {
   const phase = (t * rate) % 1;
   const h = 0.5 - 0.5 * Math.cos(2 * Math.PI * phase);
@@ -40,7 +40,7 @@ function stateAt(t, rate = RATE) {
   };
 }
 class DescentEngine {
-  constructor({ start = 1, k = 0.5, tickMs = 150 } = {}) {
+  constructor({ start = 1, k = CONE, tickMs = 150 } = {}) {
     this.x = start; this.k = k; this.tickMs = tickMs;
     this.t = 0; this.history = []; this.maxHistory = 200;
     this.timer = null; this.running = false;
@@ -73,7 +73,7 @@ class DescentEngine {
   }
   snapshot() {
     return {
-      schema: 'great-scale.descent/v0.4.2',
+      schema: 'great-scale.descent/v0.5.0',
       running: this.running, t: this.t, x: this.x, k: this.k,
       nearFixed: Math.abs(this.x - FIXED) < 0.05,
       residual: stressResidual(this.x),
@@ -82,17 +82,20 @@ class DescentEngine {
     };
   }
 }
-const HYPOTHESIS = Object.freeze({
-  id: 'great-scale.main',
-  statements: [
-    'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
-    'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
-    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point',
-    'Stress residual |x−f(x)| is the computational moment of now',
-    'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
-    'Never claim certainty — always another perspective',
-  ],
-});
+const HYPOTHESIS = Object.freeze([
+  {
+    id: 'great-scale.main',
+    statements: [
+      'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
+      'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
+      'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges; default k = CONE = φ⁻² (residual rate)',
+      'Stress residual |x−f(x)| is the computational moment of now',
+      'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
+      'Never claim certainty — always another perspective',
+      'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
+    ],
+  },
+]);
 module.exports = {
   PHI, PHI_INV, CONE, RATE, FIXED, heat, involution, modDist, involutionIdentity,
   twoCycles, fixedPoint, softContract, softMap, stressResidual, descentStep,
