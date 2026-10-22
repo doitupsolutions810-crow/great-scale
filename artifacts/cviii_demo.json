@@ -1,0 +1,15 @@
+{
+  "rung": "CVIII",
+  "registry_schema": "great-scale-witness-registry-v1",
+  "checkpoint_schema": "great-scale-registry-bound-checkpoint-v1",
+  "illustrative_registry": {
+    "version": 4,
+    "witness_domains": {
+      "witness-a": "domain-a",
+      "witness-b": "domain-b",
+      "witness-c": "domain-c"
+    }
+  },
+  "binding": "checkpoint carries registry_version and SHA-256 registry_hash",
+  "status": "illustrative only; no real registry authority signature or live attestation"
+}
