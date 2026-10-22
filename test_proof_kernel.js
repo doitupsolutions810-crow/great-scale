@@ -98,5 +98,30 @@ test('very wide proof object is rejected by schema-size gate',()=>{
   assert.throws(()=>check(p),/proof fields do not match rule schema/);
 });
 
+
+test('proof accessors are rejected without invoking getters',()=>{
+  let calls=0;const p={};
+  Object.defineProperty(p,'rule',{enumerable:true,get(){calls++;return 'assume'}});
+  Object.defineProperty(p,'formula',{enumerable:true,get(){calls++;return A}});
+  assert.throws(()=>check(p),/proof node accessors are not allowed/);
+  assert.equal(calls,0);
+});
+test('formula AST accessors are rejected without invoking getters',()=>{
+  let calls=0;const f=['and',A,B];
+  Object.defineProperty(f,'1',{enumerable:true,configurable:true,get(){calls++;return A}});
+  assert.throws(()=>validateFormula(f),/formula AST accessors are not allowed/);
+  assert.equal(calls,0);
+});
+test('truth assignment accessors are rejected without invoking getters',()=>{
+  let calls=0;const env={};
+  Object.defineProperty(env,A,{enumerable:true,get(){calls++;return true}});
+  assert.throws(()=>evalF(A,env),/truth assignment accessors are not allowed/);
+  assert.equal(calls,0);
+});
+test('claim context rejects sparse arrays',()=>{
+  const sparse=[];sparse.length=2;sparse[1]=A;
+  assert.throws(()=>checkBound(assume(A),A,sparse),/dense/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
