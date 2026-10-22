@@ -63,7 +63,7 @@ test('large truth-table formulas remain under one global evaluation budget',()=>
   function balancedOr(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['or',balancedOr(xs.slice(0,m)),balancedOr(xs.slice(m))];}
   const largeTautology=balancedOr(leaves);
   const context=[largeTautology,...Array.from({length:16},(_,i)=>['imp','P'+i,'P'+i])];
-  assert.throws(()=>tautologyUnderContext('P0',context),/evaluation budget exceeded/);
+  assert.throws(()=>tautologyUnderContext(['imp','P0','P0'],context),/evaluation budget exceeded/);
 });
 
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
