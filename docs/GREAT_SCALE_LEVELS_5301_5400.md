@@ -18,52 +18,52 @@ An attestation must therefore be evaluated against an explicit trust policy at t
 
 Let:
 
-- (e) be the evidence payload;
-- (sigma) be its signature;
-- (k) be the key identity and public-key material;
-- (P_t) be the verifier's trust policy at decision time (t);
-- (c) be the requested context (repository, workflow identity, PR number, candidate SHA, and intended action);
-- (t_i) be the claimed issuance time and (t_x) the expiry time;
-- (r_t) be the revocation state known to the trusted verifier at time (t).
+- \(e\) be the evidence payload;
+- (\sigma) be its signature;
+- \(k\) be the key identity and public-key material;
+- \(P_t\) be the verifier's trust policy at decision time \(t\);
+- \(c\) be the requested context (repository, workflow identity, PR number, candidate SHA, and intended action);
+- \(t_i\) be the claimed issuance time and \(t_x\) the expiry time;
+- \(r_t\) be the revocation state known to the trusted verifier at time \(t\).
 
 Define admissibility as the conjunction
 
-[
+\[
 A(e,\sigma,k,P_t,c,t) =
-C(e) \land S(e,\sigma,k) \land I(k,P_t,t)
+C\(e\) \land S(e,\sigma,k) \land I(k,P_t,t)
 \land B(e,c) \land F(e,t) \land R(k,r_t,t)
 \land N(e,c,t).
-]
+\]
 
 The predicates mean:
 
-- (C): the payload has an unambiguous, strictly validated schema and canonical signing representation;
-- (S): the cryptographic signature verifies using an explicitly permitted algorithm and key;
-- (I): the issuer and key are authorized by the verifier-controlled policy for this purpose at time (t);
-- (B): repository, workflow, run, receipt, artifact, PR, and full candidate SHA bindings are mutually consistent;
-- (F): freshness checks pass, including an allowed issuance/expiry window and bounded clock-skew policy;
-- (R): key and issuer status passes revocation / compromise policy at verification time;
-- (N): replay resistance and action-time state checks pass.
+- \(C\): the payload has an unambiguous, strictly validated schema and canonical signing representation;
+- \(S\): the cryptographic signature verifies using an explicitly permitted algorithm and key;
+- \(I\): the issuer and key are authorized by the verifier-controlled policy for this purpose at time \(t\);
+- \(B\): repository, workflow, run, receipt, artifact, PR, and full candidate SHA bindings are mutually consistent;
+- \(F\): freshness checks pass, including an allowed issuance/expiry window and bounded clock-skew policy;
+- \(R\): key and issuer status passes revocation / compromise policy at verification time;
+- \(N\): replay resistance and action-time state checks pass.
 
 The promotion gate may only claim authenticated admissibility when every required predicate has been established by trusted mechanisms. If only schema checks and cross-field comparisons are implemented, the result is **structurally eligible for further review**, not authenticated and not safe to promote.
 
 ### Time-indexed validity
 
-Define (A_t=A(e,\sigma,k,P_t,c,t)). In general,
+Define \(A_t=A(e,\sigma,k,P_t,c,t)\). In general,
 
-[
+\[
 A_{t_0}=\mathrm{true} \centernot\Rightarrow A_{t_1}=\mathrm{true}.
-]
+\]
 
-This is not a defect in cryptography. The policy, PR head, revocation state, artifact availability, or acceptance window may legitimately change between (t_0) and (t_1). The verifier must reevaluate decision-time conditions rather than treating a prior green result as a perpetual capability.
+This is not a defect in cryptography. The policy, PR head, revocation state, artifact availability, or acceptance window may legitimately change between \(t_0\) and \(t_1\). The verifier must reevaluate decision-time conditions rather than treating a prior green result as a perpetual capability.
 
 ### Policy monotonicity under uncertainty
 
-For a high-assurance promotion decision, missing or unverifiable trust state must not increase privilege. Let (U) denote unavailable or ambiguous evidence about issuer status, revocation, or current PR state. The safe policy is
+For a high-assurance promotion decision, missing or unverifiable trust state must not increase privilege. Let \(U\) denote unavailable or ambiguous evidence about issuer status, revocation, or current PR state. The safe policy is
 
-[
+\[
 \operatorname{Admit}(e\mid U)=\mathrm{false}
-]
+\]
 
 for checks designated mandatory by the trust policy. This is a fail-closed design requirement, not a claim that every low-risk workflow must reject all transient outages; exception behavior must be explicit, bounded, and auditable.
 
@@ -129,7 +129,7 @@ Verification must include adversarial tests against the exact committed SHA, the
 | Level | Mathematics | Science | Status |
 |---|---|---|---|
 | 5301–5310 | Evidence admissibility is a conjunction of structural, cryptographic, identity, binding, freshness, revocation, and replay predicates | Provenance requires independently trusted acquisition and context | Formal model specified |
-| 5311–5320 | (A_{t_0}\not\Rightarrow A_{t_1}) in the presence of policy or state changes | CI evidence and PR state are time-dependent software facts | Deduction from the model |
+| 5311–5320 | \(A_{t_0}\not\Rightarrow A_{t_1}\) in the presence of policy or state changes | CI evidence and PR state are time-dependent software facts | Deduction from the model |
 | 5321–5330 | Key validity is a policy-indexed relation, not a key-ID string | Rotation and revocation are operational trust-lifecycle concerns | Requirements specified |
 | 5331–5340 | Canonicalization gives an unambiguous signed representation | Stable serialization is required for reproducible signature verification | RFC 8785 referenced; implementation absent |
 | 5341–5350 | Replay exclusion requires identity and context binding | Valid evidence can be misapplied outside its intended audience | Threats and controls specified |
