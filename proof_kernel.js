@@ -63,6 +63,29 @@ function readDataArray(value, label) {
   return out;
 }
 
+function copyFormula(formula, depth=0, budget={nodes:0}) {
+  if (depth > MAX_DEPTH) throw new Error('formula depth limit exceeded');
+  if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
+  if (typeof formula === 'string') {
+    if (formula.length === 0 || formula.length > MAX_ATOM_LENGTH) throw new Error('invalid formula atom');
+    return formula;
+  }
+  if (!Array.isArray(formula)) throw new Error('malformed formula AST');
+  const parts = readDataArray(formula, 'formula AST');
+  if (parts.length !== 3) throw new Error('malformed formula AST');
+  const [op,left,right] = parts;
+  if (!['and','or','imp'].includes(op)) throw new Error('unknown formula operator');
+  return [op,copyFormula(left,depth+1,budget),copyFormula(right,depth+1,budget)];
+}
+
+function freezeResult(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const key of Object.keys(value)) freezeResult(value[key]);
+    Object.freeze(value);
+  }
+  return value;
+}
+
 function validateFormula(formula, depth=0, budget={nodes:0}) {
   if (depth > MAX_DEPTH) throw new Error('formula depth limit exceeded');
   if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
@@ -97,7 +120,8 @@ function check(proof, budget={nodes:0}) {
       case 'assume':
         requireKeys(['rule','formula']);
         validateFormula(data.formula,0,budget);
-        return {conclusion:data.formula,context:[data.formula]};
+        const formula=copyFormula(data.formula);
+        return {conclusion:formula,context:[formula]};
       case 'andI': {
         requireKeys(['rule','left','right']);
         const a=visit(data.left,depth+1),b=visit(data.right,depth+1);
@@ -118,11 +142,12 @@ function check(proof, budget={nodes:0}) {
       case 'impI': {
         requireKeys(['rule','assumption','proof']);
         validateFormula(data.assumption,0,budget);
+        const assumption=copyFormula(data.assumption);
         const a=visit(data.proof,depth+1);
-        const i=a.context.findIndex(x=>eq(x,data.assumption));
+        const i=a.context.findIndex(x=>eq(x,assumption));
         if(i<0) throw new Error('impI assumption not present for discharge');
         const ctx=[...a.context];ctx.splice(i,1);
-        return {conclusion:['imp',data.assumption,a.conclusion],context:ctx};
+        return {conclusion:['imp',assumption,a.conclusion],context:ctx};
       }
       case 'impE': {
         requireKeys(['rule','function','argument']);
@@ -133,19 +158,21 @@ function check(proof, budget={nodes:0}) {
       case 'orIL': {
         requireKeys(['rule','proof','other']);
         validateFormula(data.other,0,budget);
+        const other=copyFormula(data.other);
         const a=visit(data.proof,depth+1);
-        return {conclusion:['or',a.conclusion,data.other],context:a.context};
+        return {conclusion:['or',a.conclusion,other],context:a.context};
       }
       case 'orIR': {
         requireKeys(['rule','proof','other']);
         validateFormula(data.other,0,budget);
+        const other=copyFormula(data.other);
         const a=visit(data.proof,depth+1);
-        return {conclusion:['or',data.other,a.conclusion],context:a.context};
+        return {conclusion:['or',other,a.conclusion],context:a.context};
       }
       default: throw new Error('unknown inference rule');
     }
   }
-  return visit(proof,0);
+  return freezeResult(visit(proof,0));
 }
 function checkBound(proof, expectedConclusion, expectedContext) {
   const budget={nodes:0};
