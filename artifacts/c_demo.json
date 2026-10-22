@@ -1,0 +1,27 @@
+{
+  "rung": "C",
+  "title": "Composite Nulls and Robust Fixed-Sample Evidence",
+  "assumptions": {
+    "observation_model": "iid Bernoulli",
+    "sample_size": "fixed and predeclared",
+    "null_probabilities": [
+      0.4,
+      0.5,
+      0.6
+    ],
+    "alternative_probabilities": [
+      0.8,
+      0.2
+    ],
+    "weights": [
+      0.5,
+      0.5
+    ],
+    "observations": [
+      1,
+      1,
+      1
+    ]
+  },
+  "scope": "fixed-sample e-value; not an anytime-valid e-process"
+}
