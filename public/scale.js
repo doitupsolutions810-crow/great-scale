@@ -65,6 +65,13 @@ function validateContractionFactor(k) {
   if (!Number.isFinite(k) || Math.abs(k) >= 1) throw new RangeError('contraction factor k must be finite and satisfy |k| < 1');
   return k;
 }
+function validateTickInterval(tickMs) {
+  // Keep timer delays inside the portable signed-32-bit millisecond range.
+  if (!Number.isFinite(tickMs) || tickMs < 1 || tickMs > 2147483647) {
+    throw new RangeError('tickMs must be finite and in [1, 2147483647] milliseconds');
+  }
+  return tickMs;
+}
 export function softContract(x, k = 0.5) {
   if (!Number.isFinite(x)) throw new TypeError('contraction coordinate must be finite');
   validateContractionFactor(k);
@@ -124,7 +131,7 @@ export class DescentEngine {
   constructor({ start = 1, k = 0.5, tickMs = 150 } = {}) {
     this.x = canonicalizeCircleCoordinate(start);
     this.k = validateContractionFactor(k);
-    this.tickMs = tickMs;
+    this.tickMs = validateTickInterval(tickMs);
     this.t = 0;
     this.history = [];
     this.maxHistory = 200;
@@ -150,8 +157,9 @@ export class DescentEngine {
 
   start() {
     if (this.running) return;
+    const tickMs = validateTickInterval(this.tickMs); // Revalidate because the field is publicly mutable.
+    this.timer = setInterval(() => this.tick(), tickMs);
     this.running = true;
-    this.timer = setInterval(() => this.tick(), this.tickMs);
   }
 
   stop() {
