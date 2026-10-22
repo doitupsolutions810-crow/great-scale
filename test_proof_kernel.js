@@ -50,5 +50,21 @@ test('truth-table evaluation work budget enforced',()=>{
   assert.throws(()=>tautologyUnderContext(conclusion,context),/evaluation budget exceeded/);
 });
 
+
+test('orIR cannot reset aggregate formula-node budget',()=>{
+  const leaves=Array.from({length:2000},(_,i)=>'R'+(i%2));
+  function balanced(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['and',balanced(xs.slice(0,m)),balanced(xs.slice(m))];}
+  const big=balanced(leaves);
+  const p={rule:'orIR',proof:{rule:'orIR',proof:{rule:'orIR',proof:assume(A),other:big},other:big},other:big};
+  assert.throws(()=>check(p),/input node limit exceeded/);
+});
+test('large truth-table formulas remain under one global evaluation budget',()=>{
+  const leaves=Array.from({length:2400},()=>['imp','A','A']);
+  function balancedOr(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['or',balancedOr(xs.slice(0,m)),balancedOr(xs.slice(m))];}
+  const largeTautology=balancedOr(leaves);
+  const context=[largeTautology,...Array.from({length:16},(_,i)=>['imp','P'+i,'P'+i])];
+  assert.throws(()=>tautologyUnderContext('P0',context),/evaluation budget exceeded/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
