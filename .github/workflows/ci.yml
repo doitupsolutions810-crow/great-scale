@@ -27,3 +27,11 @@ jobs:
           python-version: '3.11'
       - name: Run the canonical verification script
         run: bash scripts/verify-local.sh
+      - name: Upload commit-bound verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: great-scale-verification-receipt
+          path: ${{ runner.temp }}/great-scale-verification-receipt.json
+          if-no-files-found: warn
+          retention-days: 14
