@@ -4,7 +4,7 @@
 
 The previous descent isolated an execution-evidence gap: local and hosted test commands are unified, and a receipt is emitted by the command, but no hosted runner has produced executed steps/logs/artifacts. The next step is to formalize a policy that cannot promote a candidate using only a receipt or a success label.
 
-The gate now added on this research branch is `promotion_gate.js`; its adversarial tests are `test_promotion_gate.js`, and they are included in `npm test`.
+The gate now added on this research branch is `promotion_gate.js`; its adversarial tests are `test_promotion_gate.js`, and they are included in `npm test`. The gate's input envelope is now restricted to plain data-only records with exact field sets, and its step list must be a dense standard array with no custom properties.
 
 ## Promotion predicate
 
@@ -30,7 +30,7 @@ Required checks include candidate/run/receipt SHA equality, matching repository,
 
 ## Executed reference tests
 
-The equivalent JavaScript reference harness for the gate passed **29/29 checks**, covering:
+The equivalent JavaScript reference harness for the hardened gate passed **34/34 checks**, covering:
 - the complete positive fixture produces review eligibility only;
 - missing/malformed evidence fails closed;
 - altered candidate, run, and receipt SHAs fail;
@@ -49,7 +49,7 @@ The local receipt is also not independent attestation. Its purpose is outcome ca
 
 ## Actual hosted run status
 
-Latest known hosted execution for the previous candidate failed after retry with no executed step summaries, no logs, and no artifact. The PR head has now advanced again due to the promotion gate and tests. It must be checked afresh for the new exact SHA. The available connector supports re-running failed jobs but does not expose a workflow-dispatch action or runner/billing administration. Re-running a no-runner failure does not create a runner.
+Latest known hosted execution for the previous candidate failed after retry with no executed step summaries, no logs, and no artifact. The PR head has now advanced again due to the promotion gate and tests. It must be checked afresh for the new exact SHA. The available connector supports re-running failed jobs but does not expose a workflow-dispatch action or runner/billing administration. The run for the latest prior candidate was retried once; it again failed without steps, logs, or artifacts. Re-running a no-runner failure does not create a runner.
 
 Therefore the new gate is integrated and locally reference-tested, but **it is not yet able to accept a real hosted execution receipt** because the required independent platform evidence has not been produced. Keep PR #89 draft and unmerged.
 
