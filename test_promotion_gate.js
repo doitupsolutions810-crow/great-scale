@@ -10,7 +10,6 @@ const SHA = 'a'.repeat(40);
 const fixture = () => ({
   candidate: { repo: 'doitupsolutions810-crow/great-scale', sha: SHA },
   pullRequest: { number: 89, state: 'open', headRepository: 'doitupsolutions810-crow/great-scale', headSha: SHA },
-  pullRequest: { number: 89, state: 'open', headRepository: 'doitupsolutions810-crow/great-scale', headSha: SHA },
   run: {
     source: 'github-actions-api',
     repository: 'doitupsolutions810-crow/great-scale',
