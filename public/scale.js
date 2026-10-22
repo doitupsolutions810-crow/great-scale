@@ -52,7 +52,7 @@ export function involutionFixedPoints() {
 }
 
 /**
- * Soft contraction toward the fixed point x*=4.5.
+ * Soft contraction toward the contraction target x*=4.5.
  * |k| < 1 guarantees convergence. Default k=0.5.
  * This is the descent dynamics — not a blend with the involution
  * (which preserves distance from 4.5 and yields two-cycles).
@@ -63,7 +63,7 @@ export function softContract(x, k = 0.5) {
 
 /**
  * Linear involution shadow (exact reflection through 4.5).
- * g(g(x)) = x, g(4.5) = 4.5. On the circle, 0 and 9 are equivalent; f fixes both 0 and 4.5.
+ * g(g(x)) = x, g(4.5) = 4.5. The circle map f fixes [0] and [4.5]; 0 and 9 are equivalent representatives.
  */
 export function softMap(x) {
   return 9 - x;
