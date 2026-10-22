@@ -4,6 +4,8 @@ const MAX_DEPTH = 256;
 const MAX_NODES = 10000;
 const MAX_ATOMS = 16;
 const MAX_EVAL_STEPS = 2000000;
+const MAX_ATOM_LENGTH = 4096;
+const MAX_RULE_LENGTH = 32;
 const eq = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 const union = (a,b) => [...a,...b];
 
@@ -12,6 +14,7 @@ function validateFormula(formula, depth=0, budget={nodes:0}) {
   if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
   if (typeof formula === 'string') {
     if (formula.length === 0) throw new Error('empty atom');
+    if (formula.length > MAX_ATOM_LENGTH) throw new Error('atom length limit exceeded');
     return true;
   }
   if (!Array.isArray(formula) || formula.length !== 3) throw new Error('malformed formula AST');
@@ -26,11 +29,14 @@ function check(proof, budget={nodes:0}) {
     if (depth > MAX_DEPTH) throw new Error('proof depth limit exceeded');
     if (++budget.nodes > MAX_NODES) throw new Error('input node limit exceeded');
     if (!p || typeof p !== 'object' || Array.isArray(p)) throw new Error('malformed proof');
-    const keys=Object.keys(p).sort();
+    const keys=Object.keys(p);
+    if(keys.length>4) throw new Error('proof fields do not match rule schema');
+    keys.sort();
     const requireKeys=(expected) => {
       if (JSON.stringify(keys) !== JSON.stringify([...expected].sort())) throw new Error('proof fields do not match rule schema');
     };
     if (typeof p.rule !== 'string') throw new Error('missing proof rule');
+    if (p.rule.length > MAX_RULE_LENGTH) throw new Error('proof rule length limit exceeded');
     switch(p.rule) {
       case 'assume':
         requireKeys(['rule','formula']);
@@ -134,4 +140,4 @@ function tautologyUnderContext(conclusion,context) {
   }
   return true;
 }
-module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,validateFormula,check,checkBound,eq,evalF,tautologyUnderContext};
+module.exports={MAX_DEPTH,MAX_NODES,MAX_ATOMS,MAX_EVAL_STEPS,MAX_ATOM_LENGTH,MAX_RULE_LENGTH,validateFormula,check,checkBound,eq,evalF,tautologyUnderContext};
