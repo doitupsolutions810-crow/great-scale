@@ -90,5 +90,27 @@ test('malformed full commit SHA blocks', () => blocked(x => { x.candidate.sha = 
 test('runner ID missing blocks', () => blocked(x => { delete x.job.runnerId; }));
 test('platform run without SHA blocks', () => blocked(x => { delete x.run.headSha; }));
 
+
+test('evidence envelope rejects getters without invoking them', () => {
+  const x = fixture();
+  let called = false;
+  Object.defineProperty(x, 'candidate', { enumerable: true, configurable: true, get() { called = true; throw new Error('getter executed'); } });
+  const result = evaluatePromotionEvidence(x);
+  assert.equal(result.eligible, false);
+  assert.equal(called, false);
+});
+test('candidate record rejects unexpected fields', () => blocked(x => { x.candidate.extra = true; }));
+test('step records reject accessors without invoking them', () => {
+  const x = fixture();
+  let called = false;
+  const bad = { conclusion: 'success' };
+  Object.defineProperty(bad, 'name', { enumerable: true, get() { called = true; throw new Error('getter executed'); } });
+  x.job.steps[0] = bad;
+  assert.equal(evaluatePromotionEvidence(x).eligible, false);
+  assert.equal(called, false);
+});
+test('steps array rejects custom properties', () => blocked(x => { x.job.steps.note = 'unexpected'; }));
+test('artifact expiry must be explicitly false', () => blocked(x => { delete x.artifact.expired; }));
+
 console.log(JSON.stringify({ passed, failed, total: passed + failed, results }, null, 2));
 if (failed) process.exitCode = 1;
