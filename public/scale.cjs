@@ -20,9 +20,13 @@ function involutionIdentity(x) {
 function twoCycles() {
   return [[1, 8], [2, 7], [3, 6], [4, 5]];
 }
+// Contraction target; the circle involution has fixed points 0 and 4.5.
 function fixedPoint() { return FIXED; }
+function involutionFixedPoints() { return [0, 4.5]; }
 function softContract(x, k = 0.5) { return FIXED + k * (x - FIXED); }
+// Real-line reflection; on the circle, 0 and 9 are equivalent.
 function softMap(x) { return 9 - x; }
+// Zero at both circle-involution fixed points: 0 and 4.5.
 function stressResidual(x) { return modDist(x, involution(x)); }
 function descentStep(x, k = 0.5) { return softContract(x, k); }
 function stateAt(t, rate = RATE) {
@@ -86,8 +90,8 @@ const HYPOTHESIS = Object.freeze({
   id: 'great-scale.main',
   statements: [
     'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
-    'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
-    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point',
+    'f(x)=(9-(x mod 9)) mod 9 has circle fixed points 0 and 4.5, plus two-cycles 1↔8,2↔7,3↔6,4↔5',
+    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to contraction target 4.5',
     'Stress residual is the circular distance d₉(x,f(x)); interpret it on the ninefold circle',
     'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
     'Never claim certainty — always another perspective',
@@ -95,6 +99,6 @@ const HYPOTHESIS = Object.freeze({
 });
 module.exports = {
   PHI, PHI_INV, CONE, RATE, FIXED, heat, involution, modDist, involutionIdentity,
-  twoCycles, fixedPoint, softContract, softMap, stressResidual, descentStep,
+  twoCycles, fixedPoint, involutionFixedPoints, softContract, softMap, stressResidual, descentStep,
   stateAt, DescentEngine, HYPOTHESIS,
 };

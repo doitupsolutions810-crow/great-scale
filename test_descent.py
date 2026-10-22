@@ -24,7 +24,8 @@ def soft_map(x):
     return 9 - x
 
 def stress_residual(x):
-    return abs(x - involution(x))
+    # Same circular metric as the JavaScript/CommonJS runtime.
+    return mod_dist(x, involution(x))
 
 def run_descent(start=1.0, steps=40, k=0.5):
     x = start
@@ -55,6 +56,13 @@ def main():
 
     ok = involution(0) == 0 and involution(9) == 0
     checks.append(("involution boundary 0≡9 → 0", ok))
+
+    fixed = [x for x in [i * 0.25 for i in range(36)] if mod_dist(involution(x), x) < 1e-9]
+    checks.append(("circle involution fixed points are 0 and 4.5", fixed == [0.0, 4.5]))
+
+    checks.append(("circular residual vanishes at both fixed points", stress_residual(0) < 1e-9 and stress_residual(4.5) < 1e-9))
+    checks.append(("circular residual periodicity", all(abs(stress_residual(x) - stress_residual(x + 9)) < 1e-9 for x in [-9.25, 0, 1, 4.5, 8.99])))
+    checks.append(("circular residual sample values", all(abs(stress_residual(x) - expected) < 1e-9 for x, expected in [(0, 0), (1, 2), (2, 4), (4, 1), (4.5, 0), (8, 2), (9, 0)])))
 
     for start in [1.0, 0.5, 8.0, 3.0, 6.5]:
         trail = run_descent(start=start, steps=40)

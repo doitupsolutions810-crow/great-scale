@@ -12,10 +12,10 @@
 ## Math
 
 - heat(h) = h(1−h) ≡ tension(B) = B(1−B)
-- involution f(x) = (9 − (x mod 9)) mod 9 — identity modular, fixed point 4.5, two-cycles 1↔8…
-- soft contraction x′ = 4.5 + k(x − 4.5), |k|<1 — converges to fixed point
+- involution f(x) = (9 − (x mod 9)) mod 9 — circle fixed points 0 and 4.5; two-cycles 1↔8…
+- soft contraction x′ = 4.5 + k(x − 4.5), |k|<1 — converges to contraction target 4.5
 - softMap g(x) = 9 − x — linear involution shadow
-- stress residual |x − f(x)| — computational moment of now
+- stress residual R(x) = d₉(x, f(x)) — circular distance, periodic under x ↦ x + 9; zero at both circle fixed points
 
 ## Run
 
