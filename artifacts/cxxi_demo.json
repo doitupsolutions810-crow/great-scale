@@ -1,0 +1,15 @@
+{
+  "rung": "CXXI",
+  "title": "Robustness to Misspecified Selection",
+  "status": "implementation_added_tests_authored_not_yet_executed",
+  "synthetic_only": true,
+  "known_equal_cluster_target": 0.125,
+  "selection_mechanism": "pi=0.8 when delta>0, otherwise 0.25",
+  "scenarios": [
+    {"logit_shift": 0.0, "meaning": "correct inclusion probabilities"},
+    {"logit_shift": 1.0, "meaning": "deliberately shifted inclusion probabilities"},
+    {"logit_shift": -1.0, "meaning": "opposite-direction logit shift"}
+  ],
+  "metrics": ["bias", "RMSE", "empirical SD", "mean selected clusters", "effective sample size"],
+  "interpretation": "A weighting estimator depends on the quality of the inclusion probabilities, not merely on applying weights."
+}
