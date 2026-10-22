@@ -124,7 +124,7 @@ function checkInternal(proof, budget={nodes:0}) {
       case 'assume':
         requireKeys(['rule','formula']);
         validateFormulaInternal(data.formula,0,budget);
-        const formula=copyFormula(data.formula);
+        const formula=copyFormula(data.formula,0,budget);
         return {conclusion:formula,context:[formula]};
       case 'andI': {
         requireKeys(['rule','left','right']);
@@ -146,7 +146,7 @@ function checkInternal(proof, budget={nodes:0}) {
       case 'impI': {
         requireKeys(['rule','assumption','proof']);
         validateFormulaInternal(data.assumption,0,budget);
-        const assumption=copyFormula(data.assumption);
+        const assumption=copyFormula(data.assumption,0,budget);
         const a=visit(data.proof,depth+1);
         const i=a.context.findIndex(x=>eq(x,assumption));
         if(i<0) throw new Error('impI assumption not present for discharge');
@@ -162,14 +162,14 @@ function checkInternal(proof, budget={nodes:0}) {
       case 'orIL': {
         requireKeys(['rule','proof','other']);
         validateFormulaInternal(data.other,0,budget);
-        const other=copyFormula(data.other);
+        const other=copyFormula(data.other,0,budget);
         const a=visit(data.proof,depth+1);
         return {conclusion:['or',a.conclusion,other],context:a.context};
       }
       case 'orIR': {
         requireKeys(['rule','proof','other']);
         validateFormulaInternal(data.other,0,budget);
-        const other=copyFormula(data.other);
+        const other=copyFormula(data.other,0,budget);
         const a=visit(data.proof,depth+1);
         return {conclusion:['or',other,a.conclusion],context:a.context};
       }
