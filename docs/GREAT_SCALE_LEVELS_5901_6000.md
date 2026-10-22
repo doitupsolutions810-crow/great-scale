@@ -10,7 +10,7 @@ This is a resource-accounting gap, not a claim of unbounded input or a demonstra
 
 - Added a verifier-owned `MAX_KERNEL_WORK = 2,000,000` budget, separate from the input-node budget.
 - Added structural `formulaEquals`, charging one unit per formula node and a length-proportional amount for string comparisons.
-- Charged context concatenation, discharge-array copying/shifting, and context-multiset bookkeeping against the same work budget.
+- Charged context concatenation, discharge-array copying/shifting, and every candidate slot examined during context-multiset matching against the same work budget, including already-matched slots.
 - Replaced repeated JSON serialization in internal implication checks and claim-bound conclusion/context matching with budgeted structural comparisons. The exported compatibility helper `eq` remains available, but the proof-checking path no longer relies on it for these decisions.
 - Added an adversarial regression with 2,100 long atom formulas and 100 nested discharges; it must fail closed with `kernel work budget exceeded` before completing an excessive comparison workload.
 
