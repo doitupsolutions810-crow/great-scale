@@ -4,7 +4,7 @@
 
 The previous descent isolated an execution-evidence gap: local and hosted test commands are unified, and a receipt is emitted by the command, but no hosted runner has produced executed steps/logs/artifacts. The next step is to formalize a policy that cannot promote a candidate using only a receipt or a success label.
 
-The gate now added on this research branch is `promotion_gate.js`; its adversarial tests are `test_promotion_gate.js`, and they are included in `npm test`. The gate's input envelope is now restricted to plain data-only records with exact field sets, and its step list must be a dense standard array with no custom properties.
+The gate now added on this research branch is `promotion_gate.js`; its adversarial tests are `test_promotion_gate.js`, and they are included in `npm test`. The gate's input envelope is now restricted to plain data-only records with exact field sets, and its step list must be a dense standard array with no custom properties. A CLI was added: `node promotion_gate.js <authenticated-platform-evidence.json>`. It exits nonzero when evidence is blocked or cannot be parsed. It expects platform evidence from an authenticated collector; it does not fetch or authenticate GitHub data itself.
 
 ## Promotion predicate
 
@@ -43,7 +43,7 @@ These tests exercise equivalent policy logic in the available JavaScript executi
 
 ## Trust boundary
 
-The gate deliberately returns `ELIGIBLE_FOR_PROMOTION_REVIEW` rather than `VERIFIED`. It validates relationships in a structured evidence bundle; it does not authenticate the GitHub API collector or prove that submitted fields came from GitHub. A production collector must fetch run/job/artifact metadata through an authenticated GitHub API connection, bind it to the exact candidate SHA, and supply those platform-derived records. A bare JSON field saying `source: github-actions-api` is not authentication.
+The gate deliberately returns `ELIGIBLE_FOR_PROMOTION_REVIEW` rather than `VERIFIED`. It validates relationships in a structured evidence bundle; it does not authenticate the GitHub API collector or prove that submitted fields came from GitHub. A production collector must fetch run/job/artifact metadata through an authenticated GitHub API connection, bind it to the exact candidate SHA, and supply those platform-derived records. The new CLI consumes the collector's JSON output but is not itself that collector. A bare JSON field saying `source: github-actions-api` is not authentication.
 
 The local receipt is also not independent attestation. Its purpose is outcome capture. The platform job metadata, logs, and artifact provenance provide the additional execution evidence; checker soundness, test adequacy, independent review, and deployment authorization remain separate gates.
 
