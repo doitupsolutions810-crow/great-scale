@@ -19,7 +19,7 @@ An attestation must therefore be evaluated against an explicit trust policy at t
 Let:
 
 - \(e\) be the evidence payload;
-- (\sigma) be its signature;
+- \(\sigma\) be its signature;
 - \(k\) be the key identity and public-key material;
 - \(P_t\) be the verifier's trust policy at decision time \(t\);
 - \(c\) be the requested context (repository, workflow identity, PR number, candidate SHA, and intended action);
@@ -30,7 +30,7 @@ Define admissibility as the conjunction
 
 \[
 A(e,\sigma,k,P_t,c,t) =
-C\(e\) \land S(e,\sigma,k) \land I(k,P_t,t)
+C(e) \land S(e,\sigma,k) \land I(k,P_t,t)
 \land B(e,c) \land F(e,t) \land R(k,r_t,t)
 \land N(e,c,t).
 \]
