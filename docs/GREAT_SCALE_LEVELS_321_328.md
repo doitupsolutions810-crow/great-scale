@@ -20,7 +20,7 @@ and
 \[
 g_{\max}=\max_{p\in[p_-,p_+]}p(1-p)-v_-.
 \]
-Thus (g_{\min}\ge0) certifies every admissible point feasible; (g_{\max}<0) certifies every admissible point infeasible; otherwise the box is unresolved. Exact rational arithmetic certifies this model and input representation, not a physical probability distribution without empirical assumptions.
+Thus `$g_{min} \geq 0$` certifies every admissible point feasible; `$g_{max}<0$` certifies every admissible point infeasible; otherwise the box is unresolved. Exact rational arithmetic certifies this model and input representation, not a physical probability distribution without empirical assumptions.
 
 ## 322 — The integration contract
 
@@ -41,7 +41,7 @@ A locally generated receipt can summarize what its process observed. It cannot, 
 
 ## 325 — The composition rule
 
-Let the candidate SHA be $s$, and define:
+Let the candidate SHA be `$s$`, and define:
 - (F$s$): formal/model assumptions are declared;
 - (I$s$): implementation corresponds to the declared model;
 - (T$s$): every required suite actually ran and passed;
@@ -53,7 +53,7 @@ The proposed promotion invariant is
 \operatorname{Promote}$s$\Rightarrow
 F$s$\land I$s$\land T$s$\land E$s$\land A$s$.
 \]
-This is a governance contract, not a theorem that the repository currently enforces end-to-end. Its key feature is the shared index $s$: evidence about one commit cannot silently certify another.
+This is a governance contract, not a theorem that the repository currently enforces end-to-end. Its key feature is the shared index `$s$`: evidence about one commit cannot silently certify another.
 
 ## 326 — Failure classification
 
@@ -71,7 +71,7 @@ Conflating infrastructure-blocked with test failure destroys diagnostic informat
 - The six robust-feasibility cases passed in an isolated local reproduction of the helper logic.
 - The exact GitHub candidate branch was source-inspected for the helper, test module, canonical script, and workflow configuration.
 - The full repository suites, complete build, and exact-head hosted run are **not verified** here. No merge or deployment is claimed.
-- The candidate preserves (Psi=\mathrm{CONE}+S), $S=h(1-h)$, (mathrm{CONE}=\phi^{-2}). It does not identify that convention with the separate provisional relation (Psi=H-\sigma).
+- The candidate preserves `$\Psi=\mathrm{CONE}+S$`, `$S=h(1-h)$`, `$\mathrm{CONE}=\phi^{-2}$`. It does not identify that convention with the separate provisional relation `$\Psi=H-\sigma$`.
 
 ## 328 — Profound finding: correctness must survive transport
 
