@@ -1,13 +1,13 @@
-const assert = require('assert);
+const assert = require('node:assert/strict');
 const {
   PHI, CONE, FIXED, heat, involution, involutionIdentity, modDist,
   twoCycles, fixedPoint, softMap, softContract, stressResidual,
   descentStep, stateAt, DescentEngine, HYPOTHESIS,
-} = require('./public/scale.cjs);
+} = require('./public/scale.cjs');
 const {
   TAU, PSI, residualStep, agentResidualStep, healthCheck,
   residualFlow, matrixPower, verifyResidualOps,
-} = require('./public/residual-ops.cjs);
+} = require('./public/residual-ops.cjs');
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -127,7 +127,7 @@ test('residualFlow contracts', () => assert.ok(residualFlow(1, 1) < 1));
 test('matrixPower(3) = [[13,−8],[−8,5]]', () => {
   const M = matrixPower(3);
   assert.strictEqual(M[0][0], 13);
-  assert.strictEqual(M[1][1], 13);
+  assert.strictEqual(M[1][1], 5);
   assert.strictEqual(M[0][1], -8);
   assert.strictEqual(M[1][0], -8);
   assert.strictEqual(M[0][0] * M[1][1] - M[0][1] * M[1][0], 1);
