@@ -181,5 +181,13 @@ test('public evaluator ignores caller-supplied work-counter objects',()=>{
   assert.equal(writes,0);
 });
 
+
+test('formula validation and certificate copying share one aggregate budget',()=>{
+  const leaves=Array.from({length:2600},(_,i)=>'F'+(i%2));
+  function balanced(xs){if(xs.length===1)return xs[0];const m=Math.floor(xs.length/2);return ['and',balanced(xs.slice(0,m)),balanced(xs.slice(m))];}
+  const formula=balanced(leaves);
+  assert.throws(()=>check({rule:'assume',formula}),/input node limit exceeded/);
+});
+
 console.log(JSON.stringify({passed,failed,total:passed+failed,results},null,2));
 if(failed)process.exitCode=1;
