@@ -11,10 +11,11 @@ A second integration gap was also found: `test_truth_table_kernel.js` was not in
 - Added a recursion depth limit of 256 and one aggregate AST node budget of 10,000 across all assumptions and the conclusion.
 - Added a global semantic evaluation work budget of 2,000,000 visited nodes across the complete truth-table run.
 - Enforced own-property Boolean valuations; inherited properties and non-Boolean assignments fail closed.
-- Added adversarial regression tests for cyclic ASTs, shared aggregate node limits, repeated truth-table work, and malformed valuation semantics.
+- Added adversarial regression tests for cyclic ASTs, shared aggregate node limits, repeated truth-table work, malformed valuation semantics, inherited/extra AST fields, sparse assumptions, oversized assumption arrays, and accessor-backed claim fields.
+- Required exact data-only schemas for claim and formula AST objects; reject inherited fields, unexpected keys, and accessors before evaluation.
 - Added `node test_truth_table_kernel.js` to the required `npm test` script, so the independent checker suite is included in the intended CI entry point.
 
-The test checker still uses classical propositional semantics over at most 16 variables. It is not a theorem prover for arithmetic, higher-order logic, or quantum physics.
+The test checker still uses classical propositional semantics over at most 16 variables. Claim envelopes and formula ASTs are restricted to exact own-property, data-only schemas. It is not a theorem prover for arithmetic, higher-order logic, or quantum physics.
 
 ## Mathematical model
 
@@ -40,7 +41,7 @@ These are implementation resource guards, not mathematical assumptions about tru
 
 ## Executed reference tests
 
-A targeted equivalent JavaScript harness passed **10/10 checks**:
+A targeted equivalent JavaScript harness passed **13/13 checks** after the envelope/schema hardening:
 1. valid modus ponens remains accepted;
 2. invalid entailment returns a counterexample;
 3. cyclic AST is rejected by depth guard;
@@ -50,7 +51,10 @@ A targeted equivalent JavaScript harness passed **10/10 checks**:
 7. string-valued assignment is rejected;
 8. explicit Boolean false is preserved;
 9. unknown operator is rejected;
-10. 17-variable claims are rejected by the finite truth-table limit.
+10. inherited and extra formula fields are rejected;
+11. sparse and oversized assumption arrays are rejected;
+12. accessor-backed claim fields are rejected without invoking the accessor;
+13. 17-variable claims are rejected by the finite truth-table limit.
 
 This harness exercised equivalent logic in the available JavaScript execution environment. It did not execute the repository's actual `npm test` command.
 
