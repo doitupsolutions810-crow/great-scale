@@ -22,6 +22,12 @@ const cjs = require('./public/scale.cjs');
     assert.deepEqual(esm.default[key], cjs[key], 'default.' + key + ' must match CommonJS');
   }
 
+  assert.deepEqual(esm.twoCycles(), cjs.twoCycles(), 'two-cycle structure must match');
+  assert.deepEqual(esm.fixedPoint(), cjs.fixedPoint(), 'fixed point must match');
+  for (const h of [0, 0.25, 0.5, 0.75, 1]) {
+    assert.deepEqual(esm.heat(h), cjs.heat(h), 'heat differs at h=' + h);
+  }
+
   for (const x of [-1, 0, 1, 4.5, 8, 9, 10]) {
     for (const name of ['involution', 'modDist', 'involutionIdentity',
       'softContract', 'softMap', 'stressResidual', 'descentStep']) {
@@ -39,6 +45,10 @@ const cjs = require('./public/scale.cjs');
   const cjsEngine = new cjs.DescentEngine({ start: 1 });
   assert.deepEqual(esmEngine.snapshot(), cjsEngine.snapshot(),
     'descent engine snapshots and version identifiers must match');
+  assert.deepEqual(esmEngine.tick(), cjsEngine.tick(),
+    'descent engine transition records must match');
+  assert.deepEqual(esmEngine.snapshot(), cjsEngine.snapshot(),
+    'descent engine post-step state must match');
 
   console.log('scale module parity: passed');
 })().catch((error) => {
