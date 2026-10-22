@@ -243,7 +243,7 @@ function rejectDuplicateJsonKeys(input) {
   const stack = [];
   let i = 0;
   let rootDone = false;
-  const skipSpace = () => { while (i < input.length && /\\s/.test(input[i])) i++; };
+  const skipSpace = () => { while (i < input.length && [32,9,10,13].includes(input.charCodeAt(i))) i++; };
   const stringEnd = start => {
     let j = start + 1;
     while (j < input.length) {
@@ -299,7 +299,7 @@ function rejectDuplicateJsonKeys(input) {
     } else if (input[i] === '"') {
       i = stringEnd(i);
     } else {
-      while (i < input.length && !/[\\s,\\]}]/.test(input[i])) i++;
+      while (i < input.length && !([32,9,10,13].includes(input.charCodeAt(i)) || input[i] === ',' || input[i] === ']' || input[i] === '}')) i++;
     }
   }
 }
