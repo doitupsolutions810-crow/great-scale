@@ -50,9 +50,11 @@ function evaluate(ast, valuation, steps={count:0}) {
   if (++steps.count > MAX_EVAL_STEPS) throw new RangeError('truth-table evaluation work limit exceeded');
   if (ast.op === 'var') {
     if (!valuation || typeof valuation !== 'object' || Array.isArray(valuation)) throw new TypeError('valuation must be an object');
-    if (!Object.prototype.hasOwnProperty.call(valuation,ast.name)) throw new TypeError('missing Boolean assignment');
-    if (typeof valuation[ast.name] !== 'boolean') throw new TypeError('assignment must be Boolean');
-    return valuation[ast.name];
+    const descriptor = Object.getOwnPropertyDescriptor(valuation, ast.name);
+    if (!descriptor) throw new TypeError('missing Boolean assignment');
+    if (!Object.prototype.hasOwnProperty.call(descriptor, 'value')) throw new TypeError('assignment accessors are not allowed');
+    if (typeof descriptor.value !== 'boolean') throw new TypeError('assignment must be Boolean');
+    return descriptor.value;
   }
   if (ast.op === 'not') return !evaluate(ast.arg, valuation, steps);
   const l = evaluate(ast.left, valuation, steps), r = evaluate(ast.right, valuation, steps);
@@ -213,6 +215,15 @@ test('assumption arrays reject custom keys and custom prototypes', () => {
   const custom=Object.assign(Object.create(proto),[V('P')]);
   custom.length=1;
   assert.throws(()=>checkEntailment({assumptions:custom,conclusion:V('P')}),/malformed claim/);
+});
+
+
+test('evaluator rejects accessor-backed assignments without invoking getters', () => {
+  let calls = 0;
+  const valuation = {};
+  Object.defineProperty(valuation, 'P', { enumerable: true, get() { calls++; return true; } });
+  assert.throws(() => evaluate(V('P'), valuation), /assignment accessors are not allowed/);
+  assert.equal(calls, 0);
 });
 
 for (const t of tests) console.log(`${t.ok?'PASS':'FAIL'} ${t.name}${t.error?` — ${t.error}`:''}`);
