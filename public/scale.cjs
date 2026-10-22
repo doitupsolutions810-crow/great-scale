@@ -1,9 +1,12 @@
-/** CJS mirror of scale.js for node test runner — v0.5.0 */
+/** CJS mirror of scale.js for node test runner — v0.5.1 */
 const PHI = (1 + Math.sqrt(5)) / 2;
 const PHI_INV = PHI - 1;
 const CONE = PHI_INV * PHI_INV;
 const RATE = 0.85;
+const RESIDUAL_DIMS = [4, 3, 1];
 const FIXED = 4.5;
+const CONE_MATRIX = [[2, -1], [-1, 1]];
+const FIB_MATRIX = [[1, 1], [1, 0]];
 
 function heat(h) { return h * (1 - h); }
 function involution(x) {
@@ -73,7 +76,7 @@ class DescentEngine {
   }
   snapshot() {
     return {
-      schema: 'great-scale.descent/v0.5.0',
+      schema: 'great-scale.descent/v0.5.1',
       running: this.running, t: this.t, x: this.x, k: this.k,
       nearFixed: Math.abs(this.x - FIXED) < 0.05,
       residual: stressResidual(this.x),
@@ -88,16 +91,18 @@ const HYPOTHESIS = Object.freeze([
     statements: [
       'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
       'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
-      'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges; default k = CONE = φ⁻² (residual rate)',
+      'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point; default k = CONE = φ⁻² (residual rate)',
       'Stress residual |x−f(x)| is the computational moment of now',
       'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
       'Never claim certainty — always another perspective',
       'Residual step r ← CONE·r; dual d ← d/CONE; first integral r·d = norm; Unity never finite-time',
+      'CONE-matrix M=[[2,-1],[-1,1]] has char poly x²-3x+1; scalar CONE and matrix M are the same contraction rate; M³ = CONE³ = three steps',
     ],
   },
 ]);
 module.exports = {
-  PHI, PHI_INV, CONE, RATE, FIXED, heat, involution, modDist, involutionIdentity,
+  PHI, PHI_INV, CONE, RATE, RESIDUAL_DIMS, FIXED, CONE_MATRIX, FIB_MATRIX,
+  heat, involution, modDist, involutionIdentity,
   twoCycles, fixedPoint, softContract, softMap, stressResidual, descentStep,
   stateAt, DescentEngine, HYPOTHESIS,
 };
