@@ -63,7 +63,7 @@ export function softContract(x, k = 0.5) {
 
 /**
  * Linear involution shadow (exact reflection through 4.5).
- * g(g(x)) = x, g(4.5) = 4.5. Same fixed point and two-cycle structure as f.
+ * g(g(x)) = x, g(4.5) = 4.5. On the circle, 0 and 9 are equivalent; f fixes both 0 and 4.5.
  */
 export function softMap(x) {
   return 9 - x;
@@ -177,7 +177,7 @@ export const HYPOTHESIS = Object.freeze({
   statements: [
     'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
     'f(x)=(9-(x mod 9)) mod 9 has circle fixed points 0 and 4.5, plus two-cycles 1↔8,2↔7,3↔6,4↔5',
-    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point',
+    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to contraction target 4.5',
     'Stress residual is the circular distance d₉(x,f(x)); interpret it on the ninefold circle',
     'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
     'Never claim certainty — always another perspective',
