@@ -222,6 +222,12 @@ test('serialized proof ingress rejects over-limit input before parsing',()=>{
 test('serialized proof ingress rejects malformed JSON',()=>{
   assert.throws(()=>checkSerialized('{"rule":'),/not valid JSON/);
 });
+test('serialized ingress rejects duplicate JSON keys, including escaped-equivalent keys',()=>{
+  const duplicateEnvelope='{"proof":{"rule":"assume","formula":"A"},"expectedConclusion":"B","expectedConclu\\u0073ion":"A","expectedContext":["A"]}';
+  assert.throws(()=>checkBoundSerialized(duplicateEnvelope),/duplicate JSON object key/);
+  const duplicateProof='{"rule":"assume","formula":"B","formula":"A"}';
+  assert.throws(()=>checkSerialized(duplicateProof),/duplicate JSON object key/);
+});
 test('serialized claim envelope binds proof conclusion and context',()=>{
   const input=JSON.stringify({proof:{rule:'assume',formula:A},expectedConclusion:A,expectedContext:[A]});
   assert.deepEqual(checkBoundSerialized(input).context,[A]);
