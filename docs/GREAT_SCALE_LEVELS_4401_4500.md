@@ -9,7 +9,7 @@ The earlier reference checker performed some inference-rule tag checks before va
 - Bound formula/proof depth at 256, aggregate proof-plus-formula input nodes at 10,000, truth-table variables at 16, and semantic evaluation work at 2,000,000 recursive evaluation steps.
 - Bind a checked proof to an explicit expected conclusion and expected assumption context with `checkBound`; compare contexts as multisets so duplicate assumptions are not silently dropped.
 - Add negative tests for malformed formulas, claim substitution, context substitution, resource limits, and an invalid conclusion that a truth-table oracle must reject.
-- Update the active `.github/workflows/blank.yml` workflow to run Node tests and the Python descent test with a timeout and read-only repository permissions.
+- Remove the duplicate placeholder `.github/workflows/blank.yml` from the branch so the existing `.github/workflows/ci.yml` remains the single authoritative CI workflow; it already runs `npm test` and `python3 test_descent.py`.
 
 ## Success criteria and current evidence
 1. Malformed formula syntax is rejected before inference.
@@ -20,7 +20,7 @@ The earlier reference checker performed some inference-rule tag checks before va
 6. Finite truth-table countermodels reject invalid entailments within the bounded propositional language.
 7. CI must report executed steps and a final success before the repository suite is labeled CI-verified.
 
-The reference harness recorded 26 core cases plus 4 claim/context-binding cases passing across two executions. Two newly added budget adversarial cases were then exercised separately; the aggregate node-budget and truth-table evaluation-budget checks both rejected their oversized inputs as intended. The full committed npm suite has not been executed by a normal hosted CI runner. GitHub Actions previously returned a job with runner ID 0 and no steps, so hosted CI availability remains a separate unresolved operational condition. Do not interpret a configured workflow, a successful Vercel deployment, or a reference execution as a successful GitHub Actions test run.
+The reference harness recorded 26 core cases plus 4 claim/context-binding cases passing across two executions. Two newly added budget adversarial cases were then exercised separately; the aggregate node-budget and truth-table evaluation-budget checks both rejected their oversized inputs as intended. The full committed npm suite has not been executed by a normal hosted CI runner. GitHub Actions previously returned failed jobs with no executed steps, and the duplicate workflow generated two CI runs per pull request. The duplicate was removed on this branch, but the underlying hosted-runner issue remains unresolved; hosted CI availability is a separate operational condition. Do not interpret a configured workflow, a successful Vercel deployment, or a reference execution as a successful GitHub Actions test run.
 
 ## Formal limits
 This is a bounded propositional reference checker, not an independently verified proof assistant. The truth-table oracle and kernel share the same informal formula encoding; therefore they are not fully independent implementations. Resource limits bound worst-case work but can reject otherwise valid large inputs; limits are an operational trade-off, not a mathematical principle. The checks do not establish general metatheoretic soundness, authenticated provenance, empirical validity, or a physical Quantum Geometry Mathematics law.
