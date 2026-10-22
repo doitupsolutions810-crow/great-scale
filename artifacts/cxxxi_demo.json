@@ -1,0 +1,36 @@
+{
+  "system": "Great Scale CXXXI",
+  "title": "Sharp Support Bounds vs Auxiliary Margins",
+  "seed": 20261031,
+  "repetitions": 5000,
+  "margin": 0.05,
+  "observed_count": 120,
+  "auxiliary_count": 12,
+  "results": [
+    {
+      "scenario": "original",
+      "true_mean": 0.04375,
+      "auxiliary_containment": 0.9454,
+      "support_containment": 1,
+      "auxiliary_mean_width": 0.212565,
+      "support_mean_width": 0.5
+    },
+    {
+      "scenario": "heldout_spiky",
+      "true_mean": 0.03333333333333333,
+      "auxiliary_containment": 0.9816,
+      "support_containment": 1,
+      "auxiliary_mean_width": 0.19128,
+      "support_mean_width": 0.5
+    },
+    {
+      "scenario": "heldout_skewed",
+      "true_mean": 0.144,
+      "auxiliary_containment": 0.971,
+      "support_containment": 1,
+      "auxiliary_mean_width": 0.4033224,
+      "support_mean_width": 0.52
+    }
+  ],
+  "caveat": "Support intervals are guaranteed only if [0,1] is a valid known support. Auxiliary intervals have empirical results only."
+}
