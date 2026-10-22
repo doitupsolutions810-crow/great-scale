@@ -47,7 +47,7 @@ test('aggregate proof and embedded-formula node budget enforced',()=>{
 test('truth-table evaluation work budget enforced',()=>{
   let conclusion='P0';
   for(let i=1;i<16;i++)conclusion=['or',conclusion,'P'+i];
-  const context=Array.from({length:1800},()=>['imp','A','A']);
+  const context=Array.from({length:1800},()=>['imp','P0','P0']);
   assert.throws(()=>tautologyUnderContext(conclusion,context),/evaluation budget exceeded/);
 });
 
