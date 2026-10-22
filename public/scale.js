@@ -95,9 +95,9 @@ export function stressResidual(x) {
   return modDist(x, involution(x));
 }
 
-/** One descent step: soft contraction toward 4.5 */
+/** One circle-domain descent step; equivalent representatives x and x+9 agree. */
 export function descentStep(x, k = 0.5) {
-  return softContract(x, k);
+  return softContract(canonicalizeCircleCoordinate(x), k);
 }
 
 /**
