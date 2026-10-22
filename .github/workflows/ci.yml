@@ -1,9 +1,9 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, 'research/combined-verification-gate-2026-10-22']
   pull_request:
-    branches: [main]
+    branches: [main, 'research/kernel-hardening-4401-4500']
   workflow_dispatch:
 permissions:
   contents: read
