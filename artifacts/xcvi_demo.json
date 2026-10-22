@@ -1,0 +1,11 @@
+{
+  "system":"Great Scale",
+  "rung":"XCVI",
+  "title":"Validation Leakage and Evidence Dependence",
+  "construction_sources":["dataset-A","pipeline-v1"],
+  "validation_sources":["dataset-A","holdout-B"],
+  "overlap":["dataset-A"],
+  "status":"DEPENDENCE_RISK_DETECTED",
+  "six_observations_three_groups":{"observations":6,"groups":3,"group_fraction":0.5},
+  "scientific_status":"screening illustration, not empirical validation"
+}
