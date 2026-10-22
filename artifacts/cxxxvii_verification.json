@@ -1,0 +1,14 @@
+{
+  "rung": "CXXXVII",
+  "title": "Independent Solver Verification",
+  "case": "CXXXVI three-unit example",
+  "enumerated_feasible_assignments": [
+    {"assignment": ["A", "A", "B"], "lower": 0.304, "upper": 0.314},
+    {"assignment": ["A", "B", "B"], "lower": 0.308, "upper": 0.322},
+    {"assignment": ["B", "A", "B"], "lower": 0.308, "upper": 0.322}
+  ],
+  "robust_envelope": {"lower": 0.304, "upper": 0.322, "width": 0.018},
+  "monotonicity_property": "relaxing constraints cannot raise the minimum or lower the maximum",
+  "evidence_type": "independent exhaustive enumeration",
+  "repository_tests_executed": false
+}
