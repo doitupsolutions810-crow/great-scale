@@ -6,16 +6,19 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { evaluatePromotionEvidence, REQUIRED_STEPS } = require('./promotion_gate');
 
-const SHA = 'a'.repeat(40);
+const SHA = 'a'.repeat(40); // pull-request source head
+const MERGE_SHA = 'c'.repeat(40); // exact synthetic merge-test commit
 const fixture = () => ({
   candidate: { repo: 'doitupsolutions810-crow/great-scale', sha: SHA },
-  pullRequest: { number: 89, state: 'open', headRepository: 'doitupsolutions810-crow/great-scale', headSha: SHA },
+  pullRequest: { number: 89, state: 'open', headRepository: 'doitupsolutions810-crow/great-scale', headSha: SHA, mergeCommitSha: MERGE_SHA },
   run: {
     source: 'github-actions-api',
     repository: 'doitupsolutions810-crow/great-scale',
     workflowPath: '.github/workflows/ci.yml',
+    event: 'pull_request',
     id: 12345,
-    headSha: SHA,
+    runAttempt: 1,
+    headSha: MERGE_SHA,
     conclusion: 'success',
   },
   job: {
@@ -28,12 +31,19 @@ const fixture = () => ({
   },
   receipt: {
     schema: 'great-scale.verification-receipt/v1',
-    commit: SHA,
+    commit: MERGE_SHA,
+    node: 'v20.19.0',
+    npm: '10.8.2',
+    python: 'Python 3.11.9',
     overall: 'passed',
     javascript_suite: 'passed',
     python_descent_suite: 'passed',
+    created_utc: '2026-10-22T12:00:00Z',
     github_run_id: '12345',
+    github_run_attempt: '1',
     github_repository: 'doitupsolutions810-crow/great-scale',
+    github_sha: MERGE_SHA,
+    runner_name: 'github-hosted-runner-1',
   },
   artifact: {
     id: 45678,
@@ -59,6 +69,9 @@ test('complete evidence is eligible for review only', () => {
   assert.equal(r.state, 'ELIGIBLE_FOR_PROMOTION_REVIEW');
   assert.match(r.caveat, /Structural gate only/);
   assert.match(r.caveat, /authenticated collection/);
+  assert.equal(r.binding.pullRequestHeadSha, SHA);
+  assert.equal(r.binding.testedMergeSha, MERGE_SHA);
+  assert.equal(r.binding.runAttempt, 1);
 });
 test('missing evidence fails closed', () => {
   assert.equal(evaluatePromotionEvidence(null).eligible, false);
@@ -67,8 +80,15 @@ test('current pull request head must equal candidate SHA', () => blocked(x => { 
 test('pull request head repository mismatch blocks', () => blocked(x => { x.pullRequest.headRepository = 'other/repository'; }));
 test('closed pull request blocks', () => blocked(x => { x.pullRequest.state = 'closed'; }));
 test('invalid pull request number blocks', () => blocked(x => { x.pullRequest.number = 0; }));
-test('candidate SHA mismatch with hosted run blocks', () => blocked(x => { x.run.headSha = 'b'.repeat(40); }));
-test('candidate SHA mismatch with receipt blocks', () => blocked(x => { x.receipt.commit = 'b'.repeat(40); }));
+test('tested merge SHA mismatch blocks', () => blocked(x => { x.run.headSha = 'b'.repeat(40); }));
+test('pull request merge-test SHA mismatch blocks', () => blocked(x => { x.pullRequest.mergeCommitSha = 'b'.repeat(40); }));
+test('run event other than pull_request blocks', () => blocked(x => { x.run.event = 'push'; }));
+test('missing or invalid run attempt blocks', () => blocked(x => { x.run.runAttempt = 0; }));
+test('receipt tested SHA mismatch blocks', () => blocked(x => { x.receipt.commit = 'b'.repeat(40); }));
+test('receipt GitHub SHA mismatch blocks', () => blocked(x => { x.receipt.github_sha = 'b'.repeat(40); }));
+test('receipt run attempt mismatch blocks', () => blocked(x => { x.receipt.github_run_attempt = '2'; }));
+test('receipt timestamp malformed blocks', () => blocked(x => { x.receipt.created_utc = 'not-a-date'; }));
+test('receipt unavailable runtime field blocks', () => blocked(x => { x.receipt.python = 'unavailable'; }));
 test('unknown evidence source blocks', () => blocked(x => { x.run.source = 'local-json'; }));
 test('wrong repository blocks', () => blocked(x => { x.run.repository = 'someone/else'; }));
 test('wrong workflow path blocks', () => blocked(x => { x.run.workflowPath = '.github/workflows/other.yml'; }));
