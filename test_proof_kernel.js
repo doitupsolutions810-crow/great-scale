@@ -222,6 +222,10 @@ test('serialized proof ingress rejects over-limit input before parsing',()=>{
 test('serialized proof ingress rejects malformed JSON',()=>{
   assert.throws(()=>checkSerialized('{"rule":'),/not valid JSON/);
 });
+test('duplicate-key scanner rejects malformed delimiter where value is required without stalling',()=>{
+  assert.throws(()=>checkSerialized('[,,]'),/not valid JSON/);
+  assert.throws(()=>checkSerialized('{"a":,}'),/not valid JSON/);
+});
 test('serialized ingress rejects excessive nesting before semantic proof checks',()=>{
   const depth=MAX_SERIALIZED_JSON_DEPTH+1;
   const input='['.repeat(depth)+'0'+']'.repeat(depth);
