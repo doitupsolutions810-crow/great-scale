@@ -69,11 +69,14 @@ function checkEntailment(claim) {
     const descriptor=Object.getOwnPropertyDescriptor(claim,key);
     if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor,'value')) throw new TypeError('claim accessors are not allowed');
   }
-  if (!Array.isArray(claim.assumptions) || !claim.conclusion) throw new TypeError('malformed claim');
+  if (!Array.isArray(claim.assumptions) || Object.getPrototypeOf(claim.assumptions)!==Array.prototype || !claim.conclusion) throw new TypeError('malformed claim');
   if (claim.assumptions.length > MAX_NODES) throw new RangeError('assumption count limit exceeded');
-  const assumptionDescriptors=Object.getOwnPropertyDescriptors(claim.assumptions);
+  const assumptionKeys=Reflect.ownKeys(claim.assumptions);
+  // The array may contain only its length and dense numeric elements.
+  // Reject custom keys before any iteration can consult a custom iterator.
+  if (assumptionKeys.length!==claim.assumptions.length+1 || assumptionKeys.some(key=>key!=='length' && (typeof key!=='string' || !/^(0|[1-9][0-9]*)$/.test(key) || Number(key)>=claim.assumptions.length))) throw new TypeError('malformed assumptions array schema');
   for(let i=0;i<claim.assumptions.length;i++) {
-    const descriptor=assumptionDescriptors[String(i)];
+    const descriptor=Object.getOwnPropertyDescriptor(claim.assumptions,String(i));
     if (!descriptor) throw new TypeError('sparse assumptions are not allowed');
     if (!Object.prototype.hasOwnProperty.call(descriptor,'value')) throw new TypeError('assumption accessors are not allowed');
   }
@@ -200,6 +203,16 @@ test('claim schema rejects inherited and accessor-backed fields', () => {
   const accessor={};Object.defineProperty(accessor,'assumptions',{enumerable:true,get(){throw Error('getter invoked')}});
   Object.defineProperty(accessor,'conclusion',{enumerable:true,value:V('P')});
   assert.throws(()=>checkEntailment(accessor),/claim accessors are not allowed/);
+});
+
+
+test('assumption arrays reject custom keys and custom prototypes', () => {
+  const extra=[V('P')];extra.note='unexpected';
+  assert.throws(()=>checkEntailment({assumptions:extra,conclusion:V('P')}),/malformed assumptions array schema/);
+  const proto=Object.create(Array.prototype);proto.push=Array.prototype.push;
+  const custom=Object.assign(Object.create(proto),[V('P')]);
+  custom.length=1;
+  assert.throws(()=>checkEntailment({assumptions:custom,conclusion:V('P')}),/malformed claim/);
 });
 
 for (const t of tests) console.log(`${t.ok?'PASS':'FAIL'} ${t.name}${t.error?` — ${t.error}`:''}`);
