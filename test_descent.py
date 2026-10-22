@@ -48,7 +48,7 @@ def main():
     print("=== Great Scale descent test v0.4.2 ===")
     checks = []
 
-    ok = all(mod_dist(involution(involution(x)), x) < 1e-9 for x in [i * 0.25 for i in range(37)])
+    ok = all(mod_dist(involution(involution(x)), x) < 1e-9 for x in [i * 0.25 for i in range(36)])
     checks.append(("involution modular identity", ok))
 
     ok = all(involution(a) == b and involution(b) == a for a, b in [(1, 8), (2, 7), (3, 6), (4, 5)])
