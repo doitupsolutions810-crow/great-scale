@@ -50,7 +50,8 @@ This change improves the software ingress contract. It does not establish proof-
 
 - **Source inspection:** the scanner and exported constants were reviewed on the research branch; aggregate-value and per-array checks were added before the full `JSON.parse` call.
 - **Regression source:** tests now cover a 10,001-item array and more than 40,000 values spread across arrays that are individually under the item limit.
-- **Execution:** these new repository tests have not yet been confirmed as executed in a real repository runner.
+- **Isolated scanner harness:** 8/8 bounded cases passed in the available JavaScript execution environment for valid nested JSON, duplicate and escaped-equivalent keys, malformed delimiter rejection, depth cap, per-array cap, aggregate-value cap, and canonically distinct Unicode keys. This exercised an equivalent scanner harness, not the committed repository file or the full repository suite.
+- **Repository execution:** these new repository tests have not yet been confirmed as executed in a real repository runner.
 - **Official test suites and build:** no passing result is claimed. The previously inspected CI failure had no usable step logs/artifacts; it cannot establish that assertions ran or failed.
 - **Integration status:** branch remains ahead of and behind `main`; the exact current head and divergence must be reconciled before promotion. Keep PR #89 draft/unmerged until exact-head test logs, both required suites, receipt, and runner provenance are available.
 
