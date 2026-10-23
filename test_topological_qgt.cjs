@@ -19,4 +19,14 @@ testCase('opposite Chern phases share the same local Great Scale floor', () => {
   close(a.SQuantum, 0, 1e-9); close(b.SQuantum, 0, 1e-9); close(a.psiQuantum, b.psiQuantum, 1e-9);
   close(qiWuZhangChernNumber(-1), -qiWuZhangChernNumber(1), 1e-8);
 });
+
+testCase('Chern result is stable across 20x20 and 40x40 grids', () => {
+  close(qiWuZhangChernNumber(-1, 20), qiWuZhangChernNumber(-1, 40));
+  close(qiWuZhangChernNumber(1, 20), qiWuZhangChernNumber(1, 40));
+});
+testCase('invalid grid sizes and nonfinite masses are rejected', () => {
+  assert.throws(() => qiWuZhangChernNumber(1, 3), /gridSize/);
+  assert.throws(() => qiWuZhangChernNumber(Number.NaN), /finite/);
+});
+
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
