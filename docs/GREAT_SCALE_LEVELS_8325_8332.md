@@ -44,4 +44,4 @@ This module does not authenticate a principal, verify signatures, or atomically 
 
 ## Verification status
 
-The focused authorization test matrix contains 18 adversarial and positive cases and is wired into `npm test`. The new policy/evidence tests were run in an isolated local harness; the authorization-gate tests are authored but have not yet been run in the actual repository checkout. Full repository tests, hosted CI, build, and deployment remain unverified.
+The focused authorization test matrix contains 20 adversarial and positive cases and is wired into `npm test`. The new policy/evidence tests were run in an isolated local harness; the authorization-gate tests are authored but have not yet been run in the actual repository checkout. Full repository tests, hosted CI, build, and deployment remain unverified.
