@@ -60,6 +60,18 @@ class RobustFeasibilityTests(unittest.TestCase):
         self.assertEqual(result.p_interval[1], Fraction(7, 100))
         self.assertEqual(result.v_interval[0], Fraction(0))
 
+    def test_large_exact_uncertainty_does_not_overflow_through_float(self):
+        # An exact finite rational can exceed IEEE-754 range. It is still a
+        # valid uncertainty bound and should be clipped by the model domain.
+        huge = Fraction(10**400)
+        result = certify_probability_moment("0.5", "0.1", huge, 0)
+        self.assertEqual(result.p_interval, (Fraction(0), Fraction(1)))
+        self.assertEqual(result.status, "unresolved")
+
+    def test_rejects_infinite_float(self):
+        with self.assertRaises(ValueError):
+            certify_probability_moment(0.5, 0.1, float("inf"), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
