@@ -1,11 +1,13 @@
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { evaluatePromotionEvidence, REQUIRED_STEPS } = require('./promotion_gate');
 
+const TEST_POLICY_SHA256 = crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, 'verification-policy.json'))).digest('hex');
 const SHA = 'a'.repeat(40); // pull-request source head
 const MERGE_SHA = 'c'.repeat(40); // exact synthetic merge-test commit
 const fixture = () => ({
@@ -43,6 +45,8 @@ const fixture = () => ({
     github_run_attempt: '1',
     github_repository: 'doitupsolutions810-crow/great-scale',
     github_sha: MERGE_SHA,
+    github_head_sha: SHA,
+    test_policy_sha256: TEST_POLICY_SHA256,
     runner_name: 'github-hosted-runner-1',
   },
   artifact: {
@@ -86,6 +90,8 @@ test('run event other than pull_request blocks', () => blocked(x => { x.run.even
 test('missing or invalid run attempt blocks', () => blocked(x => { x.run.runAttempt = 0; }));
 test('receipt tested SHA mismatch blocks', () => blocked(x => { x.receipt.commit = 'b'.repeat(40); }));
 test('receipt GitHub SHA mismatch blocks', () => blocked(x => { x.receipt.github_sha = 'b'.repeat(40); }));
+test('receipt source-head SHA mismatch blocks', () => blocked(x => { x.receipt.github_head_sha = 'b'.repeat(40); }));
+test('receipt test-policy digest mismatch blocks', () => blocked(x => { x.receipt.test_policy_sha256 = '0'.repeat(64); }));
 test('receipt run attempt mismatch blocks', () => blocked(x => { x.receipt.github_run_attempt = '2'; }));
 test('receipt timestamp malformed blocks', () => blocked(x => { x.receipt.created_utc = 'not-a-date'; }));
 test('receipt unavailable runtime field blocks', () => blocked(x => { x.receipt.python = 'unavailable'; }));
