@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { quantumGeometryBridge } = require('./public/quantum-geometry.cjs');
 const { qiWuZhangChernNumber, qiWuZhangLocalQGT } = require('./research/topological-qgt.cjs');
 let passed = 0;
-function close(a, b, tol = 1e-8) { assert.ok(Math.abs(a - b) <= tol, \`\${a} != \${b} (tol \${tol})\`); }
+function close(a, b, tol = 1e-8) { assert.ok(Math.abs(a - b) <= tol, `${a} != ${b} (tol ${tol})`); }
 function testCase(name, fn) { fn(); passed++; console.log('  PASS  ' + name); }
 testCase('QWZ lower band has Chern number -1 for m=-1', () => close(qiWuZhangChernNumber(-1), -1));
 testCase('QWZ lower band has Chern number +1 for m=+1', () => close(qiWuZhangChernNumber(1), 1));
@@ -19,4 +19,4 @@ testCase('opposite Chern phases share the same local Great Scale floor', () => {
   close(a.SQuantum, 0, 1e-9); close(b.SQuantum, 0, 1e-9); close(a.psiQuantum, b.psiQuantum, 1e-9);
   close(qiWuZhangChernNumber(-1), -qiWuZhangChernNumber(1), 1e-8);
 });
-console.log(\`topological QGT tests: \${passed} passed, 0 failed\`);
+console.log(`topological QGT tests: ${passed} passed, 0 failed`);
