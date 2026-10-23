@@ -1,0 +1,65 @@
+{
+  "exact_match_result": {
+    "authority_ref": "registry://illustrative-authority",
+    "declared_count": 3,
+    "external_completeness_proven": false,
+    "extra_ids": [],
+    "interpretation": "Exactness is relative to this declared manifest; authority and real-world population completeness require independent verification.",
+    "manifest_digest": "c122471d25a4431791cdf7c421a9998ab567013a4326bbf37228b92b8102c3e5",
+    "missing_ids": [],
+    "observed_count": 3,
+    "policy_id": "checkpoint-consistency",
+    "policy_version": "2",
+    "schema": "great-scale-evidence-scope-binding-result-v1",
+    "scope_id": "release-2026-10",
+    "status": "EXACT_MANIFEST_MATCH"
+  },
+  "limitations": [
+    "Synthetic identifiers only; no production evidence is represented.",
+    "SHA-256 detects changes relative to the manifest digest but does not authenticate the manifest issuer.",
+    "Exact observed-set equality does not prove the declared manifest enumerates every real-world record."
+  ],
+  "manifest": {
+    "authority_ref": "registry://illustrative-authority",
+    "declared_count": 3,
+    "declared_evidence_ids": ["ev-a", "ev-b", "ev-c"],
+    "manifest_digest": "c122471d25a4431791cdf7c421a9998ab567013a4326bbf37228b92b8102c3e5",
+    "policy_id": "checkpoint-consistency",
+    "policy_version": "2",
+    "schema": "great-scale-evidence-scope-manifest-v1",
+    "scope_id": "release-2026-10"
+  },
+  "partial_result": {
+    "authority_ref": "registry://illustrative-authority",
+    "declared_count": 3,
+    "external_completeness_proven": false,
+    "extra_ids": [],
+    "interpretation": "Exactness is relative to this declared manifest; authority and real-world population completeness require independent verification.",
+    "manifest_digest": "c122471d25a4431791cdf7c421a9998ab567013a4326bbf37228b92b8102c3e5",
+    "missing_ids": ["ev-c"],
+    "observed_count": 2,
+    "policy_id": "checkpoint-consistency",
+    "policy_version": "2",
+    "schema": "great-scale-evidence-scope-binding-result-v1",
+    "scope_id": "release-2026-10",
+    "status": "PARTIAL_SCOPE"
+  },
+  "rung": "CXVII",
+  "scope_mismatch_result": {
+    "authority_ref": "registry://illustrative-authority",
+    "declared_count": 3,
+    "external_completeness_proven": false,
+    "extra_ids": ["ev-x"],
+    "interpretation": "Exactness is relative to this declared manifest; authority and real-world population completeness require independent verification.",
+    "manifest_digest": "c122471d25a4431791cdf7c421a9998ab567013a4326bbf37228b92b8102c3e5",
+    "missing_ids": [],
+    "observed_count": 4,
+    "policy_id": "checkpoint-consistency",
+    "policy_version": "2",
+    "schema": "great-scale-evidence-scope-binding-result-v1",
+    "scope_id": "release-2026-10",
+    "status": "SCOPE_MISMATCH"
+  },
+  "synthetic": true,
+  "title": "Evidence Scope Identity"
+}
