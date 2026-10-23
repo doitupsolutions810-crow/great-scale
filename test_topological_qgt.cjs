@@ -96,4 +96,16 @@ testCase('quadrature diagnostics are sensitive to sampling-grid alignment near t
   assert.ok(stable.gridAlignmentAreaDiscrepancy <= stable.quadratureTolerance);
 });
 
+testCase('metric-area excess measures minority-sign curvature cancellation in converged phases', () => {
+  for (const m of [-1, 1, 3]) {
+    const d = qiWuZhangGlobalGeometry(m, 40);
+    assert.strictEqual(d.topologicalMappingValid, true);
+    assert.ok(d.positiveCurvatureBudget >= 0);
+    assert.ok(d.negativeCurvatureBudget >= 0);
+    close(d.curvatureCancellationBudget,
+      2 * Math.min(d.positiveCurvatureBudget, d.negativeCurvatureBudget), 1e-10);
+    close(d.metricAreaExcess, d.curvatureCancellationBudget, 2e-3);
+  }
+});
+
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
