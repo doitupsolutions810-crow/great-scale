@@ -194,6 +194,8 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const p = currentMidpoint.positiveCurvatureBudget;
   const n = currentMidpoint.negativeCurvatureBudget;
   const area = currentMidpoint.metricAreaBudget;
+  // Signed companion prevents the scalar correction from erasing Chern orientation.
+  const signedTopologicalPolarization = area > EPS ? chernNumber / area : 0;
   const curvatureMixingIndex = area > EPS ? (p * n) / (area * area) : 0;
   const curvatureMixingResidual = Math.abs(STopological - curvatureMixingIndex);
   const curvatureChernResidual = Math.abs(currentMidpoint.integratedCurvature - chernNumber);
@@ -219,7 +221,7 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     curvatureCancellationBudget: Math.max(0, currentMidpoint.absoluteCurvatureBudget - Math.abs(currentMidpoint.integratedCurvature)),
     metricAreaBudget: currentMidpoint.metricAreaBudget,
     topologicalFloor, metricAreaExcess,
-    topologicalSaturationRaw, topologicalSaturation,
+    topologicalSaturationRaw, topologicalSaturation, signedTopologicalPolarization,
     hTopological, STopological, psiTopological,
     curvatureMixingIndex, curvatureMixingResidual,
     minorityCurvatureBudget, curvatureChernResidual, curvatureCancellationIdentityResidual,
