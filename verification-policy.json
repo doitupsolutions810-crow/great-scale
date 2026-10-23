@@ -5,5 +5,7 @@
     "python_descent_suite"
   ],
   "workflowPath": ".github/workflows/ci.yml",
-  "receiptSchema": "great-scale.verification-receipt/v1"
+  "receiptSchema": "great-scale.verification-receipt/v1",
+  "testedCommitField": "github_sha",
+  "sourceHeadField": "github_head_sha"
 }
