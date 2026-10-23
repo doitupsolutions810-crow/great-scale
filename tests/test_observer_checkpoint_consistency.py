@@ -10,6 +10,10 @@ class ObserverCheckpointTests(unittest.TestCase):
         return sign_checkpoint(checkpoint_body("registry-log",size,head,parent),"log",self.key)
     def test_valid_checkpoint(self): self.assertTrue(verify_checkpoint(self.cp(1,"a"*64),self.trusted))
     def test_same_size_same_head(self): self.assertEqual(compare_checkpoints(self.cp(2,"b"*64),self.cp(2,"b"*64),self.trusted),"SAME")
+    def test_same_size_same_state_different_lineage_is_incomparable(self):
+        a=self.cp(2,"b"*64,"1"*64)
+        b=self.cp(2,"b"*64,"2"*64)
+        self.assertEqual(compare_checkpoints(a,b,self.trusted),"INCOMPARABLE")
     def test_same_size_different_head_is_fork(self): self.assertEqual(compare_checkpoints(self.cp(2,"b"*64),self.cp(2,"c"*64),self.trusted),"FORK")
     def test_direct_predecessor_is_ordered(self):
         first=self.cp(1,"a"*64)
