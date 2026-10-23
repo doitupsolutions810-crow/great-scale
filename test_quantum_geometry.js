@@ -7,6 +7,7 @@ function test(name, fn) {
   catch (error) { failed++; console.log('  FAIL  ' + name + ' — ' + error.message); }
 }
 function close(actual, expected, tol = 1e-10) { assert.ok(Math.abs(actual - expected) <= tol, actual + ' != ' + expected); }
+
 test('zero curvature maps to maximum Great Scale heat', () => {
   const r = quantumGeometryBridge({ g11: 1, g12: 0, g22: 1, curvature: 0 });
   close(r.curvatureFraction, 0); close(r.hQuantum, 0.5); close(r.SQuantum, 0.25);
@@ -25,6 +26,18 @@ test('intermediate curvature obeys exact residual-to-heat mapping', () => {
 test('normalized mapping is invariant under common metric/curvature scaling', () => {
   const a = quantumGeometryBridge({ g11: 1, g12: 0, g22: 1, curvature: 1 });
   const b = quantumGeometryBridge({ g11: 4, g12: 0, g22: 4, curvature: 4 });
+  close(a.curvatureFraction, b.curvatureFraction); close(a.SQuantum, b.SQuantum);
+});
+test('qutrit zero-curvature family retains nonzero metric area', () => {
+  const x = 0.3, y = 0.4, s = 1 + x*x + y*y;
+  const g11 = (1 + y*y) / (s*s), g12 = -x*y / (s*s), g22 = (1 + x*x) / (s*s);
+  const r = quantumGeometryBridge({ g11, g12, g22, curvature: 0 });
+  close(r.detG, 1 / (s*s*s)); close(r.detQ, r.detG);
+  close(r.relativeResidual, 1); close(r.SQuantum, 0.25);
+});
+test('curvature sign is intentionally discarded by scalar heat channel', () => {
+  const a = quantumGeometryBridge({ g11: 1, g12: 0, g22: 1, curvature: 1 });
+  const b = quantumGeometryBridge({ g11: 1, g12: 0, g22: 1, curvature: -1 });
   close(a.curvatureFraction, b.curvatureFraction); close(a.SQuantum, b.SQuantum);
 });
 test('rejects curvature that violates QGT positivity', () => {
