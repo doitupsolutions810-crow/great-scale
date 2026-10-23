@@ -1,0 +1,9 @@
+{
+  "schema": "great-scale.test-policy/v1",
+  "requiredSuites": [
+    "javascript_suite",
+    "python_descent_suite"
+  ],
+  "workflowPath": ".github/workflows/ci.yml",
+  "receiptSchema": "great-scale.verification-receipt/v1"
+}
