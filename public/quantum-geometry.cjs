@@ -12,7 +12,8 @@ function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) 
   const rawChi = Math.abs(curvature) / (2 * Math.sqrt(detG));
   if (rawChi > 1 + tolerance) throw new RangeError('QGT positivity violated: |F_12| > 2 sqrt(detG).');
   const chi = Math.min(1, rawChi);
-  const detQ = detG - (curvature * curvature) / 4;
+  // Round-off excursions within tolerance must not expose a negative Gram determinant.
+  const detQ = Math.max(0, detG - (curvature * curvature) / 4);
   const relativeResidual = Math.max(0, 1 - chi * chi);
   const hQuantum = (1 + chi) / 2;
   const SQuantum = heat(hQuantum);
