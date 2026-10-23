@@ -5,7 +5,7 @@
   "finding": "Verification evidence is only interpretable relative to a named, content-addressed test policy; policy identity still does not authenticate the evidence source.",
   "predicate": "VERIFIED = C AND R AND A AND S AND H AND P AND T",
   "predicates": {
-    "C": "receipt commit equals independently sourced workflow head SHA",
+    "C": "receipt commit and github_sha equal independently sourced tested commit SHA; github_head_sha separately equals pull-request source head SHA",
     "R": "workflow run ID and attempt match",
     "A": "workflow completed successfully",
     "S": "all policy-required suites have independent passing evidence",
@@ -60,7 +60,8 @@
     "Trusted provenance must be authenticated by the collector, not a caller boolean alone",
     "Artifact digest must be calculated over actual downloaded bytes",
     "A receipt cannot contain its own enclosing archive digest without a self-reference problem",
-    "Full repository tests and hosted CI have not been verified for this draft"
+    "Full repository tests and hosted CI have not been verified for this draft",
+    "Pull-request source-head SHA and tested merge SHA are distinct identities and must not be conflated"
   ],
   "status": "authored_pending_exact_checkout_and_hosted_ci"
 }
