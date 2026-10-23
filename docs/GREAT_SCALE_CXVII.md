@@ -52,7 +52,7 @@ Agreement can be certified only after each required dimension is separately chec
 - CXVI's `scope_complete` and `authenticity_status` are inputs to a classifier, not independently established facts. Its signer count is also caller-provided; it does not verify signer identities.
 - Living Intermediate Control Plane's operational evidence selection is not cryptographic provenance. TrainLLM's proposal/approval/simulation workflow and CycleKernal's audit/monitoring concepts have not yet been shown to share a compatible, trusted evidence-manifest contract.
 
-Therefore CXVII is added as a standalone Great Scale contract. No other repository is changed until an actual producer-to-consumer schema and authority chain can be mapped without conflating availability with trust.
+CXVII is implemented as `evidence_scope_binding.py` and is now integrated into CXVI through the optional `scope_manifest` parameter. When supplied, a scope mismatch or invalid manifest blocks consistency; missing declared evidence yields `PARTIAL_EVIDENCE`; only an exact observed-set/manifest match can pass the scope-binding gate. The default CXVI API remains backward-compatible when no manifest is supplied. No other repository is changed until an actual producer-to-consumer schema and authority chain can be mapped without conflating availability with trust.
 
 ## Test
 
