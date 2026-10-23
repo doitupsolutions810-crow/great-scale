@@ -8,7 +8,9 @@ function testCase(name, fn) { fn(); passed++; console.log('  PASS  ' + name); }
 testCase('QWZ lower band has Chern number -1 for m=-1', () => close(qiWuZhangChernNumber(-1), -1));
 testCase('QWZ lower band has Chern number +1 for m=+1', () => close(qiWuZhangChernNumber(1), 1));
 testCase('QWZ trivial phase m=3 has Chern number 0', () => close(qiWuZhangChernNumber(3), 0));
-testCase('gap closing at m=0 is rejected', () => assert.throws(() => qiWuZhangChernNumber(0), /Band gap closes/));
+testCase('all topological phase-boundary masses are rejected even on odd grids', () => {
+  for (const m of [-2, 0, 2]) assert.throws(() => qiWuZhangChernNumber(m, 41), /phase boundary/);
+});
 testCase('local QGT saturates the positivity bound in the m=-1 phase', () => {
   const r = quantumGeometryBridge(qiWuZhangLocalQGT(.37, .81, -1));
   close(r.curvatureFraction, 1, 1e-9); close(r.SQuantum, 0, 1e-9); close(r.psiQuantum, .3819660112501051, 1e-9);
