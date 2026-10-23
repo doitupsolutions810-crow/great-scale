@@ -52,5 +52,18 @@ test('rejects negative-definite metric masquerading as positive via determinant'
 test('rejects non-positive diagonal metric entry', () => {
   assert.throws(() => quantumGeometryBridge({ g11: 0, g12: 0, g22: 1, curvature: 0 }), /diagonal entries must be positive/);
 });
+test('two-level pure-state Bloch sphere saturates the QGT bound at every regular point', () => {
+  // |psi> = cos(theta/2)|0> + exp(i phi) sin(theta/2)|1>.
+  // Its Fubini-Study metric has det(g)=sin(theta)^2/16 and |F_theta_phi|=sin(theta)/2.
+  const theta = 0.7;
+  const g11 = 1 / 4, g12 = 0, g22 = Math.sin(theta) ** 2 / 4;
+  const curvature = Math.sin(theta) / 2;
+  const r = quantumGeometryBridge({ g11, g12, g22, curvature });
+  close(r.detG, Math.sin(theta) ** 2 / 16);
+  close(r.detQ, 0, 1e-12);
+  close(r.curvatureFraction, 1);
+  close(r.SQuantum, 0);
+  close(r.psiQuantum, CONE);
+});
 console.log('\nquantum geometry bridge tests: ' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
