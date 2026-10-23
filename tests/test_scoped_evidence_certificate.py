@@ -1,5 +1,6 @@
 import unittest
 from scoped_evidence_certificate import build_evidence_certificate
+from evidence_scope_binding import build_scope_manifest
 
 class ScopedEvidenceCertificateTests(unittest.TestCase):
     def cert(self, **overrides):
@@ -31,6 +32,34 @@ class ScopedEvidenceCertificateTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.cert(evidence_ids=["a", "a", "c"])
     def test_unknown_lineage_never_certifies(self):
         self.assertEqual(self.cert(lineage_relation="NOT_ASSESSED")["disposition"], "UNRESOLVED")
+    def test_cxvii_exact_manifest_is_integrated_into_certificate(self):
+        manifest = build_scope_manifest(scope_id="release-1", declared_evidence_ids=["a", "b", "c"],
+            policy_id="checkpoint-consistency", policy_version="2", authority_ref="registry://trusted")
+        result = self.cert(scope_manifest=manifest)
+        self.assertEqual(result["scope_binding"]["status"], "EXACT_MANIFEST_MATCH")
+        self.assertEqual(result["disposition"], "CONSISTENT_WITHIN_DECLARED_SCOPE")
+
+    def test_cxvii_scope_mismatch_blocks_consistency(self):
+        manifest = build_scope_manifest(scope_id="release-1", declared_evidence_ids=["a", "b", "x"],
+            policy_id="checkpoint-consistency", policy_version="2", authority_ref="registry://trusted")
+        result = self.cert(scope_manifest=manifest)
+        self.assertEqual(result["scope_binding"]["status"], "SCOPE_MISMATCH")
+        self.assertEqual(result["disposition"], "UNRESOLVED")
+
+    def test_cxvii_missing_declared_evidence_is_partial(self):
+        manifest = build_scope_manifest(scope_id="release-1", declared_evidence_ids=["a", "b", "c"],
+            policy_id="checkpoint-consistency", policy_version="2", authority_ref="registry://trusted")
+        result = self.cert(observed_count=2, declared_count=3, scope_complete=False,
+            evidence_ids=["a", "b"], scope_manifest=manifest)
+        self.assertEqual(result["scope_binding"]["status"], "PARTIAL_SCOPE")
+        self.assertEqual(result["disposition"], "PARTIAL_EVIDENCE")
+
+    def test_scope_manifest_requires_evidence_count_alignment(self):
+        manifest = build_scope_manifest(scope_id="release-1", declared_evidence_ids=["a", "b", "c"],
+            policy_id="checkpoint-consistency", policy_version="2", authority_ref="registry://trusted")
+        with self.assertRaises(ValueError):
+            self.cert(observed_count=2, declared_count=3, scope_complete=False, scope_manifest=manifest)
+
     def test_downgrading_any_positive_axis_never_retains_consistency(self):
         weaker = [
             self.cert(state_equivalence="UNKNOWN"),
