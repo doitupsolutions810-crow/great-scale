@@ -1,0 +1,32 @@
+{
+  "schema": "great-scale-descent-experiment-v1",
+  "rung": "8301-8308",
+  "title": "Trajectory Identity and Semigroup Consistency",
+  "model": {
+    "fixed_point": 4.5,
+    "canonical_k": "phi^-2",
+    "alternate_k": 0.5,
+    "recurrence": "x[n+1] = x* + k * (x[n] - x*)"
+  },
+  "properties": [
+    {
+      "id": "closed_form",
+      "claim": "T_k^n(x) = x* + k^n (x - x*)",
+      "test": "compare iterative trajectory to closed form"
+    },
+    {
+      "id": "semigroup",
+      "claim": "T_k^m(T_k^n(x)) = T_k^(m+n)(x)",
+      "test": "4 + 7 steps equals 11 direct steps"
+    },
+    {
+      "id": "convergence_not_parity",
+      "claim": "two contractions can converge to same fixed point and still have different trajectories",
+      "test": "canonical k versus 0.5"
+    }
+  ],
+  "evidence_class": "deterministic software-model regression",
+  "physical_quantum_claim": false,
+  "repository_full_suite_verified": false,
+  "hosted_ci_verified": false
+}
