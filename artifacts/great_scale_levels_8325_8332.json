@@ -19,7 +19,7 @@
   },
   "implementation": "authorization_gate.js",
   "testFile": "test_authorization_gate.js",
-  "testCount": 18,
+  "testCount": 20,
   "limits": [
     "Pure structural gate does not authenticate identity or verify signatures",
     "Nonce consumption must be atomic and durable outside the pure function",
