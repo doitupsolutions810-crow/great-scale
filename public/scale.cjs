@@ -6,6 +6,7 @@ const RATE = 0.85;
 const FIXED = 4.5;
 
 function heat(h) { return h * (1 - h); }
+/** Canonical reflection on R/9Z; boundary class 0 ≡ 9 and interior midpoint 4.5 are fixed. */
 function involution(x) {
   const m = ((x % 9) + 9) % 9;
   return (9 - m) % 9;
@@ -17,9 +18,7 @@ function modDist(a, b) {
 function involutionIdentity(x) {
   return modDist(involution(involution(x)), x) < 1e-9;
 }
-function twoCycles() {
-  return [[1, 8], [2, 7], [3, 6], [4, 5]];
-}
+function twoCycles() { return [[1, 8], [2, 7], [3, 6], [4, 5]]; }
 function fixedPoint() { return FIXED; }
 function softContract(x, k = 0.5) { return FIXED + k * (x - FIXED); }
 function softMap(x) { return 9 - x; }
@@ -68,17 +67,12 @@ class DescentEngine {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
   }
-  reset(start = 1) {
-    this.stop(); this.x = start; this.t = 0; this.history = [];
-  }
+  reset(start = 1) { this.stop(); this.x = start; this.t = 0; this.history = []; }
   snapshot() {
     return {
-      schema: 'great-scale.descent/v0.4.2',
-      running: this.running, t: this.t, x: this.x, k: this.k,
-      nearFixed: Math.abs(this.x - FIXED) < 0.05,
-      residual: stressResidual(this.x),
-      historyLen: this.history.length,
-      last: this.history[this.history.length - 1] || null,
+      schema: 'great-scale.descent/v0.4.2', running: this.running, t: this.t, x: this.x, k: this.k,
+      nearFixed: Math.abs(this.x - FIXED) < 0.05, residual: stressResidual(this.x),
+      historyLen: this.history.length, last: this.history[this.history.length - 1] || null,
     };
   }
 }
@@ -86,9 +80,9 @@ const HYPOTHESIS = Object.freeze({
   id: 'great-scale.main',
   statements: [
     'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
-    'f(x)=(9-(x mod 9)) mod 9 is an involution with fixed point x*=4.5 and two-cycles 1↔8,2↔7,3↔6,4↔5',
-    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the fixed point',
-    'Stress residual |x−f(x)| is the computational moment of now',
+    'f(x)=(9-(x mod 9)) mod 9; fixed classes are 0≡9 on the boundary and 4.5 in the interior; integer two-cycles 1↔8,2↔7,3↔6,4↔5',
+    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the interior midpoint',
+    'Stress residual |x−f(x)| is a computational diagnostic, not a physical observable by itself',
     'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
     'Never claim certainty — always another perspective',
   ],
