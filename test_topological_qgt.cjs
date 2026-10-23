@@ -108,7 +108,17 @@ testCase('metric-area excess measures minority-sign curvature cancellation in co
   }
 });
 
-console.log(`topological QGT tests: ${passed} passed, 0 failed`);
+testCase('Great Scale topological correction equals normalized opposite-curvature mixing', () => {
+  for (const m of [-1, 1, 3]) {
+    const d = qiWuZhangGlobalGeometry(m, 40);
+    assert.strictEqual(d.topologicalMappingValid, true);
+    close(d.curvatureMixingIndex,
+      d.positiveCurvatureBudget * d.negativeCurvatureBudget / (d.metricAreaBudget ** 2), 1e-12);
+    close(d.curvatureMixingResidual, Math.abs(d.STopological - d.curvatureMixingIndex), 1e-12);
+    assert.ok(d.curvatureMixingResidual < 2e-3,
+      'integer-C scalar and sampled curvature mixing should agree in converged phase m=' + m);
+  }
+});
 
 testCase('numerically accepted scalar is withheld when quadrature is under-resolved', () => {
   const near = qiWuZhangGlobalGeometry(-1.99, 40);
@@ -118,3 +128,5 @@ testCase('numerically accepted scalar is withheld when quadrature is under-resol
   assert.strictEqual(stable.topologicalMappingValid, true);
   close(stable.acceptedPsiTopological, stable.psiTopological, 1e-12);
 });
+
+console.log(`topological QGT tests: ${passed} passed, 0 failed`);
