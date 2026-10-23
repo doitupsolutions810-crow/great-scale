@@ -79,6 +79,35 @@ def main():
     checks.append(("run_descent default uses CONE",
                    abs(run_descent(steps=1)[-1] - expected_first) < 1e-12))
 
+    # Levels 8301–8308: trajectory equivalence is stronger than convergence
+    def closed_form(start, n, k=CONE):
+        return FIXED + (k ** n) * (start - FIXED)
+
+    for start in [0.0, 1.0, 4.5, 8.75]:
+        trail = run_descent(start=start, steps=12)
+        formula_ok = all(abs(trail[n] - closed_form(start, n)) < 1e-12
+                         for n in range(13))
+        checks.append((f"closed-form trajectory start={start}", formula_ok))
+
+    x0 = 1.25
+    x_m = run_descent(start=x0, steps=4)[-1]
+    composed = run_descent(start=x_m, steps=7)[-1]
+    direct = run_descent(start=x0, steps=11)[-1]
+    checks.append(("contraction semigroup T^7(T^4(x)) = T^11(x)",
+                   abs(composed - direct) < 1e-12))
+
+    default_trail = run_descent(start=1.0, steps=12)
+    explicit_trail = run_descent(start=1.0, steps=12, k=CONE)
+    checks.append(("default and explicit canonical trajectories agree",
+                   all(abs(a - b) < 1e-12 for a, b in zip(default_trail, explicit_trail))))
+
+    alternate_trail = run_descent(start=1.0, steps=12, k=0.5)
+    alternate_converges = abs(alternate_trail[-1] - FIXED) < 1e-2
+    alternate_matches = all(abs(a - b) < 1e-12
+                            for a, b in zip(default_trail, alternate_trail))
+    checks.append(("convergence does not imply trajectory parity",
+                   alternate_converges and not alternate_matches))
+
     ok = all(abs(soft_map(soft_map(x)) - x) < 1e-9 for x in [0, 1, 2, 3, 4, 4.5, 5, 6, 7, 8, 9])
     checks.append(("softMap involution-respecting", ok))
 
