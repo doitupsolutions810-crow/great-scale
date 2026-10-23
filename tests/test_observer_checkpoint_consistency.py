@@ -16,6 +16,10 @@ class ObserverCheckpointTests(unittest.TestCase):
         second=self.cp(2,"b"*64,checkpoint_id(first))
         self.assertEqual(compare_checkpoints(first,second,self.trusted),"ORDERED")
     def test_missing_link_is_incomparable(self): self.assertEqual(compare_checkpoints(self.cp(1,"a"*64),self.cp(2,"b"*64),self.trusted),"INCOMPARABLE")
+    def test_reverse_predecessor_does_not_reverse_causality(self):
+        later = self.cp(2, "b"*64)
+        earlier = self.cp(1, "a"*64, checkpoint_id(later))
+        self.assertEqual(compare_checkpoints(earlier, later, self.trusted), "INCOMPARABLE")
     def test_different_log_is_incomparable(self):
         a=self.cp(1,"a"*64)
         other=sign_checkpoint(checkpoint_body("other-log",1,"a"*64),"log",self.key)
