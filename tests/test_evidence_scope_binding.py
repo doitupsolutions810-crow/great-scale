@@ -57,6 +57,11 @@ class EvidenceScopeBindingTests(unittest.TestCase):
         result = evaluate_scope_binding(changed, ["ev-a", "ev-b", "ev-c"])
         self.assertEqual(result["status"], "INVALID_MANIFEST")
 
+    def test_boolean_count_is_not_accepted_as_integer_count(self):
+        manifest = self.manifest(declared_evidence_ids=["only-one"])
+        manifest["declared_count"] = True
+        self.assertEqual(evaluate_scope_binding(manifest, ["only-one"])["status"], "INVALID_MANIFEST")
+
     def test_non_string_observation_rejected(self):
         with self.assertRaises(ValueError):
             evaluate_scope_binding(self.manifest(), ["ev-a", 5, "ev-c"])
