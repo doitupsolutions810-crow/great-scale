@@ -51,6 +51,9 @@ def checkpoint_id(checkpoint: Mapping[str, Any]) -> str:
 def compare_checkpoints(a: Mapping[str, Any], b: Mapping[str, Any], trusted_signers: Mapping[str, Ed25519PublicKey]) -> str:
     """Return SAME, ORDERED, FORK, or INCOMPARABLE after validating both signatures.
 
+    SAME means equal log state (log ID, size, head hash) and matching predecessor
+    pointer. Equal state with different predecessor pointers is INCOMPARABLE:
+    state equality alone does not establish checkpoint-lineage equality.
     ORDERED means the later checkpoint directly names the earlier checkpoint's
     checkpoint_id as its predecessor. It is not a general Merkle consistency proof.
     """
@@ -60,10 +63,13 @@ def compare_checkpoints(a: Mapping[str, Any], b: Mapping[str, Any], trusted_sign
     if x["log_id"] != y["log_id"]:
         return "INCOMPARABLE"
     if x["size"] == y["size"]:
-        return "SAME" if x["head_hash"] == y["head_hash"] else "FORK"
+        if x["head_hash"] != y["head_hash"]:
+            return "FORK"
+        if x["previous_checkpoint_hash"] != y["previous_checkpoint_hash"]:
+            return "INCOMPARABLE"
+        return "SAME"
     earlier, later = (a, b) if x["size"] < y["size"] else (b, a)
-    eb, lb = earlier["body"], later["body"]
+    lb = later["body"]
     if lb["previous_checkpoint_hash"] == checkpoint_id(earlier):
         return "ORDERED"
     return "INCOMPARABLE"
-
