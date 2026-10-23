@@ -41,6 +41,13 @@ class ObserverViewComparisonTests(unittest.TestCase):
         result = compare_observer_views([a, b], self.trusted)
         self.assertEqual(result["classification"], "INCOMPARABLE")
 
+    def test_same_state_different_lineage_blocks_consistent(self):
+        a = self.cp("a", 2, "b" * 64, "1" * 64)
+        b = self.cp("b", 2, "b" * 64, "2" * 64)
+        result = compare_observer_views([a, b], self.trusted)
+        self.assertEqual(result["classification"], "INCOMPARABLE")
+        self.assertEqual(result["pairwise_results"][0]["relation"], "INCOMPARABLE")
+
     def test_duplicate_signer_cannot_fake_quorum(self):
         a = self.cp("a", 1, "a" * 64)
         b = self.cp("a", 1, "a" * 64)
