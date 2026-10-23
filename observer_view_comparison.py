@@ -29,9 +29,9 @@ def compare_observer_views(
     otherwise returns INCOMPARABLE. A quorum is a policy gate, not proof that
     signers are actually independent.
     """
-    if isinstance(minimum_distinct_signers, bool) or minimum_distinct_signers < 1:
+    if isinstance(minimum_distinct_signers, bool) or not isinstance(minimum_distinct_signers, int) or minimum_distinct_signers < 1:
         raise ValueError("minimum_distinct_signers must be a positive integer")
-    if isinstance(minimum_fault_domains, bool) or minimum_fault_domains < 1:
+    if isinstance(minimum_fault_domains, bool) or not isinstance(minimum_fault_domains, int) or minimum_fault_domains < 1:
         raise ValueError("minimum_fault_domains must be a positive integer")
     if not checkpoints:
         raise ValueError("at least one checkpoint is required")
