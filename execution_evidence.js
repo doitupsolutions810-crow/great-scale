@@ -20,7 +20,7 @@ function verifyExecutionEvidence({ receipt, runEvidence, artifactSha256, trusted
       !receipt.commit || receipt.github_run_id == null || receipt.github_run_attempt == null ||
       !/^[0-9a-f]{64}$/.test(String(receipt.expected_artifact_sha256 || "")) ||
       !receipt.test_policy_sha256 || !runEvidence.test_policy_sha256 ||
-      !runEvidence.head_sha || runEvidence.run_id == null || runEvidence.run_attempt == null ||
+      !runEvidence.tested_sha || !runEvidence.source_head_sha || runEvidence.run_id == null || runEvidence.run_attempt == null ||
       !runEvidence.status || !runEvidence.conclusion || !runEvidence.suiteResults ||
       !runEvidence.repository || !runEvidence.workflow_path) {
     return { status: "UNRESOLVED", reasons: ["required evidence is missing or malformed"] };
@@ -29,7 +29,9 @@ function verifyExecutionEvidence({ receipt, runEvidence, artifactSha256, trusted
     return { status: "UNTRUSTED", reasons: ["workflow metadata was not independently trusted"] };
   }
   const mismatches = [];
-  if (String(receipt.commit) !== String(runEvidence.head_sha)) mismatches.push("receipt commit differs from workflow head SHA");
+  if (String(receipt.commit) !== String(runEvidence.tested_sha)) mismatches.push("receipt commit differs from exact tested commit SHA");
+  if (String(receipt.github_sha) !== String(runEvidence.tested_sha)) mismatches.push("receipt GitHub SHA differs from exact tested commit SHA");
+  if (String(receipt.github_head_sha) !== String(runEvidence.source_head_sha)) mismatches.push("receipt source-head SHA differs from pull-request source head SHA");
   if (String(receipt.github_run_id) !== String(runEvidence.run_id)) mismatches.push("workflow run ID differs");
   if (String(receipt.github_run_attempt) !== String(runEvidence.run_attempt)) mismatches.push("workflow run attempt differs");
   if (runEvidence.repository !== EXPECTED_REPOSITORY) mismatches.push("workflow repository differs from expected repository");
