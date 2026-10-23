@@ -148,6 +148,22 @@ testCase('gap-aware quadrature tightens tolerance near every transition', () => 
   }
 });
 
+testCase('curvature orientation variance and minority-sign cancellation identity map into Great Scale', () => {
+  for (const m of [-1, 1, 3]) {
+    const d = qiWuZhangGlobalGeometry(m, 40);
+    assert.strictEqual(d.topologicalMappingValid, true);
+    close(d.minorityCurvatureBudget, Math.min(d.positiveCurvatureBudget, d.negativeCurvatureBudget), 1e-12);
+    close(d.curvatureCancellationIdentityResidual,
+      Math.abs(d.metricAreaExcess - 2 * d.minorityCurvatureBudget), 1e-12);
+    close(d.curvatureOrientationVariance, 1 - d.topologicalSaturation ** 2, 1e-12);
+    close(d.curvatureOrientationVarianceFromBudgets, 4 * d.curvatureMixingIndex, 1e-12);
+    close(d.curvatureOrientationVarianceResidual,
+      Math.abs(d.curvatureOrientationVariance - d.curvatureOrientationVarianceFromBudgets), 1e-12);
+    assert.ok(d.curvatureChernResidual <= d.quadratureTolerance);
+    assert.ok(d.curvatureCancellationIdentityResidual <= 2 * d.quadratureTolerance);
+  }
+});
+
 testCase('numerically accepted scalar is withheld when quadrature is under-resolved', () => {
   const near = qiWuZhangGlobalGeometry(-1.99, 40);
   assert.strictEqual(near.topologicalMappingValid, false);
