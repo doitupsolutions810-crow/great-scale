@@ -65,7 +65,5 @@ def compare_checkpoints(a: Mapping[str, Any], b: Mapping[str, Any], trusted_sign
     eb, lb = earlier["body"], later["body"]
     if lb["previous_checkpoint_hash"] == checkpoint_id(earlier):
         return "ORDERED"
-    if eb["previous_checkpoint_hash"] == checkpoint_id(later):
-        return "ORDERED"
     return "INCOMPARABLE"
 
