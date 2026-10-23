@@ -1,6 +1,9 @@
 'use strict';
 
 const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const TEST_POLICY_SHA256 = crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, 'verification-policy.json'))).digest('hex');
 
 // Structural promotion policy. This does not authenticate GitHub evidence itself.
 // The caller must obtain platform fields from an authenticated GitHub API/client,
@@ -82,7 +85,7 @@ function evaluatePromotionEvidence(evidence) {
   const pullRequest = plainDataRecord(env.pullRequest, ['number', 'state', 'headRepository', 'headSha', 'mergeCommitSha'], 'pull request snapshot', reasons);
   const run = plainDataRecord(env.run, ['source', 'repository', 'workflowPath', 'event', 'id', 'runAttempt', 'headSha', 'conclusion'], 'run', reasons);
   const job = plainDataRecord(env.job, ['id', 'conclusion', 'runnerId', 'runnerName', 'logsUrl', 'steps'], 'job', reasons);
-  const receipt = plainDataRecord(env.receipt, ['schema', 'commit', 'node', 'npm', 'python', 'javascript_suite', 'python_descent_suite', 'overall', 'created_utc', 'github_run_id', 'github_run_attempt', 'github_repository', 'github_sha', 'runner_name'], 'receipt', reasons);
+  const receipt = plainDataRecord(env.receipt, ['schema', 'commit', 'node', 'npm', 'python', 'javascript_suite', 'python_descent_suite', 'overall', 'created_utc', 'github_run_id', 'github_run_attempt', 'github_repository', 'github_sha', 'github_head_sha', 'test_policy_sha256', 'runner_name'], 'receipt', reasons);
   const artifact = plainDataRecord(env.artifact, ['id', 'name', 'workflowRunId', 'expired'], 'artifact', reasons);
   if (!candidate || !pullRequest || !run || !job || !receipt || !artifact) {
     return { eligible: false, state: 'BLOCKED', reasons };
@@ -140,6 +143,8 @@ function evaluatePromotionEvidence(evidence) {
   if (receipt.schema !== 'great-scale.verification-receipt/v1') reasons.push('verification receipt schema missing or unknown');
   if (receipt.commit !== pullRequest.mergeCommitSha) reasons.push('receipt checkout commit does not equal the current pull request merge-test SHA');
   if (receipt.github_sha !== pullRequest.mergeCommitSha) reasons.push('receipt GitHub SHA does not equal the current pull request merge-test SHA');
+  if (receipt.github_head_sha !== pullRequest.headSha) reasons.push('receipt source-head SHA does not equal the current pull request source head SHA');
+  if (receipt.test_policy_sha256 !== TEST_POLICY_SHA256) reasons.push('receipt test-policy digest does not equal the checked-out canonical policy');
   if (String(receipt.github_run_attempt ?? '') !== String(run.runAttempt ?? '')) reasons.push('receipt run attempt does not match platform run attempt');
   if (typeof receipt.created_utc !== 'string' || !Number.isFinite(Date.parse(receipt.created_utc))) reasons.push('receipt creation timestamp is missing or invalid');
   for (const key of ['node', 'npm', 'python', 'runner_name']) {
