@@ -39,6 +39,8 @@ A missing input is `UNRESOLVED`; untrusted provenance is `UNTRUSTED`; contradict
 
 ## Critical boundary
 
+For pull requests, the source branch head and the commit actually tested may differ: GitHub Actions can check out a synthetic merge commit. The verifier therefore requires separate `tested_sha` and `source_head_sha` values; it must not compare the receipt's tested commit to an ambiguously named `head_sha`.
+
 The policy digest proves which policy bytes are named; it does not prove that the policy is scientifically adequate, that the GitHub collector is authenticated, or that a particular test actually ran. The caller must retrieve workflow/run/job/step evidence independently. The artifact digest must be calculated over actual downloaded bytes by a trusted collector.
 
 There is a further design constraint: a receipt cannot safely contain the digest of the very archive that contains that receipt, because changing the digest changes the archive bytes. To avoid this self-reference, the digest target must be a separate evidence bundle, or a precisely specified canonical payload that excludes the digest field. The current receipt artifact does not yet implement that separate bundle; therefore artifact-byte verification remains an integration obligation, not a passed test.
