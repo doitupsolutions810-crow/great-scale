@@ -17,7 +17,16 @@ def mod_dist(a, b):
     d = abs(((a - b) % 9 + 9) % 9)
     return min(d, 9 - d)
 
+def canonicalize_circle_coordinate(x):
+    if not math.isfinite(x):
+        raise ValueError("circle coordinate must be finite")
+    return ((x % 9) + 9) % 9
+
 def soft_contract(x, k=0.5):
+    if not math.isfinite(x):
+        raise ValueError("contraction coordinate must be finite")
+    if not math.isfinite(k) or abs(k) >= 1:
+        raise ValueError("contraction factor k must be finite and satisfy |k| < 1")
     return FIXED + k * (x - FIXED)
 
 def soft_map(x):
@@ -28,7 +37,7 @@ def stress_residual(x):
     return mod_dist(x, involution(x))
 
 def run_descent(start=1.0, steps=40, k=0.5):
-    x = start
+    x = canonicalize_circle_coordinate(start)
     trail = [x]
     for _ in range(steps):
         x = soft_contract(x, k)
@@ -82,6 +91,17 @@ def main():
     checks.append(("softMap involution-respecting", ok))
 
     checks.append(("softMap(4.5)=4.5", abs(soft_map(4.5) - 4.5) < 1e-9))
+
+    checks.append(("circle starts canonicalize 0 ≡ 9", canonicalize_circle_coordinate(0) == canonicalize_circle_coordinate(9) == 0))
+    checks.append(("out-of-range circle starts normalize", canonicalize_circle_coordinate(19) == 1))
+    rejected = True
+    for bad_k in [-2, -1, 1, 2, float("nan"), float("inf"), float("-inf")]:
+        try: soft_contract(1, bad_k); rejected = False
+        except ValueError: pass
+    checks.append(("contraction rejects |k| ≥ 1 and non-finite k", rejected))
+    try: soft_contract(float("nan"), 0.5); finite_x_rejected = False
+    except ValueError: finite_x_rejected = True
+    checks.append(("contraction rejects non-finite x", finite_x_rejected))
 
     s = state_at(0)
     checks.append(("stateAt Ψ ≥ CONE", s["psi"] + 1e-12 >= CONE))

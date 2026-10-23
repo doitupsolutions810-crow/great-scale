@@ -57,7 +57,17 @@ export function involutionFixedPoints() {
  * This is the descent dynamics — not a blend with the involution
  * (which preserves distance from 4.5 and yields two-cycles).
  */
+function canonicalizeCircleCoordinate(x) {
+  if (!Number.isFinite(x)) throw new TypeError('circle coordinate must be finite');
+  return ((x % 9) + 9) % 9;
+}
+function validateContractionFactor(k) {
+  if (!Number.isFinite(k) || Math.abs(k) >= 1) throw new RangeError('contraction factor k must be finite and satisfy |k| < 1');
+  return k;
+}
 export function softContract(x, k = 0.5) {
+  if (!Number.isFinite(x)) throw new TypeError('contraction coordinate must be finite');
+  validateContractionFactor(k);
   return FIXED + k * (x - FIXED);
 }
 
@@ -112,8 +122,8 @@ export function stateAt(t, rate = RATE) {
 /** Background descent engine — contracts toward x*=4.5 */
 export class DescentEngine {
   constructor({ start = 1, k = 0.5, tickMs = 150 } = {}) {
-    this.x = start;
-    this.k = k;
+    this.x = canonicalizeCircleCoordinate(start);
+    this.k = validateContractionFactor(k);
     this.tickMs = tickMs;
     this.t = 0;
     this.history = [];
@@ -123,7 +133,7 @@ export class DescentEngine {
   }
 
   tick() {
-    this.x = softContract(this.x, this.k);
+    this.x = softContract(canonicalizeCircleCoordinate(this.x), this.k);
     this.t += 1;
     const rec = {
       t: this.t,
@@ -152,7 +162,7 @@ export class DescentEngine {
 
   reset(start = 1) {
     this.stop();
-    this.x = start;
+    this.x = canonicalizeCircleCoordinate(start);
     this.t = 0;
     this.history = [];
   }

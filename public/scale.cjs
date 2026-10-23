@@ -23,7 +23,19 @@ function twoCycles() {
 // Contraction target; the circle involution has fixed points 0 and 4.5.
 function fixedPoint() { return FIXED; }
 function involutionFixedPoints() { return [0, 4.5]; }
-function softContract(x, k = 0.5) { return FIXED + k * (x - FIXED); }
+function canonicalizeCircleCoordinate(x) {
+  if (!Number.isFinite(x)) throw new TypeError('circle coordinate must be finite');
+  return ((x % 9) + 9) % 9;
+}
+function validateContractionFactor(k) {
+  if (!Number.isFinite(k) || Math.abs(k) >= 1) throw new RangeError('contraction factor k must be finite and satisfy |k| < 1');
+  return k;
+}
+function softContract(x, k = 0.5) {
+  if (!Number.isFinite(x)) throw new TypeError('contraction coordinate must be finite');
+  validateContractionFactor(k);
+  return FIXED + k * (x - FIXED);
+}
 // Real-line reflection; on the circle, 0 and 9 are equivalent.
 function softMap(x) { return 9 - x; }
 // Zero at both circle-involution fixed points: 0 and 4.5.
@@ -45,12 +57,12 @@ function stateAt(t, rate = RATE) {
 }
 class DescentEngine {
   constructor({ start = 1, k = 0.5, tickMs = 150 } = {}) {
-    this.x = start; this.k = k; this.tickMs = tickMs;
+    this.x = canonicalizeCircleCoordinate(start); this.k = validateContractionFactor(k); this.tickMs = tickMs;
     this.t = 0; this.history = []; this.maxHistory = 200;
     this.timer = null; this.running = false;
   }
   tick() {
-    this.x = softContract(this.x, this.k);
+    this.x = softContract(canonicalizeCircleCoordinate(this.x), this.k);
     this.t += 1;
     const rec = {
       t: this.t, x: this.x, S: heat(this.x / 9),
@@ -73,7 +85,7 @@ class DescentEngine {
     this.timer = null;
   }
   reset(start = 1) {
-    this.stop(); this.x = start; this.t = 0; this.history = [];
+    this.stop(); this.x = canonicalizeCircleCoordinate(start); this.t = 0; this.history = [];
   }
   snapshot() {
     return {
