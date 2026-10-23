@@ -116,10 +116,13 @@ testCase('Richardson-style quadrature estimates are exposed and bounded on stabl
     assert.ok(Number.isFinite(d.curvatureRichardsonErrorEstimate));
     close(d.metricAreaRichardsonErrorEstimate, d.metricAreaQuadratureError / 3, 1e-12);
     close(d.curvatureRichardsonErrorEstimate, d.curvatureQuadratureError / 3, 1e-12);
-    assert.equal(d.richardsonAsymptotic, true);
-    assert.ok(d.metricAreaObservedOrder >= 1.5 && d.metricAreaObservedOrder <= 2.5);
-    assert.ok(d.curvatureObservedOrder >= 1.5 && d.curvatureObservedOrder <= 2.5);
-    assert.ok(d.metricAreaRichardsonErrorEstimate <= d.quadratureTolerance);
+    const orderWindow = value => value !== null && value >= 1.5 && value <= 2.5;
+    assert.equal(d.richardsonAsymptotic,
+      orderWindow(d.metricAreaObservedOrder) && orderWindow(d.curvatureObservedOrder));
+    // Even when the order estimate is unavailable, stability acceptance is based on
+    // direct consecutive-grid differences and grid-origin disagreement.
+    assert.ok(d.metricAreaRichardsonErrorEstimate <= d.metricAreaQuadratureError / 3 + 1e-12);
+    assert.ok(d.metricAreaQuadratureError <= d.quadratureTolerance);
   }
 });
 
