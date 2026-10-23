@@ -46,7 +46,7 @@ Add a separate global channel \(C\in\mathbb Z\), computed over the complete peri
 
 Run `npm test`. The added tests check:
 1. \(C=-1\) for \(m=-1\), \(C=+1\) for \(m=+1\), and \(C=0\) for \(m=3\).
-2. The gap-closing grid point at \(m=0\) is rejected.
+2. The critical masses \(m=-2,0,2\) are rejected even on an odd-sized grid, so a sampling grid cannot hide the known gap closure.
 3. The analytic local QGT of both \(m=-1\) and \(m=+1\) maps to the same Great Scale cone floor.
 
 The Chern calculation uses the Fukui–Hatsugai–Suzuki discrete plaquette formula. The test is numerical verification for this specified model and grid, not a general proof of all topological systems.
