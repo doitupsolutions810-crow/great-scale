@@ -1,0 +1,49 @@
+{
+  "great_scale_rung": "CXI",
+  "title": "Relational Observer Consistency",
+  "schema": "great-scale-observer-view-comparison-v1",
+  "policy": {
+    "minimum_distinct_signers": 2,
+    "minimum_fault_domains": 2
+  },
+  "pairwise_relation_domain": [
+    "SAME",
+    "ORDERED",
+    "FORK",
+    "INCOMPARABLE"
+  ],
+  "aggregate_rules": {
+    "FORK": "if any pair is FORK",
+    "INCOMPARABLE": "if no pair is FORK and at least one pair is INCOMPARABLE",
+    "CONSISTENT": "only if all pairs are SAME or ORDERED"
+  },
+  "test_cases": [
+    {
+      "case": "two distinct signers, same size and head",
+      "expected": "CONSISTENT"
+    },
+    {
+      "case": "two distinct signers, same size and conflicting heads",
+      "expected": "FORK"
+    },
+    {
+      "case": "two distinct signers, no predecessor relation",
+      "expected": "INCOMPARABLE"
+    },
+    {
+      "case": "duplicate signer identity",
+      "expected": "REJECT"
+    },
+    {
+      "case": "fault-domain quorum unmet",
+      "expected": "REJECT"
+    }
+  ],
+  "status": "design-and-test fixture; not a live witness attestation",
+  "limitations": [
+    "signer IDs do not prove operational independence",
+    "fault-domain labels are caller-supplied",
+    "no trusted timestamp or global publication",
+    "no scientific validity claim"
+  ]
+}
