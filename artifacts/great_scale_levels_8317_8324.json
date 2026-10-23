@@ -1,0 +1,66 @@
+{
+  "schema": "great-scale.descent-artifact/v1",
+  "levels": "8317-8324",
+  "title": "Policy-Bound Execution Evidence",
+  "finding": "Verification evidence is only interpretable relative to a named, content-addressed test policy; policy identity still does not authenticate the evidence source.",
+  "predicate": "VERIFIED = C AND R AND A AND S AND H AND P AND T",
+  "predicates": {
+    "C": "receipt commit equals independently sourced workflow head SHA",
+    "R": "workflow run ID and attempt match",
+    "A": "workflow completed successfully",
+    "S": "all policy-required suites have independent passing evidence",
+    "H": "actual bytes of a separate evidence artifact hash to the expected digest",
+    "P": "receipt and run evidence bind to SHA256 of canonical verification-policy.json",
+    "T": "run evidence is obtained from an authenticated trusted source"
+  },
+  "policy_file": "verification-policy.json",
+  "policy_digest_field": "test_policy_sha256",
+  "outcomes": [
+    "VERIFIED",
+    "MISMATCH",
+    "UNRESOLVED",
+    "UNTRUSTED"
+  ],
+  "levels_map": [
+    {
+      "level": 8317,
+      "concept": "evidence is policy-relative"
+    },
+    {
+      "level": 8318,
+      "concept": "canonical policy manifest"
+    },
+    {
+      "level": 8319,
+      "concept": "content-addressed policy identity"
+    },
+    {
+      "level": 8320,
+      "concept": "workflow path binding"
+    },
+    {
+      "level": 8321,
+      "concept": "repository binding"
+    },
+    {
+      "level": 8322,
+      "concept": "non-vacuous required-suite success"
+    },
+    {
+      "level": 8323,
+      "concept": "hashing does not authenticate provenance"
+    },
+    {
+      "level": 8324,
+      "concept": "composed fail-closed verification gate"
+    }
+  ],
+  "limits": [
+    "Policy hash identifies bytes but does not establish scientific adequacy",
+    "Trusted provenance must be authenticated by the collector, not a caller boolean alone",
+    "Artifact digest must be calculated over actual downloaded bytes",
+    "A receipt cannot contain its own enclosing archive digest without a self-reference problem",
+    "Full repository tests and hosted CI have not been verified for this draft"
+  ],
+  "status": "authored_pending_exact_checkout_and_hosted_ci"
+}
