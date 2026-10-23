@@ -28,13 +28,16 @@ The classifier emits one of four dispositions:
 
 A fork in observed evidence dominates missing population coverage, preserving CXII's conservative aggregation rule. "Consistent within declared scope" is intentionally narrower than universal truth.
 
+## Derived invariant: certification is non-promotable by loss of evidence
+
+Let (D(E)) be the certificate disposition. If any required positive predicate is weakened—state MATCH to UNKNOWN, lineage SAME/ORDERED to unresolved, population-complete to incomplete, or authenticity VERIFIED to unverified—then the result must not remain `CONSISTENT_WITHIN_DECLARED_SCOPE).
+
+This is a safety invariant, not a probability estimate: evidence loss cannot manufacture a stronger certification. The regression test `test_downgrading_any_positive_axis_never_retains_consistency` checks all four downgrade paths.
+
 ## Key mathematical distinction
 
-Let (K=1) mean the supplied evidence covers the entire declared population. Then:
-
 \[
-\operatorname{ConsistentWithinScope}(E)
-\Rightarrow S=MATCH \land L\in\{SAME,ORDERED\}
+D(E)=CONSISTENT \Rightarrow S=MATCH \land L\in\{SAME,ORDERED\}
 \land K=1 \land T=VERIFIED.
 \]
 
@@ -57,8 +60,8 @@ Run from repository root:
 PYTHONPATH=. python tests/test_scoped_evidence_certificate.py -v
 ```
 
-The ten focused unit tests cover complete scoped consistency, unresolved lineage, fork-over-missing-evidence precedence, incomplete populations, authenticity gating, mismatch handling, population count validation, signer threshold validation, unique evidence identifiers, and unassessed lineage.
+The eleven focused unit tests cover complete scoped consistency, unresolved lineage, fork-over-missing-evidence precedence, incomplete populations, authenticity gating, mismatch handling, population count validation, signer threshold validation, unique evidence identifiers, unassessed lineage, and the no-promotion-under-evidence-loss invariant.
 
 ## Limits
 
-This is a mathematical/engineering classification rule, not proof of a production conflict or physical law. The local 10-test run is not a full repository suite, CI run, or deployment verification.
+This is a mathematical/engineering classification rule, not proof of a production conflict or physical law. The local 11-test run is not a full repository suite, CI run, or deployment verification.
