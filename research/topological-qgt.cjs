@@ -1,5 +1,7 @@
 'use strict';
 
+const { CONE, heat } = require('../public/scale.cjs');
+
 const TWO_PI = 2 * Math.PI;
 const EPS = 1e-12;
 function complex(re, im = 0) { return [re, im]; }
@@ -71,7 +73,43 @@ function qiWuZhangLocalQGT(kx, ky, m) {
   const nx = projectDerivative(dx), ny = projectDerivative(dy);
   return {
     g11: dot(nx, nx) / 4, g12: dot(nx, ny) / 4, g22: dot(ny, ny) / 4,
-    curvature: dot(n, cross(nx, ny)) / 2, gap: 2 * energy
+    curvature: -dot(n, cross(nx, ny)) / 2, gap: 2 * energy
   };
 }
-module.exports = { qiWuZhangLowerBandState, qiWuZhangChernNumber, qiWuZhangLocalQGT };
+/**
+ * Whole-Brillouin-zone diagnostic. Curvature is oriented to match the
+ * occupied lower-band FHS Chern number. The normalized metric area obeys A/pi >= |C|.
+ */
+function qiWuZhangGlobalGeometry(m, gridSize = 80) {
+  if (!Number.isFinite(m)) throw new TypeError('Mass parameter m must be finite.');
+  if (Math.abs(m + 2) < EPS || Math.abs(m) < EPS || Math.abs(m - 2) < EPS) {
+    throw new RangeError('Band gap closes at a topological phase boundary for m=' + m + '.');
+  }
+  if (!Number.isInteger(gridSize) || gridSize < 4) throw new RangeError('gridSize must be an integer >= 4.');
+  const chernNumber = Math.round(qiWuZhangChernNumber(m, gridSize));
+  const dk = TWO_PI / gridSize;
+  let signedCurvature = 0, absoluteCurvature = 0, metricAreaDensity = 0;
+  for (let i = 0; i < gridSize; i++) for (let j = 0; j < gridSize; j++) {
+    const q = qiWuZhangLocalQGT(TWO_PI * i / gridSize, TWO_PI * j / gridSize, m);
+    signedCurvature += q.curvature;
+    absoluteCurvature += Math.abs(q.curvature);
+    metricAreaDensity += Math.sqrt(Math.max(0, q.g11 * q.g22 - q.g12 * q.g12));
+  }
+  const cellArea = dk * dk;
+  const integratedCurvature = signedCurvature * cellArea / TWO_PI;
+  const absoluteCurvatureBudget = absoluteCurvature * cellArea / TWO_PI;
+  const metricAreaBudget = metricAreaDensity * cellArea / Math.PI;
+  const topologicalFloor = Math.abs(chernNumber);
+  const metricAreaExcess = metricAreaBudget - topologicalFloor;
+  const topologicalSaturation = metricAreaBudget > EPS
+    ? Math.max(0, Math.min(1, topologicalFloor / metricAreaBudget)) : 0;
+  const hTopological = (1 + topologicalSaturation) / 2;
+  const STopological = heat(hTopological);
+  const psiTopological = CONE + STopological;
+  return {
+    chernNumber, integratedCurvature, absoluteCurvatureBudget,
+    metricAreaBudget, topologicalFloor, metricAreaExcess,
+    topologicalSaturation, hTopological, STopological, psiTopological
+  };
+}
+module.exports = { qiWuZhangLowerBandState, qiWuZhangChernNumber, qiWuZhangLocalQGT, qiWuZhangGlobalGeometry };

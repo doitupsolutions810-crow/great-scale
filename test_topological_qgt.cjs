@@ -1,7 +1,8 @@
 'use strict';
 const assert = require('node:assert/strict');
+const { CONE } = require('./public/scale.cjs');
 const { quantumGeometryBridge } = require('./public/quantum-geometry.cjs');
-const { qiWuZhangChernNumber, qiWuZhangLocalQGT } = require('./research/topological-qgt.cjs');
+const { qiWuZhangChernNumber, qiWuZhangLocalQGT, qiWuZhangGlobalGeometry } = require('./research/topological-qgt.cjs');
 let passed = 0;
 function close(a, b, tol = 1e-8) { assert.ok(Math.abs(a - b) <= tol, `${a} != ${b} (tol ${tol})`); }
 function testCase(name, fn) { fn(); passed++; console.log('  PASS  ' + name); }
@@ -31,4 +32,30 @@ testCase('invalid grid sizes and nonfinite masses are rejected', () => {
   assert.throws(() => qiWuZhangChernNumber(Number.NaN), /finite/);
 });
 
+testCase('signed local curvature integral agrees with the FHS Chern orientation', () => {
+  for (const m of [-1, 1]) {
+    const d = qiWuZhangGlobalGeometry(m, 40);
+    close(d.integratedCurvature, d.chernNumber, 1e-8);
+  }
+});
+testCase('metric-area budget obeys the Chern lower bound and maps into Great Scale', () => {
+  for (const m of [-1, 1]) {
+    const d = qiWuZhangGlobalGeometry(m, 40);
+    assert.ok(d.metricAreaBudget >= Math.abs(d.chernNumber) - 1e-9);
+    close(d.metricAreaBudget, d.absoluteCurvatureBudget, 1e-8);
+    assert.ok(d.metricAreaExcess > 0);
+    assert.ok(d.topologicalSaturation >= 0 && d.topologicalSaturation <= 1);
+    close(d.psiTopological, CONE + d.STopological, 1e-12);
+  }
+  const trivial = qiWuZhangGlobalGeometry(3, 40);
+  close(trivial.chernNumber, 0);
+  close(trivial.topologicalSaturation, 0);
+  close(trivial.STopological, 0.25);
+  close(trivial.psiTopological, CONE + 0.25);
+  assert.ok(trivial.metricAreaBudget > 0);
+});
+testCase('global metric-area budget converges under grid refinement', () => {
+  close(qiWuZhangGlobalGeometry(-1, 40).metricAreaBudget, qiWuZhangGlobalGeometry(-1, 80).metricAreaBudget, 2e-4);
+  close(qiWuZhangGlobalGeometry(1, 40).metricAreaBudget, qiWuZhangGlobalGeometry(1, 80).metricAreaBudget, 2e-4);
+});
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
