@@ -110,11 +110,11 @@ testCase('metric-area excess measures minority-sign curvature cancellation in co
 
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
 
-testCase('certified topological scalar is withheld when quadrature is under-resolved', () => {
+testCase('numerically accepted scalar is withheld when quadrature is under-resolved', () => {
   const near = qiWuZhangGlobalGeometry(-1.99, 40);
   assert.strictEqual(near.topologicalMappingValid, false);
-  assert.strictEqual(near.certifiedPsiTopological, null);
+  assert.strictEqual(near.acceptedPsiTopological, null);
   const stable = qiWuZhangGlobalGeometry(-1, 40);
   assert.strictEqual(stable.topologicalMappingValid, true);
-  close(stable.certifiedPsiTopological, stable.psiTopological, 1e-12);
+  close(stable.acceptedPsiTopological, stable.psiTopological, 1e-12);
 });

@@ -177,7 +177,7 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     topologicalFloor, metricAreaExcess,
     topologicalSaturationRaw, topologicalSaturation,
     hTopological, STopological, psiTopological,
-    certifiedPsiTopological: topologicalMappingValid ? psiTopological : null,
+    acceptedPsiTopological: topologicalMappingValid ? psiTopological : null,
     topologicalMappingValid,
     baseMetricAreaBudget: initial.metricAreaBudget,
     refinedIntegratedCurvature: currentMidpoint.integratedCurvature,
