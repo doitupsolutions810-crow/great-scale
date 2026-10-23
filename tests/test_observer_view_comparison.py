@@ -20,6 +20,7 @@ class ObserverViewComparisonTests(unittest.TestCase):
         result = compare_observer_views([a, b], self.trusted)
         self.assertEqual(result["classification"], "CONSISTENT")
         self.assertEqual(result["distinct_signer_count"], 2)
+        self.assertIsNone(result["distinct_fault_domain_count"])
 
     def test_conflicting_views_detected(self):
         a = self.cp("a", 4, "a" * 64)
@@ -70,6 +71,12 @@ class ObserverViewComparisonTests(unittest.TestCase):
         a = self.cp("a", 1, "a" * 64)
         with self.assertRaises(ValueError):
             compare_observer_views([a], self.trusted, minimum_distinct_signers=0)
+
+    def test_multiple_fault_domains_require_mapping(self):
+        a = self.cp("a", 1, "a" * 64)
+        b = self.cp("b", 1, "a" * 64)
+        with self.assertRaisesRegex(ValueError, "mapping is required"):
+            compare_observer_views([a, b], self.trusted, minimum_fault_domains=2)
 
 
 if __name__ == "__main__":
