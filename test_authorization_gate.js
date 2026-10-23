@@ -31,6 +31,8 @@ const cases = [
   ["approval outside max age blocks", () => blocked(x => { x.approval.issued_at = 600; })],
   ["malformed nonce blocks", () => blocked(x => { x.approval.nonce = "short"; })],
   ["malformed diff digest blocks", () => blocked(x => { x.proposal.diff_sha256 = "not-a-digest"; })],
+  ["custom properties on role list block", () => blocked(x => { x.policy.allowed_roles.note = "unexpected"; })],
+  ["accessor-backed role entries block without invocation", () => { const x = fixture(); let called = false; Object.defineProperty(x.policy.allowed_roles, "0", { enumerable: true, configurable: true, get() { called = true; throw new Error("getter invoked"); } }); assert.equal(evaluateAuthorization(x).state, "BLOCKED"); assert.equal(called, false); }],
   ["accessors are rejected without invoking them", () => {
     const x = fixture(); let called = false;
     Object.defineProperty(x.approval, "principal_id", { enumerable: true, get() { called = true; throw new Error("getter invoked"); } });
