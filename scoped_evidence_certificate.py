@@ -1,6 +1,7 @@
 """CXVI: scoped evidence certificates that keep uncertainty explicit."""
 from __future__ import annotations
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
+from evidence_scope_binding import evaluate_scope_binding
 
 SCHEMA = "great-scale-scoped-evidence-certificate-v1"
 STATE_VALUES = {"MATCH", "MISMATCH", "UNKNOWN"}
@@ -14,7 +15,8 @@ def build_evidence_certificate(*, state_equivalence: str,
         authenticity_status: str, distinct_signers: int = 0,
         signer_threshold: int = 0, evidence_ids: Sequence[str] = (),
         trust_basis: str | None = None,
-        assumptions: Sequence[str] = ()) -> dict[str, Any]:
+        assumptions: Sequence[str] = (),
+        scope_manifest: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Classify evidence within a declared scope; this function verifies no signatures.
 
     A caller may use authenticity_status='VERIFIED' only after its own trusted
@@ -50,6 +52,14 @@ def build_evidence_certificate(*, state_equivalence: str,
         raise ValueError("evidence_ids must contain non-empty strings")
     if len(ids) != len(set(ids)):
         raise ValueError("evidence_ids must be unique")
+    scope_binding = None
+    if scope_manifest is not None:
+        if len(ids) != observed_count:
+            raise ValueError("evidence_ids length must equal observed_count when scope_manifest is supplied")
+        scope_binding = evaluate_scope_binding(scope_manifest, ids)
+        if scope_binding["status"] != "EXACT_MANIFEST_MATCH":
+            scope_complete = False
+
     assumptions_list = list(assumptions)
     if any(not isinstance(x, str) or not x.strip() for x in assumptions_list):
         raise ValueError("assumptions must contain non-empty strings")
@@ -57,6 +67,8 @@ def build_evidence_certificate(*, state_equivalence: str,
     # Contradiction in observed evidence dominates absence elsewhere (CXII).
     if state_equivalence == "MISMATCH" or lineage_relation == "FORK":
         disposition = "CONFLICT_WITHIN_OBSERVED_EVIDENCE"
+    elif (scope_binding is not None and scope_binding["status"] in {"INVALID_MANIFEST", "SCOPE_MISMATCH"}):
+        disposition = "UNRESOLVED"
     elif (state_equivalence != "MATCH" or lineage_relation not in {"SAME", "ORDERED"}
           or authenticity_status != "VERIFIED"):
         disposition = "UNRESOLVED"
@@ -81,6 +93,7 @@ def build_evidence_certificate(*, state_equivalence: str,
             "trust_basis": trust_basis if authenticity_status == "VERIFIED" else None,
         },
         "evidence_ids": ids,
+        "scope_binding": scope_binding,
         "assumptions": assumptions_list,
         "disposition": disposition,
         "claim_scope": "declared population only; no claim about unseen records or unstated trust assumptions",
