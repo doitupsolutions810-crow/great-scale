@@ -28,7 +28,10 @@ def _fraction(value: int | float | str | Fraction, name: str) -> Fraction:
     if isinstance(value, bool):
         raise ValueError(f"{name} must be a finite numeric value, not bool")
     try:
-        if not math.isfinite(float(value)):
+        # Fraction inputs are exact and finite by construction; converting
+        # them (or large integers/decimal strings) through float can overflow
+        # or silently lose precision. Only floats need an IEEE finiteness check.
+        if isinstance(value, float) and not math.isfinite(value):
             raise ValueError(f"{name} must be finite")
         return Fraction(str(value))
     except (TypeError, ValueError, ZeroDivisionError, OverflowError) as exc:
