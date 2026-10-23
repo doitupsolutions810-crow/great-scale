@@ -18,4 +18,6 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          PYTHONPATH=. python tests/test_observer_checkpoint_consistency.py -v\n          PYTHONPATH=. python tests/test_observer_view_comparison.py -v\n          PYTHONPATH=. python tests/test_observer_partial_observation.py -v
+          python tests/test_observer_checkpoint_consistency.py -v
+          python tests/test_observer_view_comparison.py -v
+          python tests/test_observer_partial_observation.py -v
