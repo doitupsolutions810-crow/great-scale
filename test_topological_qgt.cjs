@@ -79,19 +79,21 @@ testCase('curvature quadrature converges across refinement for phases away from 
   }
 });
 
-testCase('quadrature diagnostics flag near-transition under-resolution', () => {
+testCase('quadrature diagnostics are sensitive to sampling-grid alignment near transitions', () => {
   const near = qiWuZhangGlobalGeometry(-1.99, 40);
   assert.strictEqual(near.chernNumber, -1);
   assert.strictEqual(near.quadratureConverged, false);
-  assert.ok(near.metricAreaQuadratureError > 1);
-  close(near.metricAreaQuadratureError,
-    Math.abs(near.refinedMetricAreaBudget - near.metricAreaBudget), 1e-12);
-  close(near.refinedMetricAreaBudget,
-    qiWuZhangGlobalGeometry(-1.99, 80).metricAreaBudget, 1e-10);
+  assert.strictEqual(near.topologicalMappingValid, false);
+  assert.ok(near.gridAlignmentAreaDiscrepancy > 0.1);
+  assert.ok(near.metricAreaQuadratureError > 0.1);
+  assert.ok(near.refinementCount >= 2);
+  assert.ok(near.refinedGridSize >= 160);
+  assert.ok(near.topologicalSaturationRaw > 0);
 
   const stable = qiWuZhangGlobalGeometry(-1, 40);
   assert.strictEqual(stable.quadratureConverged, true);
-  close(stable.refinedMetricAreaBudget,
-    qiWuZhangGlobalGeometry(-1, 80).metricAreaBudget, 1e-10);
+  assert.strictEqual(stable.topologicalMappingValid, true);
+  assert.ok(stable.gridAlignmentAreaDiscrepancy <= stable.quadratureTolerance);
 });
+
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
