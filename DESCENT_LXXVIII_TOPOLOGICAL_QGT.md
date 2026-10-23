@@ -44,7 +44,7 @@ Add a separate global channel \(C\in\mathbb Z\), computed over the complete peri
 
 ## Verification
 
-Run \`npm test\`. The added tests check:
+Run `npm test`. The added tests check:
 1. \(C=-1\) for \(m=-1\), \(C=+1\) for \(m=+1\), and \(C=0\) for \(m=3\).
 2. The gap-closing grid point at \(m=0\) is rejected.
 3. The analytic local QGT of both \(m=-1\) and \(m=+1\) maps to the same Great Scale cone floor.
