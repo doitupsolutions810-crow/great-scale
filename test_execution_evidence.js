@@ -3,8 +3,12 @@ const assert = require("node:assert/strict");
 const { verifyExecutionEvidence, POLICY_SHA256 } = require("./execution_evidence");
 
 const digest = "a".repeat(64);
+const sourceHeadSha = "abc123";
+const testedSha = "merge456";
 const receipt = {
-  commit: "abc123",
+  commit: testedSha,
+  github_sha: testedSha,
+  github_head_sha: sourceHeadSha,
   github_run_id: "9001",
   github_run_attempt: "2",
   javascript_suite: "passed",
@@ -13,7 +17,8 @@ const receipt = {
   test_policy_sha256: POLICY_SHA256
 };
 const runEvidence = {
-  head_sha: "abc123",
+  tested_sha: testedSha,
+  source_head_sha: sourceHeadSha,
   run_id: 9001,
   run_attempt: 2,
   status: "completed",
