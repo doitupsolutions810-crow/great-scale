@@ -87,6 +87,18 @@ test('DescentEngine canonicalizes circle starts and rejects invalid k', () => {
   for (let i = 0; i < 40; i++) eng.tick();
   assert.ok(eng.history.every(r => r.S >= 0 && r.S <= 0.25));
 });
+test('DescentEngine validates timer interval bounds at construction and start', () => {
+  for (const tickMs of [0, -1, NaN, Infinity, -Infinity, 2147483648]) {
+    assert.throws(() => new DescentEngine({tickMs}), /tickMs/);
+  }
+  assert.strictEqual(new DescentEngine({tickMs: 1}).tickMs, 1);
+  assert.strictEqual(new DescentEngine({tickMs: 2147483647}).tickMs, 2147483647);
+  const eng = new DescentEngine({tickMs: 150});
+  eng.tickMs = 0; // Public mutation must not bypass the start-time guard.
+  assert.throws(() => eng.start(), /tickMs/);
+  assert.strictEqual(eng.running, false);
+  assert.strictEqual(eng.timer, null);
+});
 test('soft contraction converges to 4.5 from 1.0', () => {
   let x = 1.0;
   for (let i = 0; i < 40; i++) x = softContract(x, 0.5);
