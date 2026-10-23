@@ -1,0 +1,21 @@
+name: Great Scale CXII Partial Observation Tests
+on:
+  push:
+    branches: ["feat/cx-observer-checkpoint-consistency"]
+  pull_request:
+    branches: [main]
+jobs:
+  cxi-cxii-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install cryptography
+        run: python -m pip install cryptography
+      - name: Run observer checkpoint and partial observation tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest tests/test_observer_checkpoint_consistency.py tests/test_observer_view_comparison.py tests/test_observer_partial_observation.py -v
