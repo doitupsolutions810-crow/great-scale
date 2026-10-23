@@ -4,6 +4,12 @@ const { CONE, heat } = require('../public/scale.cjs');
 
 const TWO_PI = 2 * Math.PI;
 const EPS = 1e-12;
+function binaryEntropyNats(probability) {
+  const p = Math.max(0, Math.min(1, probability));
+  const left = p > 0 ? -p * Math.log(p) : 0;
+  const right = p < 1 ? -(1 - p) * Math.log1p(-p) : 0;
+  return left + right;
+}
 function complex(re, im = 0) { return [re, im]; }
 function complexAdd(a, b) { return [a[0] + b[0], a[1] + b[1]]; }
 function complexMul(a, b) { return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]]; }
@@ -196,6 +202,17 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const area = currentMidpoint.metricAreaBudget;
   // Signed companion prevents the scalar correction from erasing Chern orientation.
   const signedTopologicalPolarization = Math.sign(chernNumber) * topologicalSaturation;
+  // Shannon entropy of curvature orientation. The topological distribution is audited
+  // against the independently sampled positive/negative curvature budgets below.
+  const topologicalPositiveOrientationProbability = (1 + signedTopologicalPolarization) / 2;
+  const curvatureOrientationEntropyNats = binaryEntropyNats(topologicalPositiveOrientationProbability);
+  const curvatureOrientationEntropyBits = curvatureOrientationEntropyNats / Math.LN2;
+  const curvatureBudgetTotal = p + n;
+  const curvatureBudgetPositiveProbability = curvatureBudgetTotal > EPS ? p / curvatureBudgetTotal : null;
+  const curvatureBudgetEntropyNats = curvatureBudgetPositiveProbability === null
+    ? null : binaryEntropyNats(curvatureBudgetPositiveProbability);
+  const curvatureOrientationEntropyResidual = curvatureBudgetEntropyNats === null
+    ? Infinity : Math.abs(curvatureOrientationEntropyNats - curvatureBudgetEntropyNats);
   const curvatureMixingIndex = area > EPS ? (p * n) / (area * area) : 0;
   const curvatureMixingResidual = Math.abs(STopological - curvatureMixingIndex);
   const curvatureChernResidual = Math.abs(currentMidpoint.integratedCurvature - chernNumber);
@@ -210,6 +227,8 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     chernIntegerResidual <= 1e-6 &&
     curvatureChernResidual <= quadratureTolerance &&
     curvatureCancellationIdentityResidual <= 2 * quadratureTolerance &&
+    Number.isFinite(curvatureOrientationEntropyResidual) &&
+    curvatureOrientationEntropyResidual <= 2 * quadratureTolerance &&
     metricAreaExcess >= -quadratureTolerance;
 
   return {
@@ -222,6 +241,8 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     metricAreaBudget: currentMidpoint.metricAreaBudget,
     topologicalFloor, metricAreaExcess,
     topologicalSaturationRaw, topologicalSaturation, signedTopologicalPolarization,
+    curvatureOrientationEntropyNats, curvatureOrientationEntropyBits,
+    curvatureBudgetEntropyNats, curvatureOrientationEntropyResidual,
     hTopological, STopological, psiTopological,
     curvatureMixingIndex, curvatureMixingResidual,
     minorityCurvatureBudget, curvatureChernResidual, curvatureCancellationIdentityResidual,
