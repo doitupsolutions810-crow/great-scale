@@ -29,6 +29,20 @@ class RobustFeasibilityTests(unittest.TestCase):
         self.assertEqual(result.lower_margin, Fraction(0))
         self.assertEqual(result.upper_margin, Fraction(0))
 
+    def test_unresolved_when_upper_margin_is_exactly_zero(self):
+        # p in [0.10, 0.20] has max p(1-p)=0.16; v=0.16 touches feasibility
+        # at one endpoint but does not make every point in the box feasible.
+        result = certify_probability_moment("0.15", "0.16", "0.05", 0)
+        self.assertEqual(result.status, "unresolved")
+        self.assertLess(result.lower_margin, 0)
+        self.assertEqual(result.upper_margin, Fraction(0))
+
+    def test_maximum_occurs_at_endpoint_when_interval_avoids_half(self):
+        # For p in [0.80, 0.90], p(1-p) decreases, so the maximum is 0.16.
+        result = certify_probability_moment("0.85", "0.08", "0.05", 0)
+        self.assertEqual(result.status, "certified_feasible")
+        self.assertEqual(result.upper_margin, Fraction(8, 100))
+
     def test_rejects_invalid_inputs(self):
         for args in [
             (1.1, 0.1, 0, 0),
