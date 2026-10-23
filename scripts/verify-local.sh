@@ -10,21 +10,31 @@ VERIFY_FEASIBILITY_STATUS=not_run
 VERIFY_PY_STATUS=not_run
 VERIFY_EXIT_STATUS=running
 VERIFY_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unavailable)"
+VERIFY_CANDIDATE_SHA="${VERIFY_CANDIDATE_SHA:-${GITHUB_SHA:-unavailable}}"
+VERIFY_PR_HEAD_SHA="${VERIFY_PR_HEAD_SHA:-}"
+VERIFY_PR_BASE_SHA="${VERIFY_PR_BASE_SHA:-}"
 VERIFY_NODE="$(node --version 2>&1 || echo unavailable)"
 VERIFY_NPM="$(npm --version 2>&1 || echo unavailable)"
 VERIFY_PYTHON="$(python3 --version 2>&1 || echo unavailable)"
 VERIFY_RECEIPT="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/great-scale-verification-receipt.json"
-export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_CANDIDATE_SHA VERIFY_PR_HEAD_SHA VERIFY_PR_BASE_SHA VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
 
 write_receipt() {
   local exit_code=$?
   if [ "$exit_code" -eq 0 ]; then VERIFY_EXIT_STATUS=passed; else VERIFY_EXIT_STATUS=failed; fi
-  export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+  export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_CANDIDATE_SHA VERIFY_PR_HEAD_SHA VERIFY_PR_BASE_SHA VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
   python3 - <<'PY'
 import json, os, datetime
 record = {
   "schema": "great-scale.verification-receipt/v1",
   "commit": os.environ.get("VERIFY_COMMIT", "unavailable"),
+  "git_checkout_sha": os.environ.get("VERIFY_COMMIT", "unavailable"),
+  "candidate_sha": os.environ.get("VERIFY_CANDIDATE_SHA", "unavailable"),
+  "pull_request_head_sha": os.environ.get("VERIFY_PR_HEAD_SHA") or None,
+  "pull_request_base_sha": os.environ.get("VERIFY_PR_BASE_SHA") or None,
+  "github_event_name": os.environ.get("GITHUB_EVENT_NAME"),
+  "github_ref": os.environ.get("GITHUB_REF"),
+  "github_head_ref": os.environ.get("GITHUB_HEAD_REF"),
   "node": os.environ.get("VERIFY_NODE", "unavailable"),
   "npm": os.environ.get("VERIFY_NPM", "unavailable"),
   "python": os.environ.get("VERIFY_PYTHON", "unavailable"),
