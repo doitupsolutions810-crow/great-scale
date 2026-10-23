@@ -24,6 +24,18 @@ write_receipt() {
 import json, os, datetime, hashlib
 with open(os.environ["VERIFY_POLICY_PATH"], "rb") as policy_file:
   test_policy_sha256 = hashlib.sha256(policy_file.read()).hexdigest()
+github_head_sha = os.environ.get("GITHUB_SHA", "unavailable")
+event_path = os.environ.get("GITHUB_EVENT_PATH")
+if event_path and os.path.isfile(event_path):
+  try:
+    with open(event_path, encoding="utf-8") as event_file:
+      event = json.load(event_file)
+    pull_request = event.get("pull_request") or {}
+    head = pull_request.get("head") or {}
+    if isinstance(head.get("sha"), str) and head["sha"]:
+      github_head_sha = head["sha"]
+  except (OSError, ValueError):
+    pass
 record = {
   "schema": "great-scale.verification-receipt/v1",
   "test_policy_sha256": test_policy_sha256,
@@ -39,6 +51,7 @@ record = {
   "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
   "github_repository": os.environ.get("GITHUB_REPOSITORY"),
   "github_sha": os.environ.get("GITHUB_SHA"),
+  "github_head_sha": github_head_sha,
   "runner_name": os.environ.get("RUNNER_NAME"),
 }
 with open(os.environ["VERIFY_RECEIPT"], "w", encoding="utf-8") as f:
