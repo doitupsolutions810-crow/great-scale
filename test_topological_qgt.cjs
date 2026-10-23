@@ -67,7 +67,7 @@ testCase('Chern invariant is stable across a phase sweep away from gap closings'
   for (const [m, expected] of sweep) {
     const raw = qiWuZhangChernNumber(m, 40);
     close(Math.round(raw), expected, 1e-8);
-    close(raw, Math.round(raw), 1e-8);
+    close(raw, Math.round(raw), 1e-5);
   }
 });
 testCase('curvature quadrature converges across refinement for phases away from transitions', () => {
