@@ -26,6 +26,10 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run the canonical verification script
+        env:
+          VERIFY_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          VERIFY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          VERIFY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
         run: bash scripts/verify-local.sh
       - name: Upload commit-bound verification receipt
         if: always()
