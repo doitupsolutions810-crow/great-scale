@@ -12,7 +12,7 @@ function complexAbs(a) { return Math.hypot(a[0], a[1]); }
 function qiWuZhangLowerBandState(kx, ky, m) {
   const dx = Math.sin(kx), dy = Math.sin(ky), dz = m + Math.cos(kx) + Math.cos(ky);
   const energy = Math.hypot(dx, dy, dz);
-  if (energy < EPS) throw new RangeError(\`Band gap closes at (\${kx}, \${ky}) for m=\${m}.\`);
+  if (energy < EPS) throw new RangeError(`Band gap closes at (${kx}, ${ky}) for m=${m}.`);
   let a, b;
   // Two gauge patches avoid a zero eigenvector at either Bloch-sphere pole.
   if (energy + dz > EPS) { a = complex(-dx, dy); b = complex(energy + dz); }
@@ -59,7 +59,7 @@ function qiWuZhangChernNumber(m, gridSize = 40) {
 function qiWuZhangLocalQGT(kx, ky, m) {
   const d = [Math.sin(kx), Math.sin(ky), m + Math.cos(kx) + Math.cos(ky)];
   const energy = Math.hypot(...d);
-  if (energy < EPS) throw new RangeError(\`Band gap closes at (\${kx}, \${ky}) for m=\${m}.\`);
+  if (energy < EPS) throw new RangeError(`Band gap closes at (${kx}, ${ky}) for m=${m}.`);
   const n = d.map(v => v / energy);
   const dx = [Math.cos(kx), 0, -Math.sin(kx)], dy = [0, Math.cos(ky), -Math.sin(ky)];
   const dot = (a, b) => a.reduce((s, v, i) => s + v * b[i], 0);
