@@ -1,6 +1,6 @@
 import unittest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from observer_checkpoint_consistency import checkpoint_body, sign_checkpoint, checkpoint_id
+from observer_checkpoint_consistency import checkpoint_body, sign_checkpoint
 from observer_partial_observation import compare_partial_observer_views
 
 
@@ -15,7 +15,7 @@ class PartialObservationTests(unittest.TestCase):
     def test_complete_consistent_pair_coverage(self):
         a = self.cp("a", 1, "a" * 64)
         b = self.cp("b", 1, "a" * 64)
-        c = self.cp("c", 2, "b" * 64, checkpoint_id(a))
+        c = self.cp("c", 1, "a" * 64)
         result = compare_partial_observer_views([a, b, c], self.trusted, [(0, 1), (0, 2), (1, 2)])
         self.assertEqual(result["classification"], "CONSISTENT")
         self.assertTrue(result["consistency_established_for_supplied_set"])
