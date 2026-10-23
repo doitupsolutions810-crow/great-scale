@@ -22,6 +22,20 @@ function record(value, keys) {
  * verify signatures, or atomically consume nonces. The caller must do those
  * operations through a trusted identity provider and durable replay store.
  */
+function denseStringArray(value) {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length < 1 || value.length > 100) return null;
+  const keys = Reflect.ownKeys(value);
+  if (keys.length !== value.length + 1 || keys.some(k => k !== "length" && (typeof k !== "string" || !/^(0|[1-9][0-9]*)$/.test(k) || Number(k) >= value.length))) return null;
+  const result = [];
+  for (let i = 0; i < value.length; i++) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(i));
+    if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, "value") ||
+        typeof descriptor.value !== "string" || !descriptor.value.trim()) return null;
+    result.push(descriptor.value);
+  }
+  return result;
+}
+
 function evaluateAuthorization(input) {
   const envelope = record(input, ["proposal", "approval", "policy", "replay"]);
   if (!envelope) return { state: "BLOCKED", reasons: ["authorization envelope missing or malformed"] };
@@ -43,10 +57,10 @@ function evaluateAuthorization(input) {
   }
   if (typeof approval.principal_id !== "string" || !approval.principal_id.trim()) reasons.push("authenticated principal identity is missing");
   if (approval.authenticated !== true || replay.trusted_identity_evidence !== true) reasons.push("identity evidence is not independently trusted");
-  if (!Array.isArray(policy.allowed_roles) || policy.allowed_roles.length === 0 ||
-      policy.allowed_roles.some(role => typeof role !== "string" || !role.trim())) {
-    reasons.push("policy must name allowed roles");
-  } else if (!policy.allowed_roles.includes(approval.role)) {
+  const allowedRoles = denseStringArray(policy.allowed_roles);
+  if (!allowedRoles) {
+    reasons.push("policy must name a dense plain array of allowed roles");
+  } else if (!allowedRoles.includes(approval.role)) {
     reasons.push("principal role is not authorized by policy");
   }
   if (approval.decision !== "approved") reasons.push("approval decision is not approved");
