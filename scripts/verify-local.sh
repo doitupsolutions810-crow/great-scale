@@ -13,16 +13,20 @@ VERIFY_NODE="$(node --version 2>&1 || echo unavailable)"
 VERIFY_NPM="$(npm --version 2>&1 || echo unavailable)"
 VERIFY_PYTHON="$(python3 --version 2>&1 || echo unavailable)"
 VERIFY_RECEIPT="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/great-scale-verification-receipt.json"
-export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+VERIFY_POLICY_PATH="$ROOT/verification-policy.json"
+export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT VERIFY_POLICY_PATH
 
 write_receipt() {
   local exit_code=$?
   if [ "$exit_code" -eq 0 ]; then VERIFY_EXIT_STATUS=passed; else VERIFY_EXIT_STATUS=failed; fi
   export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
   python3 - <<'PY'
-import json, os, datetime
+import json, os, datetime, hashlib
+with open(os.environ["VERIFY_POLICY_PATH"], "rb") as policy_file:
+  test_policy_sha256 = hashlib.sha256(policy_file.read()).hexdigest()
 record = {
   "schema": "great-scale.verification-receipt/v1",
+  "test_policy_sha256": test_policy_sha256,
   "commit": os.environ.get("VERIFY_COMMIT", "unavailable"),
   "node": os.environ.get("VERIFY_NODE", "unavailable"),
   "npm": os.environ.get("VERIFY_NPM", "unavailable"),
