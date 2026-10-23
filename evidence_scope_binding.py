@@ -84,6 +84,8 @@ def evaluate_scope_binding(manifest: Mapping[str, Any],
         expected_digest = hashlib.sha256(_canonical(payload)).hexdigest()
         structurally_valid = (
             manifest["schema"] == SCHEMA
+            and isinstance(manifest["declared_count"], int)
+            and not isinstance(manifest["declared_count"], bool)
             and manifest["declared_count"] == len(declared)
             and manifest["declared_evidence_ids"] == declared
             and isinstance(manifest["manifest_digest"], str)
