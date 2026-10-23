@@ -1,0 +1,18 @@
+{
+  "schema": "great-scale.descent-artifact/v1",
+  "levels": "8309-8316",
+  "title": "Execution-Bound Evidence",
+  "finding": "A verification receipt is a claim about an execution, not proof that the execution happened.",
+  "predicate": "VERIFIED = trusted(C AND R AND A AND S AND H)",
+  "predicates": {
+    "C": "receipt commit equals independently sourced workflow head SHA",
+    "R": "receipt run ID and attempt equal workflow run ID and attempt",
+    "A": "workflow status is completed and conclusion is success",
+    "S": "all required suites are independently evidenced as passed",
+    "H": "actual artifact digest equals receipt expected digest"
+  },
+  "outcomes": ["VERIFIED", "MISMATCH", "UNRESOLVED", "UNTRUSTED"],
+  "limits": ["JSON receipt alone does not authenticate its issuer", "Workflow conclusion alone does not prove every required test command ran", "The verifier relies on its caller to supply independently sourced evidence", "This is software assurance, not physical or quantum-geometry validation"],
+  "test_file": "test_execution_evidence.js",
+  "status": "authored_not_yet_executed"
+}
