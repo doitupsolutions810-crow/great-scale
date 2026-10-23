@@ -189,20 +189,4 @@ testCase('signed topological polarization restores orientation lost by the Great
   assert.ok(trivial.metricAreaBudget > 0);
 });
 
-testCase('signed topological polarization restores orientation lost by the Great Scale scalar', () => {
-  const negative = qiWuZhangGlobalGeometry(-1, 40);
-  const positive = qiWuZhangGlobalGeometry(1, 40);
-  const trivial = qiWuZhangGlobalGeometry(3, 40);
-  for (const d of [negative, positive, trivial]) {
-    assert.strictEqual(d.topologicalMappingValid, true);
-    close(d.signedTopologicalPolarization, d.chernNumber / d.metricAreaBudget, 1e-12);
-  }
-  close(negative.psiTopological, positive.psiTopological, 1e-10);
-  close(negative.signedTopologicalPolarization, -positive.signedTopologicalPolarization, 1e-10);
-  close(trivial.signedTopologicalPolarization, 0, 1e-12);
-  close(trivial.STopological, 0.25, 1e-12);
-  close(trivial.psiTopological, CONE + 0.25, 1e-12);
-  assert.ok(trivial.metricAreaBudget > 0);
-});
-
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
