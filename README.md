@@ -26,7 +26,7 @@ The optional QGT bridge maps the normalized metric-curvature residual into the e
 - `S_quantum = heat((1 + curvatureFraction)/2) = det(Q)/(4 det(g))`
 - `Ψ_quantum = CONE + S_quantum ≥ CONE`
 
-See [DESCENT_LXXVIII_TOPOLOGICAL_QGT.md](DESCENT_LXXVIII_TOPOLOGICAL_QGT.md) for the separate global Chern-number channel and reproducible two-band test. The bridge rejects non-positive or degenerate metrics and inputs violating QGT positivity. It is a mathematical embedding, not an empirical claim. The next step, [Descent LXXXVIII — curvature-sign variance and cancellation](research/DESCENT_LXXXVIII_CURVATURE_SIGN_VARIANCE.md), derives the global scalar as one quarter of a curvature-orientation variance and adds an explicit cancellation-identity audit.
+See [DESCENT_LXXVIII_TOPOLOGICAL_QGT.md](DESCENT_LXXVIII_TOPOLOGICAL_QGT.md) for the separate global Chern-number channel and reproducible two-band test. The bridge rejects non-positive or degenerate metrics and inputs violating QGT positivity. It is a mathematical embedding, not an empirical claim. The next step, [Descent LXXXVIII — curvature-sign variance and cancellation](research/DESCENT_LXXXVIII_CURVATURE_SIGN_VARIANCE.md), derives the global scalar as one quarter of a curvature-orientation variance and adds an explicit cancellation-identity audit. [Descent LXXXIX — orientation blindness and identifiability](research/DESCENT_LXXXIX_ORIENTATION_IDENTIFIABILITY.md) adds signed polarization so the scalar does not erase Chern orientation.
 
 ## Run
 
