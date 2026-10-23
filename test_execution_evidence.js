@@ -1,0 +1,17 @@
+"use strict";
+const assert = require("node:assert/strict");
+const { verifyExecutionEvidence } = require("./execution_evidence");
+const digest = "sha256:artifact-abc";
+const receipt = { commit: "abc123", github_run_id: "9001", github_run_attempt: "2", javascript_suite: "passed", python_descent_suite: "passed", expected_artifact_sha256: digest };
+const runEvidence = { head_sha: "abc123", run_id: 9001, run_attempt: 2, status: "completed", conclusion: "success", suiteResults: { javascript_suite: "passed", python_descent_suite: "passed" } };
+const evaluate = (receiptPatch = {}, runPatch = {}, opts = {}) => verifyExecutionEvidence({ receipt: { ...receipt, ...receiptPatch }, runEvidence: { ...runEvidence, ...runPatch }, artifactSha256: opts.artifactSha256 || digest, trustedRunEvidence: opts.trustedRunEvidence ?? true });
+assert.equal(verifyExecutionEvidence({ receipt, runEvidence, artifactSha256: digest }).status, "UNTRUSTED");
+assert.equal(evaluate().status, "VERIFIED");
+assert.equal(evaluate({ commit: "other" }).status, "MISMATCH");
+assert.equal(evaluate({}, { status: "queued", conclusion: "null" }).status, "MISMATCH");
+assert.equal(evaluate({}, { suiteResults: { javascript_suite: "passed", python_descent_suite: "not_run" } }).status, "MISMATCH");
+assert.equal(evaluate({}, {}, { artifactSha256: "sha256:wrong" }).status, "MISMATCH");
+assert.equal(evaluate({ github_run_attempt: "1" }).status, "MISMATCH");
+assert.equal(verifyExecutionEvidence({ receipt: {}, runEvidence, artifactSha256: digest, trustedRunEvidence: true }).status, "UNRESOLVED");
+assert.equal(evaluate({}, {}, { trustedRunEvidence: false }).status, "UNTRUSTED");
+console.log("execution evidence verifier: 8/8 checks passed");
