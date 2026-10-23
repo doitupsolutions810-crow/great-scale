@@ -31,6 +31,14 @@ class ScopedEvidenceCertificateTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.cert(evidence_ids=["a", "a", "c"])
     def test_unknown_lineage_never_certifies(self):
         self.assertEqual(self.cert(lineage_relation="NOT_ASSESSED")["disposition"], "UNRESOLVED")
+    def test_downgrading_any_positive_axis_never_retains_consistency(self):
+        weaker = [
+            self.cert(state_equivalence="UNKNOWN"),
+            self.cert(lineage_relation="INCOMPARABLE"),
+            self.cert(observed_count=2, declared_count=3, scope_complete=False),
+            self.cert(authenticity_status="UNVERIFIED"),
+        ]
+        self.assertTrue(all(c["disposition"] != "CONSISTENT_WITHIN_DECLARED_SCOPE" for c in weaker))
 
 if __name__ == "__main__":
     unittest.main()
