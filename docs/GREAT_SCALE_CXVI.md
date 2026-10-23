@@ -32,7 +32,7 @@ A fork in observed evidence dominates missing population coverage, preserving CX
 
 Let (D(E)) be the certificate disposition. If any required positive predicate is weakened—state MATCH to UNKNOWN, lineage SAME/ORDERED to unresolved, population-complete to incomplete, or authenticity VERIFIED to unverified—then the result must not remain `CONSISTENT_WITHIN_DECLARED_SCOPE).
 
-This is a safety invariant, not a probability estimate: evidence loss cannot manufacture a stronger certification. The regression test `test_downgrading_any_positive_axis_never_retains_consistency` checks all four downgrade paths.
+This is a safety invariant, not a probability estimate: evidence loss cannot manufacture a stronger certification. CXVII adds an optional content-addressed `scope_manifest`; when supplied, the certificate records the manifest binding and refuses consistency on an invalid or mismatched manifest. The regression test `test_downgrading_any_positive_axis_never_retains_consistency` checks all four downgrade paths.
 
 ## Key mathematical distinction
 
