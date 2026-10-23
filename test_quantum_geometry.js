@@ -33,5 +33,11 @@ test('rejects curvature that violates QGT positivity', () => {
 test('rejects degenerate metric directions', () => {
   assert.throws(() => quantumGeometryBridge({ g11: 1, g12: 1, g22: 1, curvature: 0 }), /positive and nondegenerate/);
 });
+test('rejects negative-definite metric masquerading as positive via determinant', () => {
+  assert.throws(() => quantumGeometryBridge({ g11: -1, g12: 0, g22: -1, curvature: 0 }), /diagonal entries must be positive/);
+});
+test('rejects non-positive diagonal metric entry', () => {
+  assert.throws(() => quantumGeometryBridge({ g11: 0, g12: 0, g22: 1, curvature: 0 }), /diagonal entries must be positive/);
+});
 console.log('\nquantum geometry bridge tests: ' + passed + ' passed, ' + failed + ' failed');
 process.exit(failed ? 1 : 0);
