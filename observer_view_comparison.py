@@ -58,10 +58,10 @@ def compare_observer_views(
             if not isinstance(domain, str) or not domain.strip():
                 raise ValueError(f"missing fault-domain mapping for signer {signer_id}")
             domains.add(domain)
+        if len(domains) < minimum_fault_domains:
+            raise ValueError("insufficient distinct fault-domain quorum")
     elif minimum_fault_domains > 1:
         raise ValueError("fault-domain mapping is required when minimum_fault_domains > 1")
-    if len(domains) < minimum_fault_domains:
-        raise ValueError("insufficient distinct fault-domain quorum")
 
     pair_results: list[dict[str, str]] = []
     overall = "CONSISTENT"
