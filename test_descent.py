@@ -17,7 +17,7 @@ def mod_dist(a, b):
     d = abs(((a - b) % 9 + 9) % 9)
     return min(d, 9 - d)
 
-def soft_contract(x, k=0.5):
+def soft_contract(x, k=CONE):
     return FIXED + k * (x - FIXED)
 
 def soft_map(x):
@@ -26,7 +26,7 @@ def soft_map(x):
 def stress_residual(x):
     return mod_dist(x, involution(x))
 
-def run_descent(start=1.0, steps=40, k=0.5):
+def run_descent(start=1.0, steps=40, k=CONE):
     x = start
     trail = [x]
     for _ in range(steps):
@@ -73,6 +73,11 @@ def main():
 
     checks.append(("heat max 0.25", abs(heat(0.5) - 0.25) < 1e-12))
     checks.append((f"CONE floor {CONE:.4f}", abs(CONE - 0.382) < 1e-3))
+    expected_first = FIXED + CONE * (1.0 - FIXED)
+    checks.append(("soft_contract default uses CONE",
+                   abs(soft_contract(1.0) - expected_first) < 1e-12))
+    checks.append(("run_descent default uses CONE",
+                   abs(run_descent(steps=1)[-1] - expected_first) < 1e-12))
 
     ok = all(abs(soft_map(soft_map(x)) - x) < 1e-9 for x in [0, 1, 2, 3, 4, 4.5, 5, 6, 7, 8, 9])
     checks.append(("softMap involution-respecting", ok))
