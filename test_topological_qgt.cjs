@@ -59,7 +59,6 @@ testCase('global metric-area budget converges under grid refinement', () => {
   close(qiWuZhangGlobalGeometry(-1, 40).metricAreaBudget, qiWuZhangGlobalGeometry(-1, 80).metricAreaBudget, 2e-4);
   close(qiWuZhangGlobalGeometry(1, 40).metricAreaBudget, qiWuZhangGlobalGeometry(1, 80).metricAreaBudget, 2e-4);
 });
-console.log(`topological QGT tests: ${passed} passed, 0 failed`);
 testCase('Chern invariant is stable across a phase sweep away from gap closings', () => {
   const sweep = [
     [-3, 0], [-2.5, 0], [-1.5, -1], [-1, -1], [-0.5, -1],
@@ -79,3 +78,5 @@ testCase('curvature quadrature converges across refinement for phases away from 
       'refined quadrature should not worsen the error at m=' + m);
   }
 });
+
+console.log(`topological QGT tests: ${passed} passed, 0 failed`);
