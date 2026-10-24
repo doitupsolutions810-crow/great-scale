@@ -134,7 +134,7 @@ The integrated CycleKernel branch now distinguishes:
 \]
 For the current symbolic formula, the baseline score is \(0.4325\), while the explicit empty-resource score is \(0.275\). The resulting state fingerprints differ, and the evidence witness is checked against the reported fingerprint. This is not a change to Great Scale's heat law; it is a shared rule for preserving conditions that a scalar otherwise discards.
 
-See [CycleKernel Descent C — Typed missingness](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_C_TYPED_MISSINGNESS.md) and the open [GS–LVI integration PR #9](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9). These source changes are under review and are not yet merge- or production-verified.
+Field-level presence is now preserved too: an omitted field and an explicitly supplied zero remain distinct in the canonical witness, and validated belief.deception is recorded even though the existing score does not use it. See [CycleKernel Descent C — Typed missingness](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_C_TYPED_MISSINGNESS.md), [Descent CI — Field-presence closure](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CI_WITNESS_COMPLETENESS.md), and the open [GS–LVI integration PR #9](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9). These source changes are under review and are not yet merge- or production-verified.
 
 ## Regression criteria
 
