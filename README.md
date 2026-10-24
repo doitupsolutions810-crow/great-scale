@@ -65,3 +65,8 @@ The risk channel is additional to the existing Great Scale heat/cone law; no new
 ## System 31 — alias concordance / evidence multiplicity
 
 [CycleKernel Descent CVIII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIII_ALIAS_CONCORDANCE.md) identifies a pre-scoring loss boundary: duplicate JSON keys and conflicting metric aliases can discard contradictory raw values. The relay parsers now reject repeated keys, validate every present alias, and admit multiple spellings only when all finite in-domain values agree. This is input-integrity engineering, not relay authentication, and leaves S(h)=h(1-h) and Ψ=φ⁻²+S(h) unchanged.
+
+
+## System 32 — relay envelope closure
+
+[CycleKernel Descent CVIX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIX_RELAY_ENVELOPE_CLOSURE.md) closes the next normalization boundary: direct and wrapped observations are distinct envelope forms, and a wrapped form cannot also carry recognized metric inputs at the outer level. This prevents shadow values from being silently discarded. It is an integrity constraint, not relay authentication; Great Scale's heat/cone law remains unchanged.
