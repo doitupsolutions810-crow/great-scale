@@ -141,3 +141,8 @@ The existing objective-sign inconsistency and controller behavior noted in earli
 ## Literature context
 
 The chord fallback is the classical convex-function chord bound associated with Edmundson–Madansky. The sharp fixed-moment construction is a moment-problem/Hermite-majorant argument. These are established mathematical techniques; the Great Scale contribution here is the explicit treatment of the uncertainty set, feasibility gate, and status-aware certificate contract—not a claim of a new physical law.
+
+
+## Asymptotic verification addendum
+
+The fixed-moment log-loss path \(p=1/2, v=1/20, b=1-\delta\) has exact limits \(c_\infty=2/5\), \(\alpha_\infty=1/6\), and finite offset \(C_\infty=(5/6)[-\ln(0.6)]\). The residual after subtracting both the leading logarithm and this offset is asymptotic to \((5/9)\delta\ln(1/\delta)\). See [DESCENT_LV_ASYMPTOTIC_VERIFICATION.md](DESCENT_LV_ASYMPTOTIC_VERIFICATION.md). A reported finite-sweep ratio of 2.25 is not \(U_\delta/[(1/6)\ln(1/\delta)]\) for the canonical assumptions; at \(\delta=10^{-4}\), the latter is approximately 1.277608. Do not carry the 2.25 value forward without the ratio's exact definition.
