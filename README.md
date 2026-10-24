@@ -41,3 +41,19 @@ npm run all
 Live UI: https://great-scale.vercel.app
 
 See LATTICE_BRIDGE.md for control-plane integration.
+
+## Descent LV–LVI: certified risk envelopes
+
+[Descent LV](research/DESCENT_LV_ROBUST_RISK_CERTIFICATE.md) establishes the sharp fixed-moment log-loss envelope and warns against unproved corner maximizers. [Descent LVI](research/DESCENT_LVI_CONVEX_LOSS_GENERALIZATION.md) extends the Hermite proof to a power-barrier family and includes a certified chord fallback for uncertain moments. The global robust maximum is not labelled sharp unless separately certified.
+
+Run the syntax build and regression suites with:
+
+```bash
+npm run build
+npm test
+python3 test_descent.py
+python3 test_loss_envelope.py
+npm run all
+```
+
+The risk channel is additional to the existing Great Scale heat/cone law; no new physical law is asserted.
