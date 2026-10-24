@@ -79,6 +79,28 @@ def main():
     checks.append(("stateAt Ψ ≥ CONE", s["psi"] + 1e-12 >= CONE))
     checks.append(("stateAt λ may be < CONE at low heat", s["lam"] < CONE or s["S"] > 0.1))
 
+    # GS-LVI seam: quotient-circle contraction
+    # Public docs describe a modulo-nine circle with involution, but
+    # soft_contract is an affine map on the real line. On the quotient,
+    # C(x+9n) - C(x) = 9kn, a multiple of 9 only when k is an integer.
+    # Under |k|<1 the only integer is k=0, so the circle fiber is
+    # non-constant: equivalent states (0 and 9) map to non-equivalent outputs.
+    c0, c9 = soft_contract(0), soft_contract(9)
+    qd = mod_dist(c0, c9)
+    checks.append((f"quotient seam C(0)={c0}, C(9)={c9}, dist={qd:.4f}",
+                   abs(qd - 4.5) < 1e-9 and abs(c0 - c9) % 9 > 1e-9))
+    # strict |k|<1 admits no nonzero integer k → circle fiber non-constant
+    checks.append(("affine map not circle-native under |k|<1",
+                   abs(soft_contract(0, 0.5) - soft_contract(9, 0.5)) > 1e-9))
+
+    # softMap collapse: k=0.5 → constant 4.5, cannot preserve two-cycles
+    # soft_map(x) = 9-x is a different involution than soft_contract's
+    # fixed-point attractor; they agree only at 4.5.
+    checks.append(("softMap(2) diverges from soft_contract(2) (collapse check)",
+                   abs(soft_map(2) - soft_contract(2)) > 1e-9))
+    checks.append(("softMap(2)=7.0 (pure involution, not fixed-point sink)",
+                   abs(soft_map(2) - 7.0) < 1e-9))
+
     for name, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  {name}")
 
