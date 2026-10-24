@@ -1,0 +1,37 @@
+{
+  "schema": "great-scale.federation-digest/v1.2",
+  "gs_version": "1.2.1",
+  "dual_cone": {
+    "cone_orbit": 0.2360679774997897,
+    "cone_bridge": 0.3819660112501052,
+    "delta": 0.14589803375031551,
+    "identity": "φ^{-4}"
+  },
+  "joint_fixed_point": {
+    "A_star": 0.7786,
+    "swarm_mean": 1.618034,
+    "swarm_product": -1.0,
+    "swarm_cone": 0.236068,
+    "is_attractor": true,
+    "n_agreed_objects": 10,
+    "agreed_objects": [
+      "agents_as_fixed_points",
+      "coherence_ops",
+      "conserved",
+      "dual_atlas",
+      "fibration",
+      "invariant_kind",
+      "involution",
+      "psi_structure",
+      "recursive_memory",
+      "residual_height"
+    ]
+  },
+  "laws": [
+    "keep the mean",
+    "respect residual partition 4+3+1",
+    "Ψ never below chosen cone",
+    "only scale-generated geometry",
+    "dual-cone residual δ = φ^{-4} path-invariant"
+  ]
+}
