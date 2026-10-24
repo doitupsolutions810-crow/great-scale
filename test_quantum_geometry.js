@@ -39,6 +39,14 @@ test('pure-qubit Bloch sphere saturates QGT bound at regular points', () => {
  close(r.detG,Math.sin(t)**2/16); close(r.detQ,0,1e-12); close(r.curvatureFraction,1); close(r.SQuantum,0); close(r.psiQuantum,CONE);
 });
 test('rejects QGT positivity violation', () => assert.throws(()=>quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:2.01}),/QGT positivity violated/));
+test('tolerated positivity clipping is explicit rather than silently called exact saturation', () => {
+ const r=quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:2*(1+5e-11)});
+ assert.ok(r.rawCurvatureFraction > 1);
+ close(r.positivityOvershoot,5e-11,1e-15);
+ assert.strictEqual(r.saturationProjected,true);
+ close(r.curvatureFraction,1); close(r.SQuantum,0);
+ assert.throws(()=>quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:2*(1+2e-10)}),/QGT positivity violated/);
+});
 test('rejects degenerate metric', () => assert.throws(()=>quantumGeometryBridge({g11:1,g12:1,g22:1,curvature:0}),/positive and nondegenerate/));
 test('rejects negative-definite metric', () => assert.throws(()=>quantumGeometryBridge({g11:-1,g12:0,g22:-1,curvature:0}),/diagonal entries must be positive/));
 test('rejects zero diagonal metric', () => assert.throws(()=>quantumGeometryBridge({g11:0,g12:0,g22:1,curvature:0}),/diagonal entries must be positive/));
