@@ -159,3 +159,8 @@ The test implementation is added to the existing LVI suite. Hosted CI had previo
 ## Scientific boundary
 
 The Hermite remainder and the asymptotic expansion are mathematical claims about the specified loss and support/moment assumptions. They do not establish empirical calibration of a risk model, prove that a real-world distribution obeys the assumed moments, or authorize an operational decision. The support margin and proof status must be visible at the point where the scalar is consumed.
+
+
+## Cross-repository continuation: explicit-null closure (CycleKernel Descent CII)
+
+The same typed-observation principle catches a further ambiguity below the empty-mapping fix. In Python, `metrics.get(k)` maps both an omitted key and a supplied `null`/`None` to the same value. The CycleKernel backend and both maintained bridge fusion copies now treat omission as absent/defaulted, preserve supplied mappings (including empty mappings), and reject a supplied null/non-mapping value. This does not alter the Great Scale heat/cone law or CycleKernel's fitness formula; it makes malformed input fail closed. See [Descent CII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CII_EXPLICIT_NULL_CLOSURE.md) and [GS–LVI PR #9](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9). As before, source integration and test additions are not equivalent to a passing hosted build.
