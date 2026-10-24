@@ -56,18 +56,22 @@ class LossEnvelopeTests(unittest.TestCase):
         interior_constant = (5.0 / 6.0) * math.log(5.0 / 3.0)
         previous_gap = None
 
-        for epsilon in epsilons:
+        for requested_epsilon in epsilons:
             result = fixed_moment_envelope(
-                0.5, 0.05, epsilon, loss=NEGATIVE_LOG, scale=1.0
+                0.5, 0.05, requested_epsilon, loss=NEGATIVE_LOG, scale=1.0
             )
+            # The representable support endpoint can round 1-epsilon; use the
+            # effective margin 1-b to compare against the implementation's log1p.
+            b = result["support"][1]
+            epsilon = 1.0 - b
             c = result["witness"][0]["point"]
             alpha = result["witness"][1]["probability"]
-            self.assertAlmostEqual(c, 0.5 - 0.05 / (0.5 - epsilon), places=12)
+            self.assertAlmostEqual(c, 0.5 - 0.05 / (b - 0.5), places=12)
             self.assertAlmostEqual(
-                alpha, 0.05 / ((0.5 - epsilon) ** 2 + 0.05), places=12
+                alpha, 0.05 / ((b - 0.5) ** 2 + 0.05), places=12
             )
 
-            log_term = math.log(1.0 / epsilon)
+            log_term = -math.log1p(-b)
             leading_plus_constant = (1.0 / 6.0) * log_term + interior_constant
             remainder = result["bound"] - leading_plus_constant
             first_correction = (
