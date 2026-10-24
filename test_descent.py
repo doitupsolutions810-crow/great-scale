@@ -34,6 +34,16 @@ def run_descent(start=1.0, steps=40, k=0.5):
         trail.append(x)
     return trail
 
+def fixed_moment_log_envelope(p, v, b, a=1.0):
+    """Sharp fixed-(p,v) witness expectation for f(x)=-a*ln(1-x)."""
+    if not (0 <= p < b < 1) or not (0 <= v <= p * (b - p)) or a <= 0:
+        raise ValueError("infeasible fixed-moment log-envelope parameters")
+    c = p - v / (b - p)
+    alpha = v / (((b - p) ** 2) + v)
+    loss_c = -a * math.log1p(-c)
+    loss_b = -a * math.log1p(-b)
+    return c, alpha, (1 - alpha) * loss_c + alpha * loss_b
+
 def state_at(t, rate=0.85):
     phase = (t * rate) % 1
     h = 0.5 - 0.5 * math.cos(2 * math.pi * phase)
@@ -78,6 +88,37 @@ def main():
     s = state_at(0)
     checks.append(("stateAt Ψ ≥ CONE", s["psi"] + 1e-12 >= CONE))
     checks.append(("stateAt λ may be < CONE at low heat", s["lam"] < CONE or s["S"] > 0.1))
+
+    # Descent LV asymptotic audit: p=1/2, v=1/20, b=1-delta -> 1.
+    p, v = 0.5, 0.05
+    c_inf = p - v / (1.0 - p)
+    alpha_inf = v / (((1.0 - p) ** 2) + v)
+    L = -math.log(0.6)
+    offset_inf = (5.0 / 6.0) * L
+    checks.append(("LV exact interior-atom limit c∞=2/5", abs(c_inf - 0.4) < 1e-15))
+    checks.append(("LV exact boundary-atom limit α∞=1/6", abs(alpha_inf - (1.0 / 6.0)) < 1e-15))
+    checks.append(("LV exact finite offset (5/6)(-ln 0.6)", abs(offset_inf - 0.42568801980499227) < 1e-14))
+
+    delta = 1e-4
+    c_d, alpha_d, u_d = fixed_moment_log_envelope(p, v, 1.0 - delta)
+    leading_d = (1.0 / 6.0) * math.log(1.0 / delta)
+    remainder_d = u_d - leading_d - offset_inf
+    remainder_asymptotic = (
+        (5.0 / 9.0) * delta * math.log(1.0 / delta)
+        - ((5.0 / 9.0) * L + 5.0 / 18.0) * delta
+    )
+    ratio_d = u_d / leading_d
+    checks.append(("LV finite-δ reference U*(1e-4)≈1.9612003866", abs(u_d - 1.961200386616878) < 1e-11))
+    checks.append(("LV finite-δ leading-log ratio is named correctly", abs(ratio_d - 1.2776077587213512) < 1e-10 and abs(ratio_d - 2.25) > 0.5))
+    checks.append(("LV post-offset remainder follows δ log(1/δ) expansion", abs(remainder_d - remainder_asymptotic) < 2e-7))
+
+    delta_coarse = 1e-4
+    delta_fine = 1e-6
+    _, _, u_coarse = fixed_moment_log_envelope(p, v, 1.0 - delta_coarse)
+    _, _, u_fine = fixed_moment_log_envelope(p, v, 1.0 - delta_fine)
+    q_coarse = (u_coarse - offset_inf) / math.log(1.0 / delta_coarse)
+    q_fine = (u_fine - offset_inf) / math.log(1.0 / delta_fine)
+    checks.append(("LV offset-corrected coefficient approaches 1/6", abs(q_fine - 1.0 / 6.0) < abs(q_coarse - 1.0 / 6.0)))
 
     for name, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  {name}")
