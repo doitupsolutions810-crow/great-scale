@@ -57,3 +57,6 @@ npm run all
 ```
 
 The risk channel is additional to the existing Great Scale heat/cone law; no new physical law is asserted.
+
+
+[Descent LVII — Boundary asymptotic closure](research/DESCENT_LVII_BOUNDARY_ASYMPTOTIC_CLOSURE.md) derives the logarithmic divergence coefficient from the extremal witness's limiting boundary mass and verifies the first-order correction through the existing loss-envelope regression suite. It leaves the Great Scale heat/cone law unchanged.
