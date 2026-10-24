@@ -48,6 +48,45 @@ class LossEnvelopeTests(unittest.TestCase):
         self.assertAlmostEqual(result["bound"], 0.9881707006336746, places=12)
         self.assertAlmostEqual(result["witness"][1]["probability"], 0.19801980198019808, places=12)
 
+
+    def test_negative_log_boundary_asymptotic_and_first_correction(self):
+        # Fixed p=1/2, v=0.05. The boundary atom's probability tends to 1/6;
+        # the interior atom tends to c=0.4 and contributes (5/6) ln(5/3).
+        epsilons = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+        interior_constant = (5.0 / 6.0) * math.log(5.0 / 3.0)
+        previous_gap = None
+
+        for epsilon in epsilons:
+            result = fixed_moment_envelope(
+                0.5, 0.05, epsilon, loss=NEGATIVE_LOG, scale=1.0
+            )
+            c = result["witness"][0]["point"]
+            alpha = result["witness"][1]["probability"]
+            self.assertAlmostEqual(c, 0.5 - 0.05 / (0.5 - epsilon), places=12)
+            self.assertAlmostEqual(
+                alpha, 0.05 / ((0.5 - epsilon) ** 2 + 0.05), places=12
+            )
+
+            log_term = math.log(1.0 / epsilon)
+            leading_plus_constant = (1.0 / 6.0) * log_term + interior_constant
+            remainder = result["bound"] - leading_plus_constant
+            first_correction = (
+                (5.0 / 9.0) * epsilon * log_term
+                - (5.0 / 18.0 + (5.0 / 9.0) * math.log(5.0 / 3.0)) * epsilon
+            )
+            # The next Taylor remainder is O(epsilon**2 * log(1/epsilon)).
+            self.assertLessEqual(
+                abs(remainder - first_correction),
+                1.3 * epsilon * epsilon * log_term + 1e-14,
+            )
+            gap = abs(remainder)
+            if previous_gap is not None:
+                self.assertLess(gap, previous_gap)
+            previous_gap = gap
+
+        self.assertAlmostEqual(alpha, 1.0 / 6.0, delta=1e-7)
+        self.assertAlmostEqual(c, 0.4, delta=3e-8)
+
     def test_hermite_quadratic_majorizes_each_supported_loss(self):
         b = 0.95
         for loss, power in ((NEGATIVE_LOG, 1.0), (POWER_BARRIER, 1.3)):
