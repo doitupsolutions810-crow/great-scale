@@ -41,4 +41,6 @@ npm run all
 
 Live UI: https://great-scale.vercel.app
 
-See LATTICE_BRIDGE.md for control-plane integration.
+See [LATTICE_BRIDGE.md](LATTICE_BRIDGE.md) for control-plane integration.
+
+Descent XCVII: [Orthogonal evidence closure](research/DESCENT_XCVII_ORTHOGONAL_EVIDENCE.md) explains why geometric summaries must remain separate from identity, capabilities, and provenance. Run `python3 test_evidence_projection.py` for its regression checks.
