@@ -21,12 +21,19 @@ function qiWuZhangLowerBandState(kx, ky, m) {
   const dx = Math.sin(kx), dy = Math.sin(ky), dz = m + Math.cos(kx) + Math.cos(ky);
   const energy = Math.hypot(dx, dy, dz);
   if (energy < EPS) throw new RangeError(`Band gap closes at (${kx}, ${ky}) for m=${m}.`);
+  // Normalize using dimensionless ratios. Forming energy ± dz directly can
+  // overflow for finite, very large |m| even though the normalized state exists.
   let a, b;
-  // Two gauge patches avoid a zero eigenvector at either Bloch-sphere pole.
-  if (energy + dz > EPS) { a = complex(-dx, dy); b = complex(energy + dz); }
-  else { a = complex(energy - dz); b = complex(-dx, -dy); }
-  const norm = Math.hypot(complexAbs(a), complexAbs(b));
-  return [complex(a[0] / norm, a[1] / norm), complex(b[0] / norm, b[1] / norm)];
+  if (dz >= 0) {
+    const bReal = Math.sqrt((1 + dz / energy) / 2);
+    a = complex((-dx / energy) / (2 * bReal), (dy / energy) / (2 * bReal));
+    b = complex(bReal);
+  } else {
+    const aReal = Math.sqrt((1 - dz / energy) / 2);
+    a = complex(aReal);
+    b = complex((-dx / energy) / (2 * aReal), (-dy / energy) / (2 * aReal));
+  }
+  return [a, b];
 }
 function overlap(u, v) {
   return complexAdd(complexMul(complexConjugate(u[0]), v[0]), complexMul(complexConjugate(u[1]), v[1]));
