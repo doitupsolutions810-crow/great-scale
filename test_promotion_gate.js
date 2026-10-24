@@ -148,6 +148,32 @@ test('CLI with no evidence path exits with usage error', () => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /Usage: node promotion_gate\.js/);
 });
+test('CLI rejects duplicate JSON keys before evidence evaluation', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'great-scale-gate-'));
+  const file = path.join(dir, 'duplicate.json');
+  try {
+    fs.writeFileSync(file, '{"candidate":null,"candidate":null}', 'utf8');
+    const result = spawnSync(process.execPath, ['promotion_gate.js', file], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /duplicate JSON object key/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('CLI rejects evidence files above the byte cap before parsing', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'great-scale-gate-'));
+  const file = path.join(dir, 'oversized.json');
+  try {
+    fs.writeFileSync(file, ' '.repeat(1048577), 'utf8');
+    const result = spawnSync(process.execPath, ['promotion_gate.js', file], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /byte limit exceeded/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('CLI emits BLOCKED and a nonzero exit for invalid evidence', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'great-scale-gate-'));
   const file = path.join(dir, 'evidence.json');
