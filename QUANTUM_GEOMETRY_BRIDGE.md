@@ -58,3 +58,12 @@ Saturated geometry ((R=0)) maps to zero geometric heat; zero curvature with a no
 
 Run `npm test` and `python3 test_descent.py`.
 The bridge suite covers zero curvature, saturation, intermediate curvature, scale invariance, invalid curvature, degenerate metrics, and non-positive metric diagonals.
+
+
+## Numerical trust diagnostics — Descent XCVI
+
+The bridge now computes the normalized 2×2 determinant with compensated products/subtraction and obtains the smaller eigenvalue as \(\lambda_{\min}=\det(g)/\lambda_{\max}\), reducing cancellation in near-degenerate metrics. It also returns `metricConditionNumber` and `metricConditionStatus` (`well-conditioned`, `ill-conditioned`, or `numerically-unresolved`). These fields are diagnostic and do not silently regularize the input or change the Great Scale scalar.
+
+For \(g_\varepsilon=\begin{pmatrix}1&1-\varepsilon\\1-\varepsilon&1\end{pmatrix}\), the exact determinant is \(\varepsilon(2-\varepsilon)\) and the eigenvalues are \(\varepsilon\) and \(2-\varepsilon\). Near this boundary, validity and scale covariance alone do not guarantee reliable floating-point output. The scalar embedding remains \(S_Q=(1-\chi^2)/4\) and \(\Psi_Q=\mathrm{CONE}+S_Q\); conditioning is a separate trust channel.
+
+See [Descent XCVI](research/DESCENT_XCVI_COMPENSATED_METRIC_TRUST.md) for the numerical method, classification thresholds, and verification limits.
