@@ -216,4 +216,11 @@ testCase('curvature-orientation Shannon entropy is monotone in Great Scale heat'
   assert.strictEqual(underResolved.topologicalMappingValid, false);
   assert.ok(underResolved.curvatureOrientationEntropyResidual > underResolved.quadratureTolerance);
 });
+
+testCase('QWZ eigenstate and Chern evaluation remain finite for very large finite mass', () => {
+  const state = require('./research/topological-qgt.cjs').qiWuZhangLowerBandState(0.37, 0.81, Number.MAX_VALUE);
+  for (const component of state.flat()) assert.ok(Number.isFinite(component));
+  close(state.reduce((sum, z) => sum + z[0] ** 2 + z[1] ** 2, 0), 1, 1e-12);
+  close(qiWuZhangChernNumber(Number.MAX_VALUE, 8), 0, 1e-8);
+});
 console.log(`topological QGT tests: ${passed} passed, 0 failed`);
