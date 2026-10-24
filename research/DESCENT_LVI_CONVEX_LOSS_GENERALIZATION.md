@@ -119,3 +119,8 @@ npm run all
 ~~~
 
 These are test commands, not asserted outcomes. The branch CI must actually execute them before the implementation can be called verified. Sampled pointwise checks support debugging; the analytic Hermite-remainder argument is the proof.
+
+
+## Follow-on: Descent LVII boundary asymptotic
+
+The fixed-moment log-loss envelope has an explicit singular-limit expansion as the support margin approaches zero. Descent LVII derives the limiting boundary mass, finite interior contribution, and first correction, and extends the regression suite with an epsilon sweep. See [DESCENT_LVII_BOUNDARY_ASYMPTOTIC_CLOSURE.md](DESCENT_LVII_BOUNDARY_ASYMPTOTIC_CLOSURE.md). This adds an asymptotic result without changing the LV/LVI proof-status boundary: fixed moments are sharp; the uncertain-moment global maximum is still not certified by a corner assumption.
