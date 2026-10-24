@@ -35,3 +35,8 @@ The additive QGT adapter computes `S_Q = det(Q)/(4 det(g))) for a valid two-dire
 - readiness field `scale`
 
 Laws preserved. Scientific claims remain provisional until independently validated.
+
+
+## Orthogonal evidence closure — Descent XCVII
+
+The Great Scale scalar is an observation, not an identity or authorization proof. The QGT projection deliberately loses curvature orientation and absolute metric scale. The connected control plane must preserve separate typed channels for geometry, workload identity, signed capability claims, and evidence receipts; a valid action requires independent checks of signature, audience, rights (including method/resource), constraints, expiry, policy, and revocation. See [Descent XCVII](research/DESCENT_XCVII_ORTHOGONAL_EVIDENCE.md). This is a trust-boundary invariant, not a physical claim.
