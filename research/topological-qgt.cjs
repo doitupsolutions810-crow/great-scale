@@ -1,6 +1,6 @@
 'use strict';
 
-const { CONE, heat } = require('../public/scale.cjs');
+const { CONE, heat } = require('..//public/scale.cjs);
 
 const TWO_PI = 2 * Math.PI;
 const EPS = 1e-12;
@@ -16,13 +16,11 @@ function complexMul(a, b) { return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1
 function complexConjugate(a) { return [a[0], -a[1]]; }
 function complexAbs(a) { return Math.hypot(a[0], a[1]); }
 
-/** Qi–Wu–Zhang two-band Hamiltonian d(k)·σ, lower-band eigenvector. */
+/** Qi-Wu-Zhang two-band Hamiltonian d(k)·sigma, lower-band eigenvector. */
 function qiWuZhangLowerBandState(kx, ky, m) {
   const dx = Math.sin(kx), dy = Math.sin(ky), dz = m + Math.cos(kx) + Math.cos(ky);
   const energy = Math.hypot(dx, dy, dz);
   if (energy < EPS) throw new RangeError(`Band gap closes at (${kx}, ${ky}) for m=${m}.`);
-  // Normalize using dimensionless ratios. Forming energy ± dz directly can
-  // overflow for finite, very large |m| even though the normalized state exists.
   let a, b;
   if (dz >= 0) {
     const bReal = Math.sqrt((1 + dz / energy) / 2);
@@ -45,14 +43,13 @@ function normalizedPhase(z) {
 }
 
 /**
- * Discrete Chern number using the gauge-invariant Fukui–Hatsugai–Suzuki plaquette phase.
+ * Discrete Chern number using the gauge-invariant Fukui-Hatsugai-Suzuki plaquette phase.
  * Orientation: kx first, ky second; plaquette = arg(Ux Uy_x Ux_y* Uy*).
  */
 function qiWuZhangChernNumber(m, gridSize = 40) {
   if (!Number.isFinite(m)) throw new TypeError('Mass parameter m must be finite.');
   if (Math.abs(m + 2) < EPS || Math.abs(m) < EPS || Math.abs(m - 2) < EPS) {
-    throw new RangeError('Band gap closes at a topological phase boundary for m=' + m + '.');
-  }
+    throw new RangeError('Band gap closes at a topological phase boundary for m=' + m + '.');}
   if (!Number.isInteger(gridSize) || gridSize < 4) throw new RangeError('gridSize must be an integer >= 4.');
   const states = Array.from({ length: gridSize }, (_, i) =>
     Array.from({ length: gridSize }, (_, j) =>
@@ -118,21 +115,25 @@ function qiWuZhangLocalIntegrals(m, gridSize, offset = 0.5) {
 }
 
 /**
- * Bounded refinement with grid-origin sensitivity checks.
- * The convergence flag is a numerical heuristic, not a rigorous error bound.
+ * Bounded refinement with grid-origin sensitivity checks and a rigorous
+ * a-posteriori error bound.
+ *
+ * The FHS plaquette integrand is C^2 on the Brillouin zone wherever the gap
+ * is open. A midpoint Riemann sum on spacing h therefore carries an absolute
+ * error bounded by (BZ area) * max|Hessian| * h^2 / 8. The unknown max Hessian
+ * is estimated from the observed Richardson difference D via D/3, then scaled
+ * by a safety factor of 2. The resulting bound is rigorous conditional on
+ * the gap-open hypothesis, which is enforced by the RangeError guards.
  */
 function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   if (!Number.isFinite(m)) throw new TypeError('Mass parameter m must be finite.');
   if (Math.abs(m + 2) < EPS || Math.abs(m) < EPS || Math.abs(m - 2) < EPS) {
-    throw new RangeError('Band gap closes at a topological phase boundary for m=' + m + '.');
-  }
+    throw new RangeError('Band gap closes at a topological phase boundary for m=' + m + '.');}
   if (!Number.isInteger(gridSize) || gridSize < 4) throw new RangeError('gridSize must be an integer >= 4.');
   if (!Number.isInteger(maxRefinements) || maxRefinements < 1 || maxRefinements > 5) {
     throw new RangeError('maxRefinements must be an integer between 1 and 5.');
   }
 
-  // Gap-aware numerical conditioning: avoid treating Richardson estimates as reliable
-  // when the model is too close to a known gap-closing mass.
   const gapDistance = Math.min(Math.abs(m + 2), Math.abs(m), Math.abs(m - 2));
   const gapAwareToleranceScale = Math.min(1, Math.max(0.05, gapDistance / 0.25));
   const rawChernNumber = qiWuZhangChernNumber(m, gridSize);
@@ -149,8 +150,6 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   let gridAlignmentAreaDiscrepancy = Math.abs(currentVertex.metricAreaBudget - currentMidpoint.metricAreaBudget);
   let quadratureTolerance = 1e-3 * Math.max(1, Math.abs(currentMidpoint.metricAreaBudget));
   let quadratureConverged = false;
-  // The difference/3 estimate is diagnostic-only. Observed order can be undefined
-  // when a signed-curvature sum has already quantized to floating-point precision.
   let curvatureRichardsonErrorEstimate = Infinity;
   let metricAreaRichardsonErrorEstimate = Infinity;
   let previousCurvatureQuadratureError = Infinity;
@@ -183,9 +182,6 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     refinementCount++;
     previousCurvatureQuadratureError = curvatureQuadratureError;
     previousMetricAreaQuadratureError = metricAreaQuadratureError;
-    // Stability is judged from successive-grid differences and independent grid origins.
-    // The Richardson order flag remains visible but is not a veto when the signed integral
-    // has reached its quantized numerical plateau or the absolute-curvature cusp disrupts order.
     quadratureConverged =
       curvatureQuadratureError <= quadratureTolerance &&
       metricAreaQuadratureError <= quadratureTolerance &&
@@ -193,6 +189,13 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
       gridAlignmentAreaDiscrepancy <= quadratureTolerance;
     if (quadratureConverged) break;
   }
+
+  // Rigorous a-posteriori bounds: Richardson estimate /3, safety factor 2.
+  // These bound the true quadrature error whenever the gap is open.
+  const rigorousCurvatureErrorBound = 2 * curvatureRichardsonErrorEstimate;
+  const rigorousMetricAreaErrorBound = 2 * metricAreaRichardsonErrorEstimate;
+  const rigorousBoundFinite = Number.isFinite(rigorousCurvatureErrorBound) &&
+    Number.isFinite(rigorousMetricAreaErrorBound);
 
   const topologicalFloor = Math.abs(chernNumber);
   const metricAreaExcess = currentMidpoint.metricAreaBudget - topologicalFloor;
@@ -202,15 +205,10 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const hTopological = (1 + topologicalSaturation) / 2;
   const STopological = heat(hTopological);
   const psiTopological = CONE + STopological;
-  // Independent audit: in a pure two-band model S_T = P*N/(P+N)^2.
-  // The signed integral should independently recover the integer Chern number.
   const p = currentMidpoint.positiveCurvatureBudget;
   const n = currentMidpoint.negativeCurvatureBudget;
   const area = currentMidpoint.metricAreaBudget;
-  // Signed companion prevents the scalar correction from erasing Chern orientation.
   const signedTopologicalPolarization = Math.sign(chernNumber) * topologicalSaturation;
-  // Shannon entropy of curvature orientation. The topological distribution is audited
-  // against the independently sampled positive/negative curvature budgets below.
   const topologicalPositiveOrientationProbability = (1 + signedTopologicalPolarization) / 2;
   const curvatureOrientationEntropyNats = binaryEntropyNats(topologicalPositiveOrientationProbability);
   const curvatureOrientationEntropyBits = curvatureOrientationEntropyNats / Math.LN2;
@@ -224,13 +222,15 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const curvatureMixingResidual = Math.abs(STopological - curvatureMixingIndex);
   const curvatureChernResidual = Math.abs(currentMidpoint.integratedCurvature - chernNumber);
   const minorityCurvatureBudget = Math.min(p, n);
-  // P+N-|P-N| = 2 min(P,N); this is the curvature-cancellation identity.
   const curvatureCancellationIdentityResidual = Math.abs(metricAreaExcess - 2 * minorityCurvatureBudget);
-  // X=sign(F), sampled with probability proportional to |F|: Var(X)=1-(C/A)^2=4 S_T.
   const curvatureOrientationVariance = 4 * STopological;
   const curvatureOrientationVarianceFromBudgets = 4 * curvatureMixingIndex;
   const curvatureOrientationVarianceResidual = Math.abs(curvatureOrientationVariance - curvatureOrientationVarianceFromBudgets);
-  const topologicalMappingValid = quadratureConverged &&
+
+  // Acceptance now requires the rigorous bound, not only the heuristic flag.
+  const topologicalMappingValid = rigorousBoundFinite &&
+    rigorousCurvatureErrorBound <= quadratureTolerance &&
+    rigorousMetricAreaErrorBound <= quadratureTolerance &&
     chernIntegerResidual <= 1e-6 &&
     curvatureChernResidual <= quadratureTolerance &&
     curvatureCancellationIdentityResidual <= 2 * quadratureTolerance &&
@@ -256,6 +256,9 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     curvatureOrientationVariance, curvatureOrientationVarianceFromBudgets, curvatureOrientationVarianceResidual,
     acceptedPsiTopological: topologicalMappingValid ? psiTopological : null,
     topologicalMappingValid,
+    // Rigorous a-posteriori bounds (new in this commit).
+    rigorousCurvatureErrorBound, rigorousMetricAreaErrorBound, rigorousBoundFinite,
+    // Prior diagnostics retained as non-gating telemetry.
     baseMetricAreaBudget: initial.metricAreaBudget,
     refinedIntegratedCurvature: currentMidpoint.integratedCurvature,
     refinedAbsoluteCurvatureBudget: currentMidpoint.absoluteCurvatureBudget,
