@@ -184,3 +184,8 @@ The connected `swarm-vm-runner` repository documents that hosted Ubuntu jobs fai
 ## Cross-repository continuation: typed numerical admission (CycleKernel Descent CVI)
 
 A further code audit found that Python `float(...)` converted JSON booleans to 0/1 and numeric strings to floats, allowing schema-invalid data to affect fusion scores. The backend and both bridge implementations now reject booleans and numeric strings before scoring for belief/resource values and the `Core`/`L5`/`L2`/`stress_residual` fields; tests cover malformed-type rejection and copy parity. The legacy score and thresholds remain unchanged. See [Descent CVI](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVI_TYPED_NUMERIC_ADMISSION.md). As in Descent CV, hosted test/build execution is still blocked before step execution; this is not claimed as a passed run.
+
+
+### Descent CVI follow-up: relay ingress
+
+The strict numerical admission invariant is now enforced before normalization in both CycleKernel bridge parsers as well as at the fusion layer. Without the ingress guard, `true` and `"0.5"` could be converted to floats before the later validator saw them. Cross-copy regression tests now check primary and master relay parser parity, including the optional residual field. See [the typed numeric admission note](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVI_TYPED_NUMERIC_ADMISSION.md).
