@@ -63,5 +63,27 @@ test('bridge scalar is invariant at extreme common scales and avoids determinant
  assert.ok(huge.metricEigenvalues.every(Number.isFinite)); close(huge.metricEigenvalues[0]/1e200,1); close(huge.metricEigenvalues[1]/1e200,1);
  assert.ok(huge.metricAnisotropy > 0 && Number.isFinite(huge.metricAnisotropy));
 });
+
+test('near-degenerate metrics use compensated determinant and expose conditioning', () => {
+ for (const epsilon of [1e-8, 1e-12, 1e-16]) {
+  const r=quantumGeometryBridge({g11:1,g12:1-epsilon,g22:1,curvature:0});
+  const expectedDet=(1-(1-epsilon))*(1+(1-epsilon));
+  close(r.detG,expectedDet,Math.max(1e-30,Math.abs(expectedDet)*1e-12));
+  close(r.metricEigenvalues[0],r.detG/r.metricEigenvalues[1],Math.max(1e-30,Math.abs(expectedDet)*1e-12));
+  assert.ok(r.metricConditionNumber >= 1);
+  assert.ok(['well-conditioned','ill-conditioned','numerically-unresolved'].includes(r.metricConditionStatus));
+ }
+ const ill=quantumGeometryBridge({g11:1,g12:1-1e-8,g22:1,curvature:0});
+ const unresolved=quantumGeometryBridge({g11:1,g12:1-1e-16,g22:1,curvature:0});
+ assert.strictEqual(ill.metricConditionStatus,'ill-conditioned');
+ assert.strictEqual(unresolved.metricConditionStatus,'numerically-unresolved');
+});
+test('metric conditioning diagnostics are invariant under common positive scaling', () => {
+ const a=quantumGeometryBridge({g11:1,g12:1-1e-8,g22:1,curvature:0});
+ const b=quantumGeometryBridge({g11:1e100,g12:(1-1e-8)*1e100,g22:1e100,curvature:0});
+ close(a.metricConditionNumber,b.metricConditionNumber,Math.abs(a.metricConditionNumber)*1e-8);
+ assert.strictEqual(a.metricConditionStatus,b.metricConditionStatus);
+});
+
 console.log('\nquantum geometry bridge tests: '+passed+' passed, '+failed+' failed');
 process.exit(failed?1:0);
