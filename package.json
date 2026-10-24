@@ -5,7 +5,8 @@
   "scripts": {
     "test": "node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs",
     "descent": "python3 test_descent.py",
-    "all": "npm test && python3 test_descent.py"
+    "all": "npm run build && npm test && python3 test_descent.py && python3 test_loss_envelope.py",
+    "build": "node --input-type=module --check < public/scale.js && node --input-type=module --check < public/atlas.js && node --input-type=module --check < public/nav.js && node --check public/scale.cjs && node --check public/quantum-geometry.cjs && node --check research/topological-qgt.cjs"
   },
   "license": "UNLICENSED"
 }
