@@ -41,3 +41,8 @@ npm run all
 Live UI: https://great-scale.vercel.app
 
 See LATTICE_BRIDGE.md for control-plane integration.
+
+
+## Spherical telemetry lab
+
+Open [public/spherical-lab.html](public/spherical-lab.html) to inspect the provisional seed geometry arranged as a Fibonacci shell, staggered rings, nested shells, or volume fill. The workbench exposes per-unit XYZ anchors, radial normals, neighbor graph telemetry, and JSON/PNG export. Run `node test_spherical_telemetry.cjs` for geometry/topology bridge checks. The rendered graph is not physical contact validation; source dimensions remain provisional until a measured CAD mesh is supplied.
