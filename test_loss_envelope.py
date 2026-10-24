@@ -91,6 +91,47 @@ class LossEnvelopeTests(unittest.TestCase):
         self.assertAlmostEqual(alpha, 1.0 / 6.0, delta=1e-7)
         self.assertAlmostEqual(c, 0.4, delta=3e-8)
 
+
+    def test_power_barrier_boundary_asymptotic_coefficient_is_boundary_mass(self):
+        # For positive variance, the singular-boundary atom controls the
+        # leading epsilon**(-r) divergence. Zero variance has no boundary atom.
+        mean = 0.5
+        variance = 0.05
+        scale = 1.7
+        power = 2.0
+        alpha0 = variance / ((1.0 - mean) ** 2 + variance)
+        normalized_gaps = []
+        alpha_gaps = []
+
+        for requested_epsilon in (1e-2, 1e-3, 1e-4, 1e-5, 1e-6):
+            result = fixed_moment_envelope(
+                mean, variance, requested_epsilon,
+                loss=POWER_BARRIER, scale=scale, power=power,
+            )
+            b = result["support"][1]
+            epsilon = 1.0 - b
+            alpha = result["witness"][1]["probability"]
+            normalized = result["bound"] / (scale * epsilon ** (-power))
+            normalized_gaps.append(abs(normalized - alpha0))
+            alpha_gaps.append(abs(alpha - alpha0))
+
+        self.assertTrue(all(a > b for a, b in zip(normalized_gaps, normalized_gaps[1:])))
+        self.assertTrue(all(a > b for a, b in zip(alpha_gaps, alpha_gaps[1:])))
+        self.assertLess(normalized_gaps[-1], 1e-6)
+        self.assertLess(alpha_gaps[-1], 1e-6)
+
+        # v=0 makes the extremal law a point mass at mean; there is no
+        # boundary atom and the expected loss remains finite as epsilon shrinks.
+        degenerate = fixed_moment_envelope(
+            mean, 0.0, 1e-6, loss=POWER_BARRIER, scale=scale, power=power,
+        )
+        self.assertEqual(degenerate["witness"][1]["probability"], 0.0)
+        self.assertEqual(
+            degenerate["bound"],
+            loss_value(POWER_BARRIER, mean, scale=scale, power=power),
+        )
+        self.assertTrue(math.isfinite(degenerate["bound"]))
+
     def test_hermite_quadratic_majorizes_each_supported_loss(self):
         b = 0.95
         for loss, power in ((NEGATIVE_LOG, 1.0), (POWER_BARRIER, 1.3)):
