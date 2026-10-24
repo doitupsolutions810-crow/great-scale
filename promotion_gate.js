@@ -258,9 +258,20 @@ if (require.main === module) {
     process.exitCode = 2;
   } else {
     try {
-      const stat = fs.statSync(evidencePath);
-      if (stat.size > MAX_EVIDENCE_BYTES) throw new Error('evidence JSON byte limit exceeded');
-      const raw = fs.readFileSync(evidencePath, 'utf8');
+      const fd = fs.openSync(evidencePath, 'r');
+      let raw;
+      try {
+        const stat = fs.fstatSync(fd);
+        if (stat.size > MAX_EVIDENCE_BYTES) throw new Error('evidence JSON byte limit exceeded');
+        // Read at most cap+1 bytes so a file that grows after fstat cannot
+        // force an unbounded allocation before the limit is checked.
+        const buffer = Buffer.alloc(MAX_EVIDENCE_BYTES + 1);
+        const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, 0);
+        if (bytesRead > MAX_EVIDENCE_BYTES) throw new Error('evidence JSON byte limit exceeded');
+        raw = buffer.subarray(0, bytesRead).toString('utf8');
+      } finally {
+        fs.closeSync(fd);
+      }
       const evidence = parseBoundedEvidenceJson(raw);
       const result = evaluatePromotionEvidence(evidence);
       console.log(JSON.stringify(result, null, 2));
