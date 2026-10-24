@@ -1,7 +1,7 @@
 "use strict";const assert=require("node:assert/strict"),GS=require("./public/spherical-telemetry.js");let n=0;function t(s,f){f();n++;console.log("PASS "+s)}
 t("seed is provisional finite wireframe",()=>{let x=GS.seed();assert.equal(x.provisional,true);assert.ok(x.vertices.length>40&&x.edges.length>60);assert.ok(x.vertices.flat().every(Number.isFinite))});
-t("baseline graph connected",()=>{let x=GS.build({count:32,neighbors:6});assert.equal(x.telemetry.componentCount,1);assert.equal(x.telemetry.isolatedCount,0);assert.equal(x.telemetry.finiteCoordinates,true)});
-t("links unique and non-self",()=>{let x=GS.build({count:40,distribution:"rings",neighbors:5}),k=x.edges.map(e=>e.a+":"+e.b);assert.equal(new Set(k).size,k.length);assert.ok(x.edges.every(e=>e.a<e.b&&e.length>0))});
+t("baseline graph connected",()=>{let x=GS.build({count:32,neighbors:6});assert.equal(x.units.length,32);assert.equal(x.telemetry.componentCount,1);assert.equal(x.telemetry.isolatedCount,0);assert.equal(x.telemetry.finiteCoordinates,true)});
+t("links unique and non-self",()=>{let x=GS.build({count:40,distribution:"rings",neighbors:5}),k=x.edges.map(e=>e.a+":"+e.b);assert.equal(x.units.length,40);assert.equal(new Set(k).size,k.length);assert.ok(x.edges.every(e=>e.a<e.b&&e.length>0))});
 t("nested and volume change radial positions",()=>{["nested","volume"].forEach(m=>{let x=GS.build({count:30,distribution:m});assert.ok(new Set(x.units.map(u=>u.radialDistance)).size>1)})});
 t("unit normals and vertices finite",()=>{let x=GS.build({count:24});x.units.forEach(u=>{assert.ok(Math.abs(Math.hypot(...u.normal)-1)<1e-10);assert.equal(u.vertices.length,x.seed.vertices.length)})});
 t("invalid options rejected",()=>{assert.throws(()=>GS.build({count:2}));assert.throws(()=>GS.build({distribution:"bad"}))});
