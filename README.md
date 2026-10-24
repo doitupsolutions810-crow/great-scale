@@ -60,3 +60,8 @@ The risk channel is additional to the existing Great Scale heat/cone law; no new
 
 
 [Descent LVII — Boundary asymptotic closure](research/DESCENT_LVII_BOUNDARY_ASYMPTOTIC_CLOSURE.md) derives the logarithmic divergence coefficient from the extremal witness's limiting boundary mass and verifies the first-order correction through the existing loss-envelope regression suite. It leaves the Great Scale heat/cone law unchanged.
+
+
+## System 31 — alias concordance / evidence multiplicity
+
+[CycleKernel Descent CVIII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIII_ALIAS_CONCORDANCE.md) identifies a pre-scoring loss boundary: duplicate JSON keys and conflicting metric aliases can discard contradictory raw values. The relay parsers now reject repeated keys, validate every present alias, and admit multiple spellings only when all finite in-domain values agree. This is input-integrity engineering, not relay authentication, and leaves S(h)=h(1-h) and Ψ=φ⁻²+S(h) unchanged.
