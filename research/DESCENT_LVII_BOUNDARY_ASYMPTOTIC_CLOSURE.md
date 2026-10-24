@@ -122,6 +122,20 @@ where \(U\) is the reported bound, \(\mathcal F\) is the feasible moment set, \(
 
 This is the same projection discipline being integrated into CycleKernel: its score \(N=\sqrt{s n}\) is non-injective, so the raw symbolic/neural channels, source metadata, decision margins, and state witness must remain alongside the scalar. The linked CycleKernel [GS–LVI evidence PR](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9) carries that proposal but remains open/draft; its source and CI status must not be represented as merged or production-verified.
 
+
+## Cross-repository descent: missingness is part of the observation state
+
+A second non-injective projection appears in CycleKernel's evidence pipeline. Python truthiness mapped both an absent mapping and an explicitly empty mapping to the same default. Great Scale's typed-certificate rule implies those inputs must remain distinguishable: input presence, effective values, and source labels belong in the witness.
+
+The integrated CycleKernel branch now distinguishes:
+\[
+\operatorname{Absent}\mapsto\text{documented baseline},\qquad
+\operatorname{Present}(\{\})\mapsto\text{explicit empty input}.
+\]
+For the current symbolic formula, the baseline score is \(0.4325\), while the explicit empty-resource score is \(0.275\). The resulting state fingerprints differ, and the evidence witness is checked against the reported fingerprint. This is not a change to Great Scale's heat law; it is a shared rule for preserving conditions that a scalar otherwise discards.
+
+See [CycleKernel Descent C — Typed missingness](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_C_TYPED_MISSINGNESS.md) and the open [GS–LVI integration PR #9](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9). These source changes are under review and are not yet merge- or production-verified.
+
 ## Regression criteria
 
 The new test in test_loss_envelope.py:
