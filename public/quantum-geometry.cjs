@@ -1,4 +1,8 @@
 /**
+ * Additive QGT → Great Scale bridge.
+ * Inputs use F_12 = 2 Im(Q_12). Existing stateAt() dynamics are unchanged.
+ */
+const { PHI, CONE, heat } = require('./scale.cjs');
 // Error-free transforms recover low product bits before subtracting nearly equal terms.
 // Inputs are normalized to |x| <= 1, keeping Dekker splitting away from overflow.
 function twoProduct(a, b) {
@@ -26,10 +30,6 @@ function compensatedDeterminant2x2(a11, a12, a22) {
   const [high, low] = twoSum(difference, productErrorDifference);
   return high + (low + differenceError + productErrorDifferenceError);
 }
- * Additive QGT → Great Scale bridge.
- * Inputs use F_12 = 2 Im(Q_12). Existing stateAt() dynamics are unchanged.
- */
-const { PHI, CONE, heat } = require('./scale.cjs');
 function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) {
   const values = [g11, g12, g22, curvature];
   if (!values.every(Number.isFinite)) throw new TypeError('Metric entries and curvature must be finite numbers.');
