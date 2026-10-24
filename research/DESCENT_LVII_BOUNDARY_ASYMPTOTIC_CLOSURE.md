@@ -194,3 +194,10 @@ The strict numerical admission invariant is now enforced before normalization in
 ## System 30 — validation frontier (CycleKernel Descent CVII)
 
 The next descent formalizes why the relay parser correction must precede float coercion: if a normalization map is non-injective, a downstream validator cannot distinguish raw inputs that map to the same normalized value. CycleKernel's primary and master relay parsers now type-check raw numeric values before normalization, and regression tests cover parser parity. This preserves the distinctions required by downstream evidence and identity witnesses; it does not change the LVII analytic bound or imply a new physical law. See [Descent CVII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVII_VALIDATION_FRONTIER.md).
+
+
+## Cross-repository continuation — Descent CVIII / System 31: alias concordance
+
+The CycleKernel ingress audit found a boundary beneath typed numeric admission: JSON text with repeated identical object keys can be decoded with last-key-wins semantics, and alias normalization can select L5 while silently discarding a conflicting entropy value. Validating only the selected value therefore does not validate the whole observation.
+
+The primary and master relay parsers now reject repeated JSON keys before dictionary construction and validate all present aliases for Core/U2/L2/L5. Matching finite in-domain aliases remain compatible; invalid or contradictory aliases fail closed. This strengthens observation integrity, but neither canonicalization nor a content hash authenticates the relay publisher. See [CycleKernel Descent CVIII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIII_ALIAS_CONCORDANCE.md). Great Scale's heat/cone law remains S(h)=h(1-h), Ψ=φ⁻²+S(h)≥φ⁻²; no new physical law is asserted.
