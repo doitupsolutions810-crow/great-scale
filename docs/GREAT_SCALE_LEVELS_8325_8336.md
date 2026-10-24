@@ -8,7 +8,7 @@ This is a source-level boundary mismatch. No live exploitation or deployment imp
 
 ## Integration
 
-- Added a 1 MiB evidence-file cap checked using file metadata before reading, followed by a decoded-string byte-length check.
+- Added a 1 MiB evidence-file cap checked using the opened descriptor's metadata, then read at most cap+1 bytes so a concurrent file growth cannot force an unbounded read allocation; the decoded string is byte-checked again.
 - Added an iterative pre-parse scanner with bounds on nesting depth, object-key count, array item count, and aggregate JSON values.
 - The scanner compares decoded key strings, rejecting escaped-equivalent duplicates as well as literal duplicate names.
 - The CLI now passes the bounded scanner before materializing evidence with `JSON.parse`.
