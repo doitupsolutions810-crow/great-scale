@@ -20,9 +20,23 @@ function involutionIdentity(x) {
 }
 function twoCycles() { return [[1, 8], [2, 7], [3, 6], [4, 5]]; }
 function fixedPoint() { return FIXED; }
-function softContract(x, k = 0.5) { return FIXED + k * (x - FIXED); }
+/**
+ * GS-LVII: circle-native contraction. Canonicalize to [0,9) before the
+ * affine step so C(x+9n) = C(x) on the quotient R/9Z. The raw real-line
+ * formula C_k(x)=4.5+k(x-4.5) fails quotient compatibility for |k|<1
+ * (only integer k=0 works); projecting first is the minimal fix that
+ * keeps |k|<1 convergence while making the fiber constant.
+ */
+function softContract(x, k = 0.5) {
+  const m = ((x % 9) + 9) % 9;
+  return FIXED + k * (m - FIXED);
+}
+/** Pure involution channel: 9 - x. Agrees with softContract only at 4.5. */
 function softMap(x) { return 9 - x; }
-function stressResidual(x) { return Math.abs(x - involution(x)); }
+function stressResidual(x) {
+  const m = ((x % 9) + 9) % 9;
+  return Math.abs(m - involution(m));
+}
 function descentStep(x, k = 0.5) { return softContract(x, k); }
 function stateAt(t, rate = RATE) {
   const phase = (t * rate) % 1;
@@ -70,7 +84,7 @@ class DescentEngine {
   reset(start = 1) { this.stop(); this.x = start; this.t = 0; this.history = []; }
   snapshot() {
     return {
-      schema: 'great-scale.descent/v0.4.2', running: this.running, t: this.t, x: this.x, k: this.k,
+      schema: 'great-scale.descent/v0.5.0', running: this.running, t: this.t, x: this.x, k: this.k,
       nearFixed: Math.abs(this.x - FIXED) < 0.05, residual: stressResidual(this.x),
       historyLen: this.history.length, last: this.history[this.history.length - 1] || null,
     };
@@ -81,8 +95,9 @@ const HYPOTHESIS = Object.freeze({
   statements: [
     'S(h)=h(1-h) is identical to lattice tension T(B)=B(1-B)',
     'f(x)=(9-(x mod 9)) mod 9; fixed classes are 0≡9 on the boundary and 4.5 in the interior; integer two-cycles 1↔8,2↔7,3↔6,4↔5',
-    'Soft contraction x′=4.5+k(x−4.5), |k|<1, converges to the interior midpoint',
-    'Stress residual |x−f(x)| is a computational diagnostic, not a physical observable by itself',
+    'GS-LVII: soft contraction is circle-native — C(x)=4.5+k*((x mod 9)-4.5), |k|<1, fiber-constant on R/9Z; raw real-line affine fails quotient compatibility for non-integer k',
+    'softMap(x)=9-x is the pure involution channel; softContract is the contraction channel; they agree only at the fixed point 4.5 — two channels, two meanings, one scalar shadow when unnamed',
+    'Stress residual |x-f(x)| is a computational diagnostic, not a physical observable by itself; it is representation-invariant on the canonical representative',
     'Cone: Ψ = CONE + S never below CONE; λ may contract below CONE at low heat',
     'Never claim certainty — always another perspective',
   ],
