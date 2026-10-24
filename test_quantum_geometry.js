@@ -42,5 +42,13 @@ test('rejects QGT positivity violation', () => assert.throws(()=>quantumGeometry
 test('rejects degenerate metric', () => assert.throws(()=>quantumGeometryBridge({g11:1,g12:1,g22:1,curvature:0}),/positive and nondegenerate/));
 test('rejects negative-definite metric', () => assert.throws(()=>quantumGeometryBridge({g11:-1,g12:0,g22:-1,curvature:0}),/diagonal entries must be positive/));
 test('rejects zero diagonal metric', () => assert.throws(()=>quantumGeometryBridge({g11:0,g12:0,g22:1,curvature:0}),/diagonal entries must be positive/));
+
+test('bridge scalar is invariant at extreme common scales and avoids determinant underflow', () => {
+ const base=quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:1});
+ const tiny=quantumGeometryBridge({g11:1e-200,g12:0,g22:1e-200,curvature:1e-200});
+ close(tiny.curvatureFraction,base.curvatureFraction); close(tiny.SQuantum,base.SQuantum);
+ const huge=quantumGeometryBridge({g11:1e200,g12:0,g22:1e200,curvature:1e200});
+ close(huge.curvatureFraction,base.curvatureFraction); close(huge.SQuantum,base.SQuantum);
+});
 console.log('\nquantum geometry bridge tests: '+passed+' passed, '+failed+' failed');
 process.exit(failed?1:0);
