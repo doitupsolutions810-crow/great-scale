@@ -1,0 +1,71 @@
+{
+  "name": "Great-Scale Unified Control Lattice",
+  "version": "1.2.0",
+  "timestamp": "2026-10-23T21:30:00Z",
+  "provenance": "Local great_scale_observer + GitHub doitupsolutions810-crow cluster + external residual/capability patterns. No silent hypothesis promotion.",
+  "cone_unification": {
+    "authoritative": "φ^{-3} = φ^{-1} - φ^{-2} = √5 − 2 ≈ 0.2360679774997897",
+    "previous_readme": "φ^{-2} ≈ 0.381966 (corrected; that value is phi_inv2, not the orbit floor)",
+    "psi_floor": "Ψ = CONE + S ≥ CONE always"
+  },
+  "layers": {
+    "geometry_kernel": {
+      "repo": "great-scale / great_scale_observer",
+      "version": "1.2.0",
+      "exports": ["PHI", "CONE", "heat", "state_at", "coherent_geometry", "residual_compose", "orientation_entropy"]
+    },
+    "control_lattice": {
+      "repo": "living-intermediate-control-plane",
+      "role": "platform lattice, policy, TLS, federation, attestation, Avrone cockpit"
+    },
+    "capability_plane": {
+      "repo": "capability-authority",
+      "role": "Issue/Execute signed rights, dual-approval, AttestPipe, fail-closed"
+    },
+    "cycle_engine": {
+      "repo": "CycleKernal",
+      "role": "generational simulation, ChatMemoryBridge, Prometheus, phase-time"
+    },
+    "workspace": {
+      "repo": "control12-workspace",
+      "role": "gated ChatBot, coding workspace, receipts, Host-ONLY"
+    }
+  },
+  "enhancements_v1_2": [
+    "residual_compose(alpha=0.1) prevents rank-1 collapse under agent/swarm composition",
+    "orientation_entropy diagnostic (binary Shannon on mean-PHI signs)",
+    "capability_hooks in coherent_geometry (issue/execute/fail_closed)",
+    "control_lattice wiring map",
+    "CONE unified to φ^{-3} with explicit provenance note"
+  ],
+  "invariants": [
+    "Ψ ≥ CONE at every state",
+    "agents are dynamic fixed points (lock / perturb / score / dissipate)",
+    "every effect attested and capability-scoped",
+    "discourse/joint fixed point remains flat under continuous generations",
+    "no ambient privilege; production fails closed",
+    "residual composition retains variance (alpha > 0)"
+  ],
+  "joint_fixed_point": {
+    "A_star": 0.7786,
+    "G_star_objects": 10,
+    "objects": [
+      "agents_as_fixed_points",
+      "coherence_ops",
+      "conserved",
+      "dual_atlas",
+      "fibration",
+      "invariant_kind",
+      "involution",
+      "psi_structure",
+      "recursive_memory",
+      "residual_height"
+    ]
+  },
+  "next_actions": [
+    "Align LICP QGT bridge CONE comment to φ^{-3}",
+    "Wire capability-authority Issue path into control12-workspace agent calls",
+    "Persist continuous descent G* into LICP federation digests",
+    "Full system path-consistency after wiring"
+  ]
+}
