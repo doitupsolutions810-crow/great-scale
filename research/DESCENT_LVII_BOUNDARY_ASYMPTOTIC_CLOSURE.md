@@ -37,6 +37,34 @@ U_*(\varepsilon)
 
 **Interpretation:** the coefficient of the logarithmic divergence is the limiting probability mass of the extremizer placed on the singular boundary. The finite constant is the loss contribution of the interior atom. A single reported risk number hides this decomposition; the witness reveals it.
 
+
+## General boundary-singularity closure for LVI's power barrier
+
+The leading-coefficient result is not specific to the logarithm. The same witness parameters satisfy
+\[
+\alpha_\varepsilon=\alpha_0+O(\varepsilon),\qquad c_\varepsilon=c_0+O(\varepsilon).
+\]
+For any supported loss whose value and derivative remain finite near \(c_0\), this gives
+\[
+U_f^*(\varepsilon)
+=\alpha_0 f(1-\varepsilon)+(1-\alpha_0)f(c_0)
++O\!\left(\varepsilon |f(1-\varepsilon)|+\varepsilon\right).
+\]
+Consequently, for LVI's power-barrier family
+\[
+f_{\rm barrier}(P)=a\big[(1-P)^{-r}-1\big],\qquad a>0,\ r>0,
+\]
+and \(v>0\) (so \(\alpha_0>0\)),
+\[
+U_{\rm barrier}^*(\varepsilon)
+=a\alpha_0\varepsilon^{-r}+O(\varepsilon^{1-r}+1),
+\qquad
+\frac{U_{\rm barrier}^*(\varepsilon)}{a\varepsilon^{-r}}\longrightarrow\alpha_0.
+\]
+Unlike the logarithmic case, for \(r\geq1\) the subleading correction can itself diverge; it is not generally correct to declare the finite interior contribution the entire constant remainder after only subtracting the leading power.
+
+The degenerate case \(v=0\) is important: the witness is the point mass at \(p\), \(\alpha_\varepsilon=0\) exactly, and \(U_f^*(\varepsilon)=f(p)\) stays finite as \(\varepsilon\downarrow0\). Thus a singular loss does not automatically produce a divergent envelope; the extremal witness must place nonzero probability at the singular boundary.
+
 ## Explicit expansion for the repository's regression case
 
 For \(p=\frac12\), \(v=0.05\), \(a=1\):
@@ -100,7 +128,8 @@ The new test in test_loss_envelope.py:
 1. reproduces the limiting boundary mass \(1/6\) and interior point \(0.4\);
 2. subtracts the leading logarithm and finite constant and verifies the remainder shrinks as the support margin decreases;
 3. verifies the first-order correction and its \(O(\varepsilon^2\ln(1/\varepsilon))\) remainder over a deterministic epsilon sweep;
-4. leaves the existing fixed-moment and chord-fallback tests intact.
+4. verifies that the power-barrier envelope normalized by \(a\varepsilon^{-r}\) converges to the extremal boundary mass, while the zero-variance case remains finite;
+5. leaves the existing fixed-moment and chord-fallback tests intact.
 
 Run the branch's existing checks:
 ~~~bash
