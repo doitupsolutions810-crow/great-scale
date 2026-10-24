@@ -70,6 +70,89 @@ function plainDenseArray(value, label, reasons) {
   return out;
 }
 
+const MAX_EVIDENCE_BYTES = 1048576;
+const MAX_EVIDENCE_DEPTH = 64;
+const MAX_EVIDENCE_KEYS_PER_OBJECT = 32;
+const MAX_EVIDENCE_ARRAY_ITEMS = 10000;
+const MAX_EVIDENCE_VALUES = 100000;
+
+// Scan JSON tokens iteratively before materialization. Duplicate decoded keys
+// are rejected so downstream consumers cannot disagree about which value wins.
+function scanEvidenceJson(raw) {
+  const stack = [];
+  let i = 0, rootDone = false, values = 0;
+  const whitespace = c => c === 32 || c === 9 || c === 10 || c === 13;
+  const skipSpace = () => { while (i < raw.length && whitespace(raw.charCodeAt(i))) i++; };
+  const stringEnd = start => {
+    let j = start + 1;
+    while (j < raw.length) {
+      if (raw[j] === '\\') { j += 2; continue; }
+      if (raw[j] === '"') return j + 1;
+      j++;
+    }
+    return raw.length;
+  };
+  while (true) {
+    skipSpace();
+    if (i >= raw.length) break;
+    const frame = stack[stack.length - 1];
+    if (frame && frame.type === 'object' && (frame.state === 'keyOrEnd' || frame.state === 'key')) {
+      if (raw[i] === '}') { stack.pop(); i++; continue; }
+      if (raw[i] !== '"') throw new Error('invalid JSON evidence');
+      const end = stringEnd(i);
+      let key;
+      try { key = JSON.parse(raw.slice(i, end)); } catch { throw new Error('invalid JSON evidence'); }
+      if (frame.keys.has(key)) throw new Error('duplicate JSON object key');
+      frame.keys.add(key);
+      if (frame.keys.size > MAX_EVIDENCE_KEYS_PER_OBJECT) throw new Error('evidence object key limit exceeded');
+      frame.state = 'colon'; i = end; continue;
+    }
+    if (frame && frame.type === 'object' && frame.state === 'colon') {
+      if (raw[i] !== ':') throw new Error('invalid JSON evidence');
+      i++; frame.state = 'value'; continue;
+    }
+    if (frame && frame.state === 'commaOrEnd') {
+      if (raw[i] === ',') { i++; frame.state = frame.type === 'object' ? 'key' : 'value'; }
+      else if ((frame.type === 'object' && raw[i] === '}') || (frame.type === 'array' && raw[i] === ']')) {
+        stack.pop(); i++;
+      } else throw new Error('invalid JSON evidence');
+      continue;
+    }
+    if (frame && frame.type === 'array' && frame.state === 'valueOrEnd' && raw[i] === ']') {
+      stack.pop(); i++; continue;
+    }
+    if (!frame && rootDone) throw new Error('invalid JSON evidence');
+    if (++values > MAX_EVIDENCE_VALUES) throw new Error('evidence JSON value limit exceeded');
+    if (frame && frame.type === 'array' && ++frame.items > MAX_EVIDENCE_ARRAY_ITEMS) {
+      throw new Error('evidence array item limit exceeded');
+    }
+    if (frame) frame.state = 'commaOrEnd';
+    else rootDone = true;
+    if (raw[i] === '{') {
+      if (stack.length >= MAX_EVIDENCE_DEPTH) throw new Error('evidence JSON depth limit exceeded');
+      stack.push({type:'object', state:'keyOrEnd', keys:new Set()}); i++;
+    } else if (raw[i] === '[') {
+      if (stack.length >= MAX_EVIDENCE_DEPTH) throw new Error('evidence JSON depth limit exceeded');
+      stack.push({type:'array', state:'valueOrEnd', items:0}); i++;
+    } else if (raw[i] === '"') {
+      i = stringEnd(i);
+    } else {
+      const start = i;
+      while (i < raw.length && !whitespace(raw.charCodeAt(i)) && raw[i] !== ',' && raw[i] !== ']' && raw[i] !== '}') i++;
+      if (i === start) throw new Error('invalid JSON evidence');
+    }
+  }
+}
+function parseBoundedEvidenceJson(raw) {
+  if (typeof raw !== 'string' || raw.length > MAX_EVIDENCE_BYTES ||
+      Buffer.byteLength(raw, 'utf8') > MAX_EVIDENCE_BYTES) {
+    throw new Error('evidence JSON byte limit exceeded');
+  }
+  scanEvidenceJson(raw);
+  try { return JSON.parse(raw); }
+  catch { throw new Error('invalid JSON evidence'); }
+}
+
 function evaluatePromotionEvidence(evidence) {
   const reasons = [];
   if (!evidence || typeof evidence !== 'object' || Array.isArray(evidence)) {
@@ -175,8 +258,10 @@ if (require.main === module) {
     process.exitCode = 2;
   } else {
     try {
+      const stat = fs.statSync(evidencePath);
+      if (stat.size > MAX_EVIDENCE_BYTES) throw new Error('evidence JSON byte limit exceeded');
       const raw = fs.readFileSync(evidencePath, 'utf8');
-      const evidence = JSON.parse(raw);
+      const evidence = parseBoundedEvidenceJson(raw);
       const result = evaluatePromotionEvidence(evidence);
       console.log(JSON.stringify(result, null, 2));
       if (!result.eligible) process.exitCode = 1;
