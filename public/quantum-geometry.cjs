@@ -26,9 +26,14 @@ function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) 
   const hQuantum = (1 + chi) / 2;
   const SQuantum = heat(hQuantum);
   const psiQuantum = CONE + SQuantum;
-  const metricMean = (g11 + g22) / 2;
-  const metricSpread = Math.sqrt(((g11 - g22) / 2) ** 2 + g12 ** 2);
-  const metricEigenvalues = [metricMean - metricSpread, metricMean + metricSpread];
+  // Compute eigenvalues in normalized coordinates first. Raw sums and squares
+  // can overflow even when the rescaled eigenvalues themselves are representable.
+  const metricMeanScaled = (a11 + a22) / 2;
+  const metricSpreadScaled = Math.hypot((a11 - a22) / 2, a12);
+  const metricEigenvalues = [
+    (metricMeanScaled - metricSpreadScaled) * metricScale,
+    (metricMeanScaled + metricSpreadScaled) * metricScale
+  ];
   const nQuantum = 8 - 4 * SQuantum;
   return {
     schema: 'great-scale.quantum-geometry/v1',
