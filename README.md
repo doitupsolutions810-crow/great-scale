@@ -33,6 +33,7 @@ See [DESCENT_LXXVIII_TOPOLOGICAL_QGT.md](DESCENT_LXXVIII_TOPOLOGICAL_QGT.md) for
 ```bash
 npm test
 python3 test_descent.py
+python3 test_evidence_projection.py
 npm run all
 ```
 
