@@ -189,3 +189,8 @@ A further code audit found that Python `float(...)` converted JSON booleans to 0
 ### Descent CVI follow-up: relay ingress
 
 The strict numerical admission invariant is now enforced before normalization in both CycleKernel bridge parsers as well as at the fusion layer. Without the ingress guard, `true` and `"0.5"` could be converted to floats before the later validator saw them. Cross-copy regression tests now check primary and master relay parser parity, including the optional residual field. See [the typed numeric admission note](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVI_TYPED_NUMERIC_ADMISSION.md).
+
+
+## System 30 — validation frontier (CycleKernel Descent CVII)
+
+The next descent formalizes why the relay parser correction must precede float coercion: if a normalization map is non-injective, a downstream validator cannot distinguish raw inputs that map to the same normalized value. CycleKernel's primary and master relay parsers now type-check raw numeric values before normalization, and regression tests cover parser parity. This preserves the distinctions required by downstream evidence and identity witnesses; it does not change the LVII analytic bound or imply a new physical law. See [Descent CVII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVII_VALIDATION_FRONTIER.md).
