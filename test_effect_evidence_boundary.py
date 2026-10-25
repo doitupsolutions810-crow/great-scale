@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Finite-state contract for effect/evidence atomicity boundaries."""
+"""Finite-state contract for effect/evidence atomicity and retry safety."""
 from itertools import product
 
 STATES = tuple(product((False, True), repeat=3))
-# (effect_may_have_occurred, evidence_durable, caller_saw_response)
+# (effect_may_have_occurred, evidence_durable, caller_saw_success_response)
 
 
 def classify(effect_may_have_occurred: bool, evidence_durable: bool, caller_saw_response: bool) -> str:
@@ -19,8 +19,13 @@ def classify(effect_may_have_occurred: bool, evidence_durable: bool, caller_saw_
 
 
 def evidence_backed_success_allowed(effect_may_have_occurred: bool, evidence_durable: bool) -> bool:
-    """Evidence-backed completion is permitted only when effect and evidence are confirmed."""
+    """Evidence-backed completion requires confirmed effect and durable evidence."""
     return effect_may_have_occurred and evidence_durable
+
+
+def retry_is_safe(operation_committed: bool, idempotency_enforced: bool) -> bool:
+    """A retry after an uncertain acknowledgement is safe only with deduplication."""
+    return not operation_committed or idempotency_enforced
 
 
 def main() -> None:
@@ -32,15 +37,22 @@ def main() -> None:
             assert status != "failed_no_effect"
         if status == "complete":
             assert effect and durable and response
+
     assert classify(True, False, True) == "indeterminate"
     assert classify(True, False, False) == "indeterminate"
     assert classify(True, True, True) == "complete"
-    # Safety contract: evidence-backed success cannot be returned when evidence is absent.
+
     for effect, durable in product((False, True), repeat=2):
         if not durable:
             assert not evidence_backed_success_allowed(effect, durable)
     assert evidence_backed_success_allowed(True, True)
-    print("PASS effect/evidence boundary: 8/8 states; effect-without-durable-evidence never clean failure")
+
+    # A committed write with a lost/failed acknowledgement cannot be safely
+    # repeated unless idempotency/deduplication is enforced.
+    assert not retry_is_safe(operation_committed=True, idempotency_enforced=False)
+    assert retry_is_safe(operation_committed=True, idempotency_enforced=True)
+    assert retry_is_safe(operation_committed=False, idempotency_enforced=False)
+    print("PASS effect/evidence boundary: 8/8 states; retry safety requires deduplication after uncertain commit")
 
 
 if __name__ == "__main__":
