@@ -75,17 +75,7 @@ A follow-up inspection of Capability Authority `main` at `plane_service/server.p
 
 Thus the API's success response does not establish durable evidence. More precisely, the code does not establish whether the index is durable, whether the bus accepted the event, or whether both failed. This is a code-path finding from the fetched source, not proof of a production incident. The executor source at SHA `e4e3de501d9f0898ff1239b5f2dc010e8c2a82a8` currently constructs a receipt and returns `result: "executed"`; this inspection alone does not prove a real external side effect occurred.
 
-Let (S) mean the API reports success and (D) mean durable evidence exists. The current control flow permits:
-
-[
-S=1 land D=0
-]
-
-because evidence errors are swallowed. The required contract for an evidence-backed success endpoint is:
-
-[
-S=1 Rightarrow D=1
-]
+Let `S` mean the API reports success and `D` mean durable evidence exists. The current control flow permits `S = true` while `D = false`, because evidence errors are swallowed. The required contract for an evidence-backed success endpoint is `S => D`: success implies durable evidence.
 
 If the effect may already have happened and (D) cannot be established, the correct response is an explicit indeterminate state plus operation identity and reconciliation—not a clean success and not a claim that no effect occurred.
 
