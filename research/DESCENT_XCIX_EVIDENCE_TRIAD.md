@@ -76,3 +76,32 @@ This is an example of a general anti-pattern:
 \text{one status bit} \not\equiv \text{complete proof}
 ]
 A safe API should expose the predicates independently, then define acceptance as their conjunction.
+
+
+## Descent C — authorization is a fourth, independent proof obligation
+
+A deeper inspection of CycleKernal's default-branch `backend/server.js` at blob SHA `fa16b63e56213fb031624c01b124db900adcb0c3` found that the inspected Express routes do not establish an authenticated principal or bind the requested resource identifier to that principal. Examples include:
+
+- `POST /api/chat/save` accepts `userId` from the request body.
+- `GET /api/chat/history/:userId` selects records using the caller-supplied path parameter.
+- `POST /api/simulation/snapshot` accepts `universeId` from the request body; the read route similarly selects by the path parameter.
+- `/api/analytics/dashboard`, `/api/users/active`, and `/metrics` have no route-level authentication check in this file.
+
+This is a source-level observation, not proof that a deployed service is reachable from the public internet or that an incident occurred. Network controls, upstream middleware, and deployment configuration were not verified. The inspected file itself does not show the principal/resource binding needed to enforce per-user authorization.
+
+### Refined acceptance equation
+
+Integrity, evidence authenticity, observed execution, and caller authority are distinct:
+
+- (I): payload integrity is established.
+- (A): evidence issuer authenticity is established.
+- (E): the claimed command actually ran and its result was observed.
+- (P): the current principal is authenticated, authorized for the action, and bound to the target resource.
+
+[
+mathrm{Accept}(W, q) Rightarrow I(W) land A(W) land E(W) land P(q, W)
+]
+
+A validly signed receipt does not authorize the current caller to read another user's history. A caller-supplied `userId` is a selector, not proof of ownership. Likewise, an internal digest does not prove that a request is permitted.
+
+This expands the earlier three-gate model to four independent Boolean proof obligations. There are (2^4=16) states; exactly one state satisfies the strict acceptance rule. Production enforcement still requires actual authentication middleware, server-derived identity, resource ownership/tenant checks, and negative integration tests. The finite-state test only checks the logical contract.
