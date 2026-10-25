@@ -164,3 +164,20 @@ Preferred fixes, in order of simplicity:
 3. Or use an append-only projection with stable unique event IDs and a reader that tolerates/reconciles duplicate delivery.
 
 A process-local RLock plus atomic file replacement is insufficient. Add an actual multiprocess test that forces the stale-read/write interleaving and then verifies projection completeness against the ledger.
+
+
+## Descent CXLIII — integrity does not prove completeness
+
+The deeper epistemic limit is that a valid hash chain proves consistency of the records it contains, not that every expected event is present, and not that a separate projection contains every ledger event. Capability Authority's `verify_chain()` walks rows that exist and checks each `prev_digest` and digest. A valid chain of length (n-1) can still be missing an event that should have existed; a valid complete ledger can also coexist with an incomplete JSON projection.
+
+Let (V(L)) mean the stored ledger's chain verifies, and (C(L,J)) mean the projection is complete for the ledger. In general:
+
+\[
+V(L)\not\Rightarrow C(L,J)
+\]
+
+The stale-writer example gives (L=\{A,B\}), (J=\{B\}), with a valid chain for (L), yet (L\nsubseteq J). Even stronger, a self-consistent chain alone cannot establish that (L) itself includes every event that should have been recorded. Completeness needs an independent expected-event source, sequence/watermark, transactional outbox, or reconciliation against an authoritative producer/operation registry.
+
+The model test now constructs and verifies a two-event hash chain while deliberately omitting one event from the projection. It asserts that chain integrity succeeds while projection completeness fails. This demonstrates the logical separation; it is not a production database integration test.
+
+**Operational implication:** report integrity, completeness, and provenance as separate evidence fields. A single `verified: true` must not imply completeness unless the system also verifies a trusted sequence boundary or reconciles against an independent source of expected events.
