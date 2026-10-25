@@ -79,6 +79,21 @@ def verify_model_chain(rows: list[dict]) -> bool:
     return True
 
 
+
+def append_once_model(records: dict[str, dict], event_id: str, event: dict) -> tuple[dict, bool]:
+    """Model stable-ID deduplication, ignoring attempt-local projection metadata."""
+    logical = {
+        key: value for key, value in event.items()
+        if key not in {"_indexed_at", "_digest", "_prev_digest"}
+    }
+    if event_id in records:
+        if records[event_id] != logical:
+            raise ValueError("event ID reused with different payload")
+        return dict(records[event_id]), True
+    records[event_id] = dict(logical)
+    return dict(logical), False
+
+
 def main() -> None:
     states = tuple(product((False, True), repeat=3))
     assert len(states) == 8
@@ -137,7 +152,35 @@ def main() -> None:
     assert verify_model_chain(truncated_prefix)
     assert len(truncated_prefix) < len(expected_events)
 
-    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; stale-writer lost update reproduced; valid-chain/incomplete-projection and valid-prefix truncation verified")
+
+    # Stable event identity: repeated delivery returns the original logical
+    # receipt, while reusing an ID for a different payload is rejected.
+    event_records: dict[str, dict] = {}
+    original, replayed = append_once_model(
+        event_records, "evt-stable", {"event_id": "evt-stable", "value": 9, "_indexed_at": 1.0}
+    )
+    assert not replayed
+    replay, replayed = append_once_model(
+        event_records, "evt-stable", {"event_id": "evt-stable", "value": 9, "_indexed_at": 2.0}
+    )
+    assert replayed and replay == original
+    assert len(event_records) == 1
+    try:
+        append_once_model(
+            event_records, "evt-stable", {"event_id": "evt-stable", "value": 10}
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("same event ID with a different payload must fail")
+    for _ in range(32):
+        same, was_replay = append_once_model(
+            event_records, "evt-race", {"event_id": "evt-race", "value": 11}
+        )
+    assert was_replay and same["value"] == 11
+    assert len(event_records) == 2
+
+    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; stale-writer lost update reproduced; valid-chain/incomplete-projection and valid-prefix truncation; stable-ID replay/conflict checks verified")
 
 
 if __name__ == "__main__":
