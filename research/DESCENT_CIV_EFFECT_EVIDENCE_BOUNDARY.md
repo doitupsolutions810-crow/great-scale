@@ -67,3 +67,26 @@ This finite-state test validates the model only. It does not simulate a real dat
 ## Verification status
 
 No repository suite or live side effect was run for this note. The Python test is a finite-state contract test to be run by CI. No claim is made that any current repository implements the complete protocol.
+
+
+## Source-level refinement — success-status laundering
+
+A follow-up inspection of Capability Authority `main` at `plane_service/server.py` SHA `2cf77b51d1913b4bc3e37df8dadc45739200d276` found a concrete instance of this boundary: `_record_evidence(event)` catches and prints exceptions from both `evidence.index.get_index().ingest(event)` and `BUS.publish(event)`, then returns no status. `handle_execute` calls it after an executor result with `status == "ok"` and returns the original result regardless of whether either evidence path failed.
+
+Thus the API's success response does not establish durable evidence. More precisely, the code does not establish whether the index is durable, whether the bus accepted the event, or whether both failed. This is a code-path finding from the fetched source, not proof of a production incident. The executor source at SHA `e4e3de501d9f0898ff1239b5f2dc010e8c2a82a8` currently constructs a receipt and returns `result: "executed"`; this inspection alone does not prove a real external side effect occurred.
+
+Let (S) mean the API reports success and (D) mean durable evidence exists. The current control flow permits:
+
+[
+S=1 land D=0
+]
+
+because evidence errors are swallowed. The required contract for an evidence-backed success endpoint is:
+
+[
+S=1 Rightarrow D=1
+]
+
+If the effect may already have happened and (D) cannot be established, the correct response is an explicit indeterminate state plus operation identity and reconciliation—not a clean success and not a claim that no effect occurred.
+
+The existing finite-state test captures the general state distinction. A repository-level regression test should additionally inject failures into both the index and bus and assert that the API never reports evidence-backed completion unless the configured durability contract is satisfied.
