@@ -1,107 +1,84 @@
-# Descent XCIX — Integrity, Authenticity, and Execution Are Independent
+# Descent XCIX — Four Independent Proof Obligations
 
 ## Finding
 
-A digest, signature reference, or green-looking status string is not a complete proof of a successful trusted operation. Three independent propositions must be distinguished:
+A digest, signature reference, successful test, or green-looking status string is not a complete proof of a trusted operation. Four propositions must be kept separate:
 
-- **Integrity (I):** the received bytes/witness match the claimed digest.
-- **Authenticity (A):** the producer is the expected identity and the signature/attestation verifies under a trusted key or trust root.
-- **Execution (E):** the claimed command actually ran on the intended revision/environment and its result was observed.
+- **Integrity (I):** the bytes/witness match the claimed digest.
+- **Authenticity (A):** the producer is verified against a trusted identity.
+- **Execution (E):** the claimed command actually ran on the intended revision and environment, with an observed result.
+- **Authority (P):** the current principal is authenticated and authorized for this action on this resource.
 
-A complete acceptance decision requires all three:
+The strict acceptance rule is:
 
 \[
-\mathrm{Accept} \Rightarrow I \land A \land E
+\operatorname{Accept}(W,q) = I(W) \land A(W) \land E(W) \land P(q,W)
 \]
 
-No one of these propositions implies either of the others. A correct digest can describe malicious content; a valid signature can sign a claim about a command that never ran; an executed test can be unauthenticated or associated with the wrong commit.
+No predicate implies the others. A correct digest can describe malicious content; a valid signature can attest to an unexecuted command; an executed test can be tied to the wrong revision; and a fully valid artifact does not authorize a caller to access another user's data.
 
 ## Mathematical model
 
-Let the evidence object be \(W=(b,h,s,c,r)\), where \(b\) is the payload, \(h\) its digest, \(s\) signature/attestation, \(c\) command plus exit code, and \(r\) the tested revision.
+Let the evidence object be \(W=(b,h,s,c,r)\), where \(b\) is the payload, \(h\) its digest, \(s\) signature/attestation, \(c\) command plus exit code, and \(r\) the tested revision. Let \(q\) be the caller and requested resource.
 
-Define:
 \[
 I(W)=[H(b)=h]
 \]
 \[
-A(W)=\mathrm{Verify}(s, h \parallel r \parallel c, K_{trusted})
+A(W)=\operatorname{Verify}(s,h\parallel r\parallel c,K_{trusted})
 \]
 \[
-E(W)=\mathrm{ObservedRunnerExecution}(r,c,exit=0)
+E(W)=\operatorname{ObservedRunnerExecution}(r,c,\operatorname{exit}=0)
 \]
-
-Then:
 \[
-\mathrm{Accept}(W)=I(W)\land A(W)\land E(W)
+P(q,W)=\operatorname{Authenticated}(q)\land\operatorname{Authorized}(q,\operatorname{action},\operatorname{resource})
 \]
 
-This model deliberately binds the signature to the revision, command, and outcome. Signing only the payload digest leaves room for a validly signed artifact to be misrepresented as having passed a particular test.
+This model binds the attestation to repository, revision, workflow, command, environment, outcome, and artifact identity. Signing only a payload digest does not establish that a specific test ran or that the current caller is authorized.
 
-## Practical mapping to the repositories
+## State-space result
 
-- **Great Scale:** a content fingerprint can prove that a witness matches an identifier, but not who supplied it or whether a computation ran.
-- **CycleKernal:** fusion_state_id / canonical witness consistency protects internal integrity; the repository explicitly notes that this does not authenticate the upstream relay.
-- **Capability Authority:** a signed receipt must bind the structured action, issuer identity, policy context, and evidence identity; signature validity alone does not prove policy admission.
-- **Living Intermediate Control Plane:** a structural acceptance validator can reject incomplete metadata, but cannot replace cryptographic signature verification, trusted issuer checks, revocation checks, or real runner evidence.
-- **GitHub Actions:** a failed job with runner ID 0 and no executed steps is execution-unverified, not a test failure and not a pass.
+There are \(2^4=16\) Boolean states. Exactly one satisfies strict acceptance: \((I,A,E,P)=(1,1,1,1)\). The executable test enumerates every state and checks that removing any one gate rejects the request.
 
-## Executable contract test
+The test validates the logical contract only. It is not a cryptographic implementation, production authorization test, or proof that a hosted runner executed.
 
-test_evidence_triad.py exhaustively enumerates the 8 Boolean combinations of integrity, authenticity, and execution. Acceptance is true in exactly one state: all three are true. This checks the acceptance rule; it is not a cryptographic implementation or proof that any specific CI runner executed.
+## Practical mapping
 
-## Acceptance protocol
+- **Great Scale:** a content fingerprint can prove witness consistency, not the identity of the supplier or execution of a computation.
+- **CycleKernal:** the inspected backend accepts request-supplied `userId` and `universeId` on data routes without showing principal/resource binding in that file. A separate effect/evidence failure window exists on chat saves: MongoDB persistence occurs before later operations and the HTTP response.
+- **Capability Authority:** a signed receipt must bind the structured action, issuer, policy context, and evidence identity; signature validity alone does not prove policy admission or durable recording.
+- **Living Intermediate Control Plane:** structural validation cannot replace signature verification, trusted issuer checks, revocation checks, or runner evidence.
+- **GitHub Actions:** a failed job with no runner allocation or executed steps is execution-unverified, not proof that tests ran and failed, and not a pass.
 
-1. Hash canonical payload bytes and compare to the claimed digest.
-2. Verify a signature/attestation under an explicitly trusted identity.
-3. Bind the attestation to repository, exact commit SHA, workflow identity, command, environment/image digest, exit code, and artifact digest.
-4. Require independently observed execution with exit code zero and all required test/build steps present.
-5. Treat missing logs, missing runner allocation, missing step records, or missing artifact provenance as **unverified**.
-6. Do not let a checksum, status badge, signature, or test report substitute for the other proof layers.
+## Acceptance and operational protocol
+
+1. Hash canonical payload bytes and compare with the claimed digest.
+2. Verify the signature/attestation under an explicitly trusted identity.
+3. Bind evidence to repository, exact commit SHA, workflow identity, command, environment/image digest, exit code, and artifact digest.
+4. Require observed execution with exit code zero and all required test/build steps present.
+5. Authenticate the caller server-side; authorize each action and target resource. Never treat request-supplied identifiers as proof of ownership.
+6. Treat missing logs, runner allocation, step records, artifact provenance, or authorization context as **unverified/denied**, not successful.
+7. Keep effect status, evidence durability, and caller acknowledgement distinct. A failed acknowledgement does not prove that no write occurred.
+8. Do not let a checksum, status badge, signature, or test report substitute for the other proof layers.
+
+## Concrete counterexamples
+
+### Authenticity collapse
+
+The Living Intermediate Control Plane session-link verifier previously computed:
+
+`ok = digestOk && (signatureOk === null ? true : signatureOk === true)`
+
+When no HMAC trust key was configured, a digest-consistent unsigned record could return `ok: true`. That established integrity, not authenticity. The correction is tracked in [LICP PR #24](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/24); the change remains open/unmerged and the prior hosted run lacked usable step logs.
+
+### Authorization collapse
+
+CycleKernal's default-branch `backend/server.js` at blob SHA `fa16b63e56213fb031624c01b124db900adcb0c3` accepts `userId` / `universeId` from request parameters or bodies on chat and snapshot routes, while the inspected file does not show authenticated-principal binding. The dashboard, active-user count, and metrics endpoints also lack route-level auth checks in that file. This is source-level evidence only; deployment reachability and upstream controls were not verified.
+
+### Acknowledgement/effect collapse
+
+CycleKernal's `POST /api/chat/save` saves a MongoDB record before running `countDocuments`, writing Redis, and returning success. If a later step fails, the handler can return HTTP 500 even though the MongoDB write already succeeded. A retry may create a duplicate because the route shows no idempotency key or uniqueness contract. The snapshot route has a similar ambiguity if persistence succeeds but the response is lost. See [Great Scale PR #127](https://github.com/doitupsolutions810-crow/great-scale/pull/127) for the state model.
 
 ## Scope and limitations
 
-This is an engineering evidence model, not a physical law. The finite-state test validates only the logical acceptance rule. No cryptographic verifier, hosted runner, deployment, or external artifact was exercised by this note. Repository-specific integration must implement and test the predicates above.
-
-## Concrete cross-repository counterexample
-
-The Living Intermediate Control Plane session-link verifier previously computed:
-`ok = digestOk && (signatureOk === null ? true : signatureOk === true)`.
-When no HMAC trust key was configured, a digest-consistent unsigned record could therefore return `ok: true`. That result established integrity only; it did not establish authenticity. The verifier's module documentation says session links are evidence-only, so this finding does not imply an execution gate was bypassed. It does show that a single success boolean can collapse distinct proof obligations and mislead downstream consumers.
-
-The follow-up fix is tracked in [Living Intermediate Control Plane PR #24](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/24). It makes `ok` require both digest integrity and authenticated HMAC verification, and returns separate `integrityOk`, `authenticated`, and `reason` fields. The change is open and unmerged; hosted CI reported failure but its job had no step records and its logs were unavailable, so the source change remains unverified by that run.
-
-This is an example of a general anti-pattern:
-[
-\text{one status bit} \not\equiv \text{complete proof}
-]
-A safe API should expose the predicates independently, then define acceptance as their conjunction.
-
-
-## Descent C — authorization is a fourth, independent proof obligation
-
-A deeper inspection of CycleKernal's default-branch `backend/server.js` at blob SHA `fa16b63e56213fb031624c01b124db900adcb0c3` found that the inspected Express routes do not establish an authenticated principal or bind the requested resource identifier to that principal. Examples include:
-
-- `POST /api/chat/save` accepts `userId` from the request body.
-- `GET /api/chat/history/:userId` selects records using the caller-supplied path parameter.
-- `POST /api/simulation/snapshot` accepts `universeId` from the request body; the read route similarly selects by the path parameter.
-- `/api/analytics/dashboard`, `/api/users/active`, and `/metrics` have no route-level authentication check in this file.
-
-This is a source-level observation, not proof that a deployed service is reachable from the public internet or that an incident occurred. Network controls, upstream middleware, and deployment configuration were not verified. The inspected file itself does not show the principal/resource binding needed to enforce per-user authorization.
-
-### Refined acceptance equation
-
-Integrity, evidence authenticity, observed execution, and caller authority are distinct:
-
-- (I): payload integrity is established.
-- (A): evidence issuer authenticity is established.
-- (E): the claimed command actually ran and its result was observed.
-- (P): the current principal is authenticated, authorized for the action, and bound to the target resource.
-
-[
-mathrm{Accept}(W, q) Rightarrow I(W) land A(W) land E(W) land P(q, W)
-]
-
-A validly signed receipt does not authorize the current caller to read another user's history. A caller-supplied `userId` is a selector, not proof of ownership. Likewise, an internal digest does not prove that a request is permitted.
-
-This expands the earlier three-gate model to four independent Boolean proof obligations. There are (2^4=16) states; exactly one state satisfies the strict acceptance rule. Production enforcement still requires actual authentication middleware, server-derived identity, resource ownership/tenant checks, and negative integration tests. The finite-state test only checks the logical contract.
+This is an engineering model, not a physical law. The finite-state test checks only the acceptance rule. No cryptographic verifier, live runner, deployed service, or real database failure was exercised by this note. Repository-level enforcement still requires implementation and negative integration tests.
