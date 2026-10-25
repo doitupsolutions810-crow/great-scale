@@ -62,3 +62,17 @@ test_evidence_triad.py exhaustively enumerates the 8 Boolean combinations of int
 ## Scope and limitations
 
 This is an engineering evidence model, not a physical law. The finite-state test validates only the logical acceptance rule. No cryptographic verifier, hosted runner, deployment, or external artifact was exercised by this note. Repository-specific integration must implement and test the predicates above.
+
+## Concrete cross-repository counterexample
+
+The Living Intermediate Control Plane session-link verifier previously computed:
+`ok = digestOk && (signatureOk === null ? true : signatureOk === true)`.
+When no HMAC trust key was configured, a digest-consistent unsigned record could therefore return `ok: true`. That result established integrity only; it did not establish authenticity. The verifier's module documentation says session links are evidence-only, so this finding does not imply an execution gate was bypassed. It does show that a single success boolean can collapse distinct proof obligations and mislead downstream consumers.
+
+The follow-up fix is tracked in [Living Intermediate Control Plane PR #24](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/24). It makes `ok` require both digest integrity and authenticated HMAC verification, and returns separate `integrityOk`, `authenticated`, and `reason` fields. The change is open and unmerged; hosted CI reported failure but its job had no step records and its logs were unavailable, so the source change remains unverified by that run.
+
+This is an example of a general anti-pattern:
+[
+\text{one status bit} \not\equiv \text{complete proof}
+]
+A safe API should expose the predicates independently, then define acceptance as their conjunction.
