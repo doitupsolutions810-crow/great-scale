@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CXLVII: characterize the quotient seam of the canonical-coordinate contraction.
 
-This is a regression *characterization* of a mathematical defect, not a claim
+This is a regression characterization of a mathematical defect, not a claim
 that the canonical-coordinate formula is continuous on the circle.
 """
 import math
@@ -34,11 +34,15 @@ def test_fiber_constancy_does_not_imply_continuity():
     assert math.isclose(seam_value, 2.25, abs_tol=1e-12)
     assert math.isclose(gap, 4.5, abs_tol=1e-7)
 
-    # For 0 < |k| < 1, the seam jump is 9|k| in the local lift;
-    # it cannot vanish modulo 9 unless k is an integer (thus k=0 here).
-    for k in (0.1, 0.25, 0.5, 0.9):
-        jump = circular_distance(4.5 + 4.5 * k, 4.5 - 4.5 * k)
-        assert jump > 0
+    # The seam defect is symmetric in sign; k=0 is the degenerate continuous case.
+    for k in (-0.9, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 0.9):
+        left = 4.5 + 4.5 * k
+        at_seam = 4.5 - 4.5 * k
+        expected = min(9 * abs(k), 9 - 9 * abs(k))
+        assert math.isclose(circular_distance(left, at_seam), expected, abs_tol=1e-12)
+        assert expected > 0
+    assert math.isclose(circular_distance(soft_contract(9 - eps, 0), soft_contract(0, 0)),
+                        0.0, abs_tol=1e-7)
 
 
 if __name__ == "__main__":
