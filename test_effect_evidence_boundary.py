@@ -18,6 +18,11 @@ def classify(effect_may_have_occurred: bool, evidence_durable: bool, caller_saw_
     return "inconsistent"
 
 
+def evidence_backed_success_allowed(effect_may_have_occurred: bool, evidence_durable: bool) -> bool:
+    """Evidence-backed completion is permitted only when effect and evidence are confirmed."""
+    return effect_may_have_occurred and evidence_durable
+
+
 def main() -> None:
     assert len(STATES) == 8
     for effect, durable, response in STATES:
@@ -30,6 +35,11 @@ def main() -> None:
     assert classify(True, False, True) == "indeterminate"
     assert classify(True, False, False) == "indeterminate"
     assert classify(True, True, True) == "complete"
+    # Safety contract: evidence-backed success cannot be returned when evidence is absent.
+    for effect, durable in product((False, True), repeat=2):
+        if not durable:
+            assert not evidence_backed_success_allowed(effect, durable)
+    assert evidence_backed_success_allowed(True, True)
     print("PASS effect/evidence boundary: 8/8 states; effect-without-durable-evidence never clean failure")
 
 
