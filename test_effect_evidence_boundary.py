@@ -132,8 +132,12 @@ def main() -> None:
     assert ledger_ids == {"A", "B"}
     assert not ledger_ids.issubset(projection_ids)
     assert verify_model_chain(valid_ledger), "valid ledger chain must remain valid despite incomplete projection"
+    # Removing the tail yields a valid prefix; the chain alone cannot detect truncation.
+    truncated_prefix = valid_ledger[:1]
+    assert verify_model_chain(truncated_prefix)
+    assert len(truncated_prefix) < len(expected_events)
 
-    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; stale-writer lost update reproduced; valid-chain/incomplete-projection distinction verified")
+    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; stale-writer lost update reproduced; valid-chain/incomplete-projection and valid-prefix truncation verified")
 
 
 if __name__ == "__main__":
