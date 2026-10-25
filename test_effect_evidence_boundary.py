@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Finite-state contract for effect/evidence atomicity and retry safety."""
+"""Finite-state contracts for effect/evidence and ledger/projection boundaries."""
 from itertools import product
 
 STATES = tuple(product((False, True), repeat=3))
@@ -24,8 +24,23 @@ def evidence_backed_success_allowed(effect_may_have_occurred: bool, evidence_dur
 
 
 def retry_is_safe(operation_committed: bool, idempotency_enforced: bool) -> bool:
-    """A retry after an uncertain acknowledgement is safe only with deduplication."""
+    """A retry after an uncertain commit is safe only with deduplication."""
     return not operation_committed or idempotency_enforced
+
+
+def projection_state(ledger_committed: bool, projection_durable: bool, caller_acknowledged: bool) -> str:
+    """A separate projection is not complete merely because the ledger committed."""
+    if ledger_committed and not projection_durable:
+        return "reconcile_projection"
+    if ledger_committed and projection_durable and caller_acknowledged:
+        return "complete"
+    if not ledger_committed and not projection_durable:
+        return "not_committed"
+    return "reconcile_acknowledgement"
+
+
+def projection_retry_is_safe(ledger_committed: bool, idempotency_enforced: bool) -> bool:
+    return not ledger_committed or idempotency_enforced
 
 
 def main() -> None:
@@ -47,12 +62,29 @@ def main() -> None:
             assert not evidence_backed_success_allowed(effect, durable)
     assert evidence_backed_success_allowed(True, True)
 
-    # A committed write with a lost/failed acknowledgement cannot be safely
-    # repeated unless idempotency/deduplication is enforced.
     assert not retry_is_safe(operation_committed=True, idempotency_enforced=False)
     assert retry_is_safe(operation_committed=True, idempotency_enforced=True)
     assert retry_is_safe(operation_committed=False, idempotency_enforced=False)
-    print("PASS effect/evidence boundary: 8/8 states; retry safety requires deduplication after uncertain commit")
+
+    projection_states = tuple(product((False, True), repeat=4))
+    assert len(projection_states) == 16
+    for ledger, projection, acknowledged, deduplicated in projection_states:
+        status = projection_state(ledger, projection, acknowledged)
+        if ledger and not projection:
+            assert status == "reconcile_projection"
+            assert status != "complete"
+        if status == "complete":
+            assert ledger and projection and acknowledged
+        if ledger and not deduplicated:
+            assert not projection_retry_is_safe(ledger, deduplicated)
+        else:
+            assert projection_retry_is_safe(ledger, deduplicated)
+
+    assert projection_state(True, False, False) == "reconcile_projection"
+    assert projection_state(True, True, True) == "complete"
+    assert not projection_retry_is_safe(ledger_committed=True, idempotency_enforced=False)
+    assert projection_retry_is_safe(ledger_committed=True, idempotency_enforced=True)
+    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; retry requires deduplication after commit")
 
 
 if __name__ == "__main__":
