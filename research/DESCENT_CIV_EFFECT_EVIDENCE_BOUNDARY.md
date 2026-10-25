@@ -80,3 +80,26 @@ Let `S` mean the API reports success and `D` mean durable evidence exists. The c
 If the effect may already have happened and (D) cannot be established, the correct response is an explicit indeterminate state plus operation identity and reconciliation—not a clean success and not a claim that no effect occurred.
 
 The existing finite-state test captures the general state distinction. A repository-level regression test should additionally inject failures into both the index and bus and assert that the API never reports evidence-backed completion unless the configured durability contract is satisfied.
+
+
+## Cross-repository refinement — post-write failure can masquerade as no effect
+
+CycleKernal's default-branch `backend/server.js` at blob SHA `fa16b63e56213fb031624c01b124db900adcb0c3` contains a concrete failure window in `POST /api/chat/save`:
+
+1. `await chatEntry.save()` persists the chat to MongoDB.
+2. `countDocuments()` and a Redis `setEx()` run afterward.
+3. The handler returns HTTP 500 for any caught error in this sequence.
+
+If MongoDB save succeeds but count or Redis fails, the caller receives an error even though the primary write may already exist. Retrying the request can create a second record because the route does not show a stable idempotency key or uniqueness constraint for an operation identity. The snapshot endpoint also has the generic lost-response ambiguity: persistence can complete before the client learns the result.
+
+Let (W) mean the primary write committed, (A_c) mean the caller received a success acknowledgement, and (R) mean a retry occurs. The implementation admits:
+
+[
+W=1 land A_c=0
+]
+
+Therefore, the inference (A_c=0 Rightarrow W=0) is invalid. If retry repeats the write without deduplication, duplicate state is possible.
+
+The fix is not merely to change HTTP 500 to HTTP 200. Use a stable operation ID with a database uniqueness constraint or equivalent atomic deduplication, separate primary-write outcome from cache/metrics health, and expose a way to query/reconcile the original operation. Cache failure after a committed primary write should not silently transform a committed write into a retryable no-effect claim.
+
+This is a source-code failure-path analysis, not proof that the deployed service has experienced duplicates. Deployment and runtime fault injection have not been performed.
