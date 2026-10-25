@@ -181,3 +181,16 @@ The stale-writer example gives (L=\{A,B\}), (J=\{B\}), with a valid chain for (L
 The model test now constructs and verifies a two-event hash chain while deliberately omitting one event from the projection. It asserts that chain integrity succeeds while projection completeness fails. This demonstrates the logical separation; it is not a production database integration test.
 
 **Operational implication:** report integrity, completeness, and provenance as separate evidence fields. A single `verified: true` must not imply completeness unless the system also verifies a trusted sequence boundary or reconciles against an independent source of expected events.
+
+
+### Stronger corollary: a valid hash-chain prefix cannot detect tail truncation
+
+Because `verify_chain()` starts from the fixed zero digest and verifies only rows returned by the database, deleting one or more trailing rows leaves a valid prefix. The verifier has no trusted expected row count, externally anchored tip, or producer sequence watermark to distinguish “the full ledger” from “a valid but truncated history.” The digest is also unkeyed, so the chain alone does not authenticate who produced an event.
+
+Formally, for a valid chain (L_n), its prefix (L_k) for (k<n) can also verify:
+
+\[
+V(L_n)=\text{true}\quad\land\quad V(L_k)=\text{true}
+\]
+
+while (L_k) is incomplete relative to the expected history. Detecting this requires an independently trusted checkpoint/tip, monotonic producer sequence, signed checkpoint, or reconciliation against an external event source. Hash chaining detects internal tampering of retained rows; it does not, by itself, detect suffix deletion or establish authenticity.
