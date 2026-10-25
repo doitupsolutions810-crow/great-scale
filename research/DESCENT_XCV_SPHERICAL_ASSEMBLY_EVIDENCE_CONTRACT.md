@@ -97,3 +97,23 @@ Record commit SHA, runtime versions, exact commands, exit codes, complete output
 ## Evidence boundary
 
 This note establishes algebraic properties and an engineering acceptance contract. It does not certify the spherical shape's physical interlock, mechanical stability, a new physical law, or the contents of the inaccessible Grok project. Those claims require the missing source geometry and repeatable tests against a canonical candidate.
+
+
+## Descent XCV addendum — CI observability and test coverage
+
+A deeper inspection of the current `main` CI workflow found a separate integration gap:
+
+- `.github/workflows/ci.yml` runs only `npm test` and `python3 test_descent.py`.
+- `package.json` defines `npm test` as `node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs`.
+- The spherical prototype's standalone CommonJS/ESM tests are not included in those scripts. Their local pass counts therefore do not imply they are exercised by repository CI.
+- The observed workflow run for this evidence-contract PR completed as failure in about three seconds with `runner_id: 0`, an empty `steps` array, and no runner name. This is consistent with failure before normal job execution; it does not identify the underlying platform cause and is not evidence that a particular test assertion failed.
+
+### Required CI repair and acceptance
+
+1. Diagnose the hosted runner/check initialization failure from GitHub-side diagnostics; do not classify it as a code failure without logs.
+2. Add the canonical spherical test command to the repository test script only after its test path is committed and deterministic.
+3. Ensure the workflow reports named checkout, setup, test, and descent steps.
+4. Confirm the exact candidate SHA ran every step and retain full output and exit codes.
+5. Treat CI coverage as incomplete until the spherical tests are part of the normal test entry point and a real runner executes them.
+
+This is an important evidence distinction: a test that passes locally but is not wired into the repository test command is not a regression guard for future commits. A CI job that never reaches its steps is an observability/runner failure until demonstrated otherwise.
