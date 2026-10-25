@@ -194,3 +194,32 @@ V(L_n)=\text{true}\quad\land\quad V(L_k)=\text{true}
 \]
 
 while (L_k) is incomplete relative to the expected history. Detecting this requires an independently trusted checkpoint/tip, monotonic producer sequence, signed checkpoint, or reconciliation against an external event source. Hash chaining detects internal tampering of retained rows; it does not, by itself, detect suffix deletion or establish authenticity.
+
+
+## Descent CXLIV — stable event identity makes retries replayable
+
+Capability Authority's proposed PR #12 now adds a stable `event_id` identity to the SQLite evidence warehouse. Within `BEGIN IMMEDIATE`, append first looks up the ID; if it already exists with the same logical payload, it returns the original digest and predecessor digest instead of appending another row. Reusing an ID for a different logical payload is rejected. A partial unique index enforces at most one row per non-null event ID, and migration refuses to silently proceed if historical duplicate IDs already exist.
+
+The projection path consumes the replay signal: if the event is already projected, it returns the existing record instead of duplicating it; if the ledger committed but a fresh projection lacks the event, retry can repopulate that entry from the original ledger receipt. The implementation ignores `_indexed_at` when comparing logical retry payloads because that field is generated anew during each ingest attempt.
+
+The new contract is:
+
+\[
+\forall e,\quad \operatorname{count}_{L}(e.id)\leq 1
+\]
+
+and, for an identical retry, the receipt is stable:
+
+\[
+\operatorname{receipt}(e,id) = \operatorname{receipt}(e,id)_{\text{retry}}
+\]
+
+Reusing the same ID with a different logical payload must fail, not silently mutate the original event. Events without a stable `event_id` remain outside this deduplication guarantee; callers must generate and preserve the ID across retries.
+
+### Verification boundary
+
+Added repository tests cover same-ID replay, conflicting payload rejection, 32 concurrent attempts for one ID, valid chain length, projection duplicate suppression, and repair of a missing projection entry. The exact committed test files were copied into an isolated local harness and executed: **9 tests passed, exit code 0**. This is a local copied-source harness, not the full repository test suite or hosted CI. The latest hosted `lab` workflow on Capability Authority head `9162c738b5ec0f0a31d9efe164395e5ddb4daeba` failed, but GitHub exposed no job steps/logs, so the cause remains unknown.
+
+### Remaining descent
+
+Stable event identity closes the duplicate-ledger-append gap only for callers that supply the same ID. It does not solve the separate cross-process JSON stale-writer problem identified in CXLII, prove that the ledger has not been truncated, or authenticate the producer. The next durable architecture is a SQLite projection updated in the same transaction as the ledger, plus an independently anchored chain checkpoint and principal-bound operation IDs. Until then, integrity, completeness, authenticity, projection consistency, and caller acknowledgement must remain separate status fields.
