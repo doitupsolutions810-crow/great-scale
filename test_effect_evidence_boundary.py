@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Finite-state contracts for effect/evidence and ledger/projection boundaries."""
+import hashlib
+import json
 from itertools import product
 
 
@@ -43,18 +45,38 @@ def stale_projection_interleaving() -> tuple[set[str], set[str]]:
     writer_a_view = initial.copy()
     writer_b_view = initial.copy()
     ledger: set[str] = set()
-
-    # Both independent stores append to the authoritative ledger.
     ledger.add("event-a")
     writer_a_view.add("event-a")
     projection_after_a = writer_a_view.copy()
-
     ledger.add("event-b")
     writer_b_view.add("event-b")
-    # B atomically replaces the file with a view derived from stale initial state.
     projection_after_b = writer_b_view.copy()
     assert projection_after_a == {"event-a"}
     return ledger, projection_after_b
+
+
+def make_chain(events: list[dict]) -> list[dict]:
+    rows = []
+    previous = "0" * 64
+    for event in events:
+        canonical = json.dumps(event, sort_keys=True, separators=(",", ":"), default=str).encode()
+        digest = hashlib.sha256(previous.encode() + canonical).hexdigest()
+        rows.append({"event": event, "prev_digest": previous, "digest": digest})
+        previous = digest
+    return rows
+
+
+def verify_model_chain(rows: list[dict]) -> bool:
+    previous = "0" * 64
+    for row in rows:
+        if row["prev_digest"] != previous:
+            return False
+        canonical = json.dumps(row["event"], sort_keys=True, separators=(",", ":"), default=str).encode()
+        expected = hashlib.sha256(previous.encode() + canonical).hexdigest()
+        if expected != row["digest"]:
+            return False
+        previous = row["digest"]
+    return True
 
 
 def main() -> None:
@@ -67,7 +89,6 @@ def main() -> None:
             assert status != "failed_no_effect"
         if status == "complete":
             assert effect and durable and response
-
     assert classify(True, False, True) == "indeterminate"
     assert classify(True, False, False) == "indeterminate"
     assert classify(True, True, True) == "complete"
@@ -92,7 +113,6 @@ def main() -> None:
         assert projection_retry_is_safe(not ledger, deduplicated) or not ledger
         if ledger and not deduplicated:
             assert not projection_retry_is_safe(ledger, deduplicated)
-
     assert projection_state(True, False, False) == "reconcile_projection"
     assert projection_state(True, True, True) == "complete"
     assert not projection_retry_is_safe(True, False)
@@ -103,7 +123,17 @@ def main() -> None:
     assert projection == {"event-b"}
     assert not ledger.issubset(projection), "model must expose stale-writer lost update"
 
-    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; stale-writer counterexample reproduced")
+    # Integrity validates rows present; it does not prove projection completeness.
+    expected_events = [{"event_id": "A", "value": 1}, {"event_id": "B", "value": 2}]
+    valid_ledger = make_chain(expected_events)
+    assert verify_model_chain(valid_ledger)
+    projection_ids = {"B"}
+    ledger_ids = {row["event"]["event_id"] for row in valid_ledger}
+    assert ledger_ids == {"A", "B"}
+    assert not ledger_ids.issubset(projection_ids)
+    assert verify_model_chain(valid_ledger), "valid ledger chain must remain valid despite incomplete projection"
+
+    print("PASS effect/evidence: 8/8 states; ledger/projection: 16/16 states; stale-writer lost update reproduced; valid-chain/incomplete-projection distinction verified")
 
 
 if __name__ == "__main__":
