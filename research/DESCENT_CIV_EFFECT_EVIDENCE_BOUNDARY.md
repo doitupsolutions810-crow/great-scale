@@ -103,3 +103,34 @@ Therefore, the inference (A_c=0 Rightarrow W=0) is invalid. If retry repeats the
 The fix is not merely to change HTTP 500 to HTTP 200. Use a stable operation ID with a database uniqueness constraint or equivalent atomic deduplication, separate primary-write outcome from cache/metrics health, and expose a way to query/reconcile the original operation. Cache failure after a committed primary write should not silently transform a committed write into a retryable no-effect claim.
 
 This is a source-code failure-path analysis, not proof that the deployed service has experienced duplicates. Deployment and runtime fault injection have not been performed.
+
+
+## Descent CXLI — authoritative ledger versus searchable projection
+
+A second independent failure boundary appears in Capability Authority's evidence pipeline. On default-branch `evidence/index.py` at blob SHA `ada6279eb02fa1286ced2f8c021e5983269cef73`, index initialization catches JSON parse errors and resets `_docs` to an empty list. In `ingest`, exceptions from the hash-chained warehouse append are swallowed; the event is still added to the JSON projection. The corresponding default-branch warehouse at blob SHA `509c1c9ee46f2ca5842b216224c3f5b08a4a74a0` reads the chain tip and appends without acquiring a write lock before the tip read.
+
+The fixes for serialized append, fail-closed index loading, warehouse error propagation, and atomic JSON replacement are proposed in [Capability Authority PR #12](https://github.com/doitupsolutions810-crow/capability-authority/pull/12). The PR is open and unmerged; its controls are not yet the default-branch behavior.
+
+The proposed branch still has a cross-store gap: SQLite commits before the JSON projection is atomically replaced. If SQLite commits and the projection write fails, the ledger and projection diverge. A retry can append the same logical event again unless a stable event ID is enforced by the authoritative store. Atomic replacement prevents partial JSON files; it does not make SQLite plus JSON one transaction.
+
+Let:
+- (L): authoritative ledger contains the event;
+- (J): searchable projection durably reflects the event;
+- (Q): caller receives a success response;
+- (K): the authoritative store enforces idempotency for the stable event ID.
+
+The necessary completion condition is:
+
+\[
+\operatorname{Complete}=L\land J\land Q
+\]
+
+The safe retry condition after a possible ledger commit is:
+
+\[
+\operatorname{RetrySafe}=\neg L\lor K
+\]
+
+When (L=1) and (J=0), the correct state is `RECONCILE_PROJECTION`, not `FAILED_NO_EFFECT` and not `COMPLETE`. The projection should be rebuildable from the authoritative ledger, and replay should be idempotent by event identity.
+
+The executable model checks all (2^4=16) states. It verifies that completion requires ledger, projection, and acknowledgement, and that retry after a ledger commit requires enforced deduplication. This is a contract test, not a real SQLite/filesystem crash test. Production remediation still needs a stable event ID, unique constraint/migration, replay/rebuild logic, and injected failures after ledger commit but before projection replacement.
