@@ -22,6 +22,8 @@ Let:
 - (L): local-evidence opt-in is explicit;
 - (F): a force-procurement request is set.
 
+Gate completeness requires the exact identifier set {G0, G1, G2, G3, G4, G5, G6} with each ID present once and each status equal to READY. Merely counting seven READY strings is insufficient.
+
 Public contract verification is:
 
 [
@@ -58,9 +60,9 @@ A claim in one document cannot fill a missing claim or weakened constraint in th
 
 ### Verification
 
-The CLXIX Python model covers valid paired documents, split-source claims, weakened schema, generic HTTP-200 bodies, a held gate, non-HTTPS public endpoints, force invariance, and explicit local fallback. It is a specification-level regression model, not a substitute for executing the JavaScript production implementation.
+The CLXIX Python model now covers ten cases: valid paired documents, split-source claims, weakened schema, generic HTTP-200 bodies, a held gate, non-HTTPS public endpoints, force invariance, explicit local fallback, missing gate requirements in the schema, and an unknown/duplicate gate set. The exact G0–G6 key set and schema-required gate list are independently validated. It is a specification-level regression model, not a substitute for executing the JavaScript production implementation.
 
-The focused isolated Node harness for the proposed control-plane helper/probe passed **13/13 selected tests**. A separately reconstructed focused harness for the CONTROL12 evaluator passed **6/6 selected tests**. Full repository suites were not run in this isolated session.
+The focused isolated Node harness for the proposed control-plane helper/probe passed **15/15 selected tests**. A separately reconstructed focused harness for the CONTROL12 evaluator passed **8/8 selected tests**. Full repository suites were not run in this isolated session.
 
 Hosted CI is currently unverified: the latest control-plane run reported `runner_id=0` and `steps=[]` and failed within seconds, so no test step executed. CONTROL12 lattice-ops Actions runs reported `startup_failure`. These results indicate runner/startup failure, not proof of a source-test failure or success. The deployment check is also blocked by the Vercel daily deployment-rate limit.
 
