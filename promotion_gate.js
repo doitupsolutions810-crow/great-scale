@@ -235,7 +235,14 @@ function evaluatePromotionEvidence(evidence) {
   if (receipt.commit !== pullRequest.mergeCommitSha) reasons.push('receipt checkout commit does not equal the current pull request merge-test SHA');
   if (receipt.github_sha !== pullRequest.mergeCommitSha) reasons.push('receipt GitHub SHA does not equal the current pull request merge-test SHA');
   if (String(receipt.github_run_attempt ?? '') !== String(run.runAttempt ?? '')) reasons.push('receipt run attempt does not match platform run attempt');
-  if (typeof receipt.created_utc !== 'string' || !Number.isFinite(Date.parse(receipt.created_utc))) reasons.push('receipt creation timestamp is missing or invalid');
+  const receiptTime = typeof receipt.created_utc === 'string' ? Date.parse(receipt.created_utc) : NaN;
+  if (!Number.isFinite(receiptTime) ||
+      !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(receipt.created_utc) ||
+      !Number.isFinite(Date.parse(receipt.created_utc))) {
+    reasons.push('receipt creation timestamp must be a valid UTC ISO-8601 timestamp');
+  } else if (receiptTime > Date.now() + 5 * 60 * 1000) {
+    reasons.push('receipt creation timestamp is too far in the future');
+  }
   for (const key of ['node', 'npm', 'python', 'runner_name']) {
     if (typeof receipt[key] !== 'string' || !receipt[key].trim() || receipt[key] === 'unavailable') reasons.push('receipt runtime field is missing or unavailable: ' + key);
   }
