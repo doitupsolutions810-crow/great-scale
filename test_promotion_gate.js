@@ -97,6 +97,16 @@ test('failed job blocks', () => blocked(x => { x.job.conclusion = 'failure'; }))
 test('zero runner ID blocks', () => blocked(x => { x.job.runnerId = 0; }));
 test('runner name missing blocks', () => blocked(x => { x.job.runnerName = ''; }));
 test('job logs missing blocks', () => blocked(x => { x.job.logsUrl = null; }));
+test('job logs URL run ID must match the evidence run', () => blocked(x => { x.job.logsUrl = 'https://github.com/doitupsolutions810-crow/great-scale/actions/runs/99999/job/98765'; }));
+test('job logs URL job ID must match the evidence job', () => blocked(x => { x.job.logsUrl = 'https://github.com/doitupsolutions810-crow/great-scale/actions/runs/12345/job/99999'; }));
+test('job logs URL repository must match the candidate repository', () => blocked(x => { x.job.logsUrl = 'https://github.com/other/repository/actions/runs/12345/job/98765'; }));
+test('job logs URL rejects lookalike hosts and URL decorations', () => {
+  for (const url of [
+    'https://github.com.evil.example/doitupsolutions810-crow/great-scale/actions/runs/12345/job/98765',
+    'https://github.com/doitupsolutions810-crow/great-scale/actions/runs/12345/job/98765?redirect=elsewhere',
+    'https://user@github.com/doitupsolutions810-crow/great-scale/actions/runs/12345/job/98765',
+  ]) blocked(x => { x.job.logsUrl = url; });
+});
 test('missing required test step blocks', () => blocked(x => { x.job.steps = x.job.steps.filter(s => s.name !== 'Run the canonical verification script'); }));
 test('skipped test step blocks', () => blocked(x => { x.job.steps.find(s => s.name === 'Run the canonical verification script').conclusion = 'skipped'; }));
 test('failed receipt suite blocks', () => blocked(x => { x.receipt.python_descent_suite = 'failed'; }));
