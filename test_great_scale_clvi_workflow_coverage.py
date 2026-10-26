@@ -25,11 +25,22 @@ def workflow_paths(root: Path = WORKFLOW_ROOT):
     return sorted([*root.glob("*.yml"), *root.glob("*.yaml")])
 
 
+def scan_workflows(root: Path):
+    paths = workflow_paths(root)
+    violations = []
+    for path in paths:
+        for repository, ref in mutable_action_refs(path.read_text(encoding="utf-8")):
+            violations.append(f"{path.name}: {repository}@{ref}")
+    return paths, violations
+
+
 def test_policy_accepts_pins_and_rejects_tags():
     pinned = "steps:\n  - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683\n"
     tagged = "steps:\n  - uses: actions/checkout@v4\n"
+    named_step = "steps:\n  - name: checkout\n    uses: actions/checkout@v4\n"
     assert mutable_action_refs(pinned) == []
     assert mutable_action_refs(tagged) == [("actions/checkout", "v4")]
+    assert mutable_action_refs(named_step) == [("actions/checkout", "v4")]
 
 
 def test_scanner_covers_all_workflow_files():
@@ -40,18 +51,26 @@ def test_scanner_covers_all_workflow_files():
 
 
 def test_mutable_reference_in_any_workflow_is_detected():
-    # Synthetic second workflow proves the policy is not scoped to ci.yml.
-    synthetic = WORKFLOW_ROOT / "clvi-synthetic-policy-test.yaml"
-    bad = "name: extra workflow\njobs:\n  test:\n    steps:\n      - uses: vendor/action@main\n"
-    assert mutable_action_refs(bad) == [("vendor/action", "main")]
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        (root / "ci.yml").write_text(
+            "steps:\n  - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683\n",
+            encoding="utf-8",
+        )
+        (root / "extra.yaml").write_text(
+            "steps:\n  - name: unpinned action\n    uses: vendor/action@main\n",
+            encoding="utf-8",
+        )
+        paths, violations = scan_workflows(root)
+        assert {path.name for path in paths} == {"ci.yml", "extra.yaml"}
+        assert violations == ["extra.yaml: vendor/action@main"]
 
 
 def test_all_actual_workflows_are_pinned():
-    paths = workflow_paths()
+    paths, violations = scan_workflows(WORKFLOW_ROOT)
     if not paths:
         print(f"FAIL CLVI: no workflow YAML files found under {WORKFLOW_ROOT}", file=sys.stderr)
         raise AssertionError("workflow scan must not silently pass on empty input")
-    _, violations = scan_workflows(WORKFLOW_ROOT)
     assert not violations, "mutable action references: " + ", ".join(violations)
 
 
