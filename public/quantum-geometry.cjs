@@ -4,7 +4,7 @@
  */
 const { PHI, CONE, heat } = require('./scale.cjs');
 // Error-free transforms recover low product bits before subtracting nearly equal terms.
-// Inputs are normalized to |x| <= 1, keeping Dekker splitting away from overflow.
+// Inputs are normalized to |x| < 2, keeping Dekker splitting away from overflow.
 function twoProduct(a, b) {
   const product = a * b;
   const splitter = 134217729;
@@ -30,6 +30,16 @@ function compensatedDeterminant2x2(a11, a12, a22) {
   const [high, low] = twoSum(difference, productErrorDifference);
   return high + (low + differenceError + productErrorDifferenceError);
 }
+function powerOfTwoScale(value) {
+  const view = new DataView(new ArrayBuffer(8));
+  view.setFloat64(0, value, false);
+  const bits = view.getBigUint64(0, false);
+  const exponentBits = Number((bits >> 52n) & 0x7ffn);
+  if (exponentBits !== 0) return Math.pow(2, exponentBits - 1023);
+  const fraction = bits & ((1n << 52n) - 1n);
+  if (fraction === 0n) return 1;
+  return Math.pow(2, -1074 + fraction.toString(2).length - 1);
+}
 function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) {
   const values = [g11, g12, g22, curvature];
   if (!values.every(Number.isFinite)) throw new TypeError('Metric entries and curvature must be finite numbers.');
@@ -43,7 +53,7 @@ function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) 
   // each entry before determinant evaluation and erase relative information
   // in an ill-conditioned matrix. Binary exponent scaling is exact for
   // normal binary64 values and keeps Dekker splitting away from overflow.
-  const metricScale = Math.pow(2, Math.floor(Math.log2(metricMagnitude)));
+  const metricScale = powerOfTwoScale(metricMagnitude);
   const a11 = g11 / metricScale, a12 = g12 / metricScale, a22 = g22 / metricScale;
   const detScaled = compensatedDeterminant2x2(a11, a12, a22);
   if (!(detScaled > 0) || !Number.isFinite(detScaled)) throw new RangeError('The two-direction metric must be positive and nondegenerate (scaled detG > 0).');
