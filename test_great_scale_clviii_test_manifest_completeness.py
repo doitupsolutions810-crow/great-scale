@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""CLVIII: enforce aggregate test-manifest completeness and command validity."""
+"""CLVIII/CLXII: audit test reachability and executable Python test entrypoints."""
+import ast
 import json
 from pathlib import Path
 import re
@@ -19,12 +20,53 @@ def audit_suite(root: Path, all_command: str):
     return missing_targets, omitted_tests
 
 
+def tests_not_invoked_by_direct_runner(path: Path):
+    """Find test_* functions not called by a module's direct Python entrypoint."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    defined = {
+        node.name for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name.startswith("test_")
+    }
+    invoked = set()
+    for node in tree.body:
+        if not isinstance(node, ast.If):
+            continue
+        test = node.test
+        is_main_guard = (
+            isinstance(test, ast.Compare)
+            and isinstance(test.left, ast.Name)
+            and test.left.id == "__name__"
+            and len(test.ops) == 1
+            and isinstance(test.ops[0], ast.Eq)
+            and len(test.comparators) == 1
+            and isinstance(test.comparators[0], ast.Constant)
+            and test.comparators[0].value == "__main__"
+        )
+        if is_main_guard:
+            invoked.update(
+                call.func.id for call in ast.walk(node)
+                if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+            )
+    return sorted(defined - invoked)
+
+
 def test_current_aggregate_references_existing_python_files():
     root = Path(__file__).resolve().parent
     package = json.loads((root / "package.json").read_text(encoding="utf-8"))
     missing, omitted = audit_suite(root, package["scripts"]["all"])
     assert not missing, f"npm run all references missing Python files: {missing}"
     assert not omitted, f"Python tests omitted from npm run all: {omitted}"
+
+
+def test_current_python_test_functions_are_invoked():
+    root = Path(__file__).resolve().parent
+    bad = {
+        path.name: tests_not_invoked_by_direct_runner(path)
+        for path in root.glob("test_*.py")
+        if path.is_file() and tests_not_invoked_by_direct_runner(path)
+    }
+    assert not bad, f"Python test functions not invoked by direct runner: {bad}"
 
 
 def test_audit_detects_an_omitted_test_module():
@@ -46,12 +88,33 @@ def test_audit_detects_a_dangling_command_target():
         assert omitted == []
 
 
+def test_audit_detects_test_functions_that_python_would_not_run():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_silent.py"
+        path.write_text("def test_regression():\n    assert False\n", encoding="utf-8")
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_accepts_test_functions_called_by_main_guard():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_active.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n    test_regression()\n',
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == []
+
+
 if __name__ == "__main__":
     tests = [
         test_current_aggregate_references_existing_python_files,
+        test_current_python_test_functions_are_invoked,
         test_audit_detects_an_omitted_test_module,
         test_audit_detects_a_dangling_command_target,
+        test_audit_detects_test_functions_that_python_would_not_run,
+        test_audit_accepts_test_functions_called_by_main_guard,
     ]
     for test in tests:
         test()
-    print(f"PASS CLVIII aggregate test-manifest completeness ({len(tests)}/{len(tests)} tests)")
+    print(f"PASS manifest and executable-entrypoint audit ({len(tests)}/{len(tests)} tests)")
