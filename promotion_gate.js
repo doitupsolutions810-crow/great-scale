@@ -15,6 +15,18 @@ const REQUIRED_STEPS = [
   'Upload commit-bound verification receipt',
 ];
 const SHA_RE = /^[0-9a-f]{40}$/i;
+const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
+function jobLogsUrlMatches(value, repository, runId, jobId) {
+  if (typeof value !== 'string' || typeof repository !== 'string' ||
+      !Number.isSafeInteger(runId) || !Number.isSafeInteger(jobId)) return false;
+  let url;
+  try { url = new URL(value); } catch { return false; }
+  return url.protocol === 'https:' && url.hostname === 'github.com' &&
+    url.port === '' && url.username === '' && url.password === '' &&
+    url.search === '' && url.hash === '' &&
+    url.pathname === `/${repository}/actions/runs/${runId}/job/${jobId}`;
+}
 
 function plainDataRecord(value, expectedKeys, label, reasons) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
@@ -171,9 +183,9 @@ function evaluatePromotionEvidence(evidence) {
     return { eligible: false, state: 'BLOCKED', reasons };
   }
 
-  if (typeof candidate.repo !== 'string' || !candidate.repo ||
+  if (typeof candidate.repo !== 'string' || !REPO_RE.test(candidate.repo) ||
       typeof candidate.sha !== 'string' || !SHA_RE.test(candidate.sha)) {
-    reasons.push('candidate repository and full 40-character SHA are required');
+    reasons.push('candidate repository in owner/repository form and full 40-character SHA are required');
   }
   if (!Number.isSafeInteger(pullRequest.number) || pullRequest.number <= 0) reasons.push('valid pull request number is required');
   if (pullRequest.state !== 'open') reasons.push('pull request must still be open at evidence collection time');
@@ -194,9 +206,8 @@ function evaluatePromotionEvidence(evidence) {
       typeof job.runnerName !== 'string' || !job.runnerName.trim()) {
     reasons.push('observed nonzero runner identity is missing');
   }
-  if (typeof job.logsUrl !== 'string' ||
-      !/^https:\/\/github\.com\/.+\/actions\/runs\/.+\/job\/.+/.test(job.logsUrl)) {
-    reasons.push('platform job logs URL is missing or unrecognized');
+  if (!jobLogsUrlMatches(job.logsUrl, candidate.repo, run.id, job.id)) {
+    reasons.push('platform job logs URL is not bound to the candidate repository, workflow run, and job ID');
   }
 
   const rawSteps = plainDenseArray(job.steps, 'platform steps', reasons);
