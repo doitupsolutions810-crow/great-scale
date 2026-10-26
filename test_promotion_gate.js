@@ -113,6 +113,7 @@ test('failed receipt suite blocks', () => blocked(x => { x.receipt.python_descen
 test('unknown receipt schema blocks', () => blocked(x => { x.receipt.schema = 'v0'; }));
 test('receipt run ID mismatch blocks', () => blocked(x => { x.receipt.github_run_id = '111'; }));
 test('receipt repository mismatch blocks', () => blocked(x => { x.receipt.github_repository = 'other/repo'; }));
+test('receipt runner name must match observed platform job runner', () => blocked(x => { x.receipt.runner_name = 'different-runner'; }));
 test('missing artifact blocks', () => blocked(x => { x.artifact = null; }));
 test('artifact from another run blocks', () => blocked(x => { x.artifact.workflowRunId = 888; }));
 test('expired artifact blocks', () => blocked(x => { x.artifact.expired = true; }));
