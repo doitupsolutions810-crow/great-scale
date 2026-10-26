@@ -26,7 +26,7 @@ This is a syntactic immutability gate. It does not, by itself, establish that a 
 
 - Added `test_great_scale_clv_action_pin_enforcement.py`.
 - Wired it into the canonical `npm run all` command.
-- Pinned the CI workflow's checkout and setup-node actions to full commit SHAs, with intended upstream release identities recorded in the workflow comments.
+- Pinned the CI workflow's checkout and setup-node actions to full upstream commit SHAs. The checkout pin is identified as v4.2.2; the setup-node pin is recorded by its exact commit SHA, without asserting a release tag that was not independently established.
 
 ## Test and verification boundaries
 
