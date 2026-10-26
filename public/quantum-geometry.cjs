@@ -51,8 +51,19 @@ function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) 
   const saturationProjected = rawChi > 1;
   const chi = Math.min(1, rawChi);
   const detQScaled = Math.max(0, detScaled - (scaledCurvature * scaledCurvature) / 4);
-  const detG = detScaled * metricScale * metricScale;
-  const detQ = detQScaled * metricScale * metricScale;
+  // Raw determinants may be outside binary64's representable range even
+  // when normalized geometry and eigenvalues remain useful. Never return
+  // Infinity or silently conflate a positive underflowed determinant with 0.
+  function exposeRawDeterminant(normalizedDeterminant) {
+    const raw = (normalizedDeterminant * metricScale) * metricScale;
+    if (!Number.isFinite(raw)) return { value: null, status: 'overflow' };
+    if (normalizedDeterminant > 0 && raw === 0) return { value: null, status: 'underflow' };
+    return { value: raw, status: 'finite' };
+  }
+  const detGResult = exposeRawDeterminant(detScaled);
+  const detQResult = exposeRawDeterminant(detQScaled);
+  const detG = detGResult.value;
+  const detQ = detQResult.value;
   const relativeResidual = Math.max(0, 1 - chi * chi);
   const hQuantum = (1 + chi) / 2;
   const SQuantum = heat(hQuantum);
