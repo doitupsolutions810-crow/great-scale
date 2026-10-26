@@ -87,7 +87,8 @@ function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) 
   const nQuantum = 8 - 4 * SQuantum;
   return {
     schema: 'great-scale.quantum-geometry/v1',
-    detG, detQ, signedCurvature: curvature, metricEigenvalues,
+    detG, detQ, detGStatus: detGResult.status, detQStatus: detQResult.status,
+    signedCurvature: curvature, metricEigenvalues,
     metricAnisotropy: metricEigenvalues[0] / metricEigenvalues[1],
     metricConditionNumber, metricConditionStatus,
     curvatureFraction: chi, rawCurvatureFraction: rawChi, positivityOvershoot, saturationProjected,
