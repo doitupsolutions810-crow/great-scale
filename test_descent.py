@@ -129,8 +129,8 @@ def main():
     # They agree only at the fixed point.
     checks.append(("softMap(2)=7.0 (pure involution channel)",
                    abs(soft_map(2) - 7.0) < 1e-9))
-    checks.append(("soft_contract(2)=3.75 (contraction channel, distinct from involution)",
-                   abs(soft_contract(2, 0.5) - 3.75) < 1e-9))
+    checks.append(("soft_contract(2)=3.25 (contraction channel, distinct from involution)",
+                   abs(soft_contract(2, 0.5) - 3.25) < 1e-9))
     checks.append(("channels agree only at fixed point: softMap(4.5)==soft_contract(4.5)",
                    abs(soft_map(4.5) - soft_contract(4.5, 0.5)) < 1e-9))
 
