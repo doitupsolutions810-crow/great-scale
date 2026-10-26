@@ -15,7 +15,7 @@ operatorname{Classify}(E,c) in {mathbf{PASS},mathbf{FAIL},mathbf{UNKNOWN}}
 ]
 
 - **PASS:** a completed, successful GitHub Actions pull-request run matches the exact head SHA, base SHA, and required workflow.
-- **FAIL:** a completed, qualifying run for that same candidate has a failure-like conclusion.
+- **FAIL:** a completed, qualifying run for that same candidate has the explicit `failure` conclusion. Cancellation, timeout, and action-required states remain UNKNOWN because they do not prove that tests failed.
 - **UNKNOWN:** evidence is absent, stale, incomplete, from the wrong provider/event/workflow, or otherwise insufficient.
 
 For authorization, both FAIL and UNKNOWN must block promotion, but they must not be reported as the same scientific observation:
