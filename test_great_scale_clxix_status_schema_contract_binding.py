@@ -38,6 +38,7 @@ def good_schema():
             "overall": {"enum": ["READY", "HOLD"]},
             "gates": {
                 "type": "object",
+                "required": list(GATE_IDS),
                 "properties": {gate: allow("READY") for gate in GATE_IDS},
             },
         },
@@ -91,10 +92,14 @@ def validate_status_schema(status, schema, url="https://evidence.example.invalid
             failures.append("schema.properties.overall")
         gate_schema = properties.get("gates")
         gate_properties = gate_schema.get("properties") if isinstance(gate_schema, dict) else None
+        gate_required = gate_schema.get("required") if isinstance(gate_schema, dict) else None
         if (
             not isinstance(gate_properties, dict)
             or gate_schema.get("type") != "object"
             or set(gate_properties) != set(GATE_IDS)
+            or not isinstance(gate_required, list)
+            or set(gate_required) != set(GATE_IDS)
+            or len(gate_required) != len(GATE_IDS)
             or any(not property_allows(gate_properties.get(gate), "READY") for gate in GATE_IDS)
         ):
             failures.append("schema.properties.gates")
@@ -175,6 +180,22 @@ def test_explicit_local_opt_in_is_only_the_degraded_fallback_path():
     assert procurement_authorized(True, False, False, True, force=True) is False
 
 
+
+def test_schema_must_require_all_seven_gate_keys():
+    schema = good_schema()
+    schema["properties"]["gates"]["required"] = list(GATE_IDS[:-1])
+    valid, failures = validate_status_schema(good_status(), schema)
+    assert not valid
+    assert "schema.properties.gates" in failures
+
+
+def test_unknown_gate_set_does_not_pass():
+    status = good_status()
+    status["gates"] = {**status["gates"], "G7": status["gates"].pop("G6")}
+    valid, failures = validate_status_schema(status, good_schema())
+    assert not valid
+    assert "status.gates" in failures
+
 if __name__ == "__main__":
     tests = [
         test_valid_independent_status_and_schema_contract_passes,
@@ -185,6 +206,8 @@ if __name__ == "__main__":
         test_public_http_endpoint_is_not_accepted_as_trusted_public_evidence,
         test_force_cannot_change_authorization,
         test_explicit_local_opt_in_is_only_the_degraded_fallback_path,
+        test_schema_must_require_all_seven_gate_keys,
+        test_unknown_gate_set_does_not_pass,
     ]
     for test_fn in tests:
         test_fn()
