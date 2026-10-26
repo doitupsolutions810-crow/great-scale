@@ -70,11 +70,24 @@ def validate_status_schema(status, schema, url="https://evidence.example.invalid
         failures.append("status.overall")
 
     gates = status.get("gates")
-    if (
-        not isinstance(gates, dict)
-        or set(gates) != set(GATE_IDS)
-        or any(gates.get(gate) != "READY" for gate in GATE_IDS)
-    ):
+    if isinstance(gates, dict):
+        valid_status_gates = (
+            set(gates) == set(GATE_IDS)
+            and all(gates.get(gate) == "READY" for gate in GATE_IDS)
+        )
+    elif isinstance(gates, list):
+        gate_entries = [item for item in gates if isinstance(item, dict)]
+        ids = [item.get("id") for item in gate_entries]
+        valid_status_gates = (
+            len(gates) == len(GATE_IDS)
+            and len(gate_entries) == len(GATE_IDS)
+            and set(ids) == set(GATE_IDS)
+            and len(set(ids)) == len(GATE_IDS)
+            and all(item.get("status") == "READY" for item in gate_entries)
+        )
+    else:
+        valid_status_gates = False
+    if not valid_status_gates:
         failures.append("status.gates")
 
     if schema.get("$schema") != SCHEMA_URI:
@@ -92,16 +105,55 @@ def validate_status_schema(status, schema, url="https://evidence.example.invalid
             failures.append("schema.properties.overall")
         gate_schema = properties.get("gates")
         gate_properties = gate_schema.get("properties") if isinstance(gate_schema, dict) else None
-        gate_required = gate_schema.get("required") if isinstance(gate_schema, dict) else None
-        if (
-            not isinstance(gate_properties, dict)
-            or gate_schema.get("type") != "object"
-            or set(gate_properties) != set(GATE_IDS)
-            or not isinstance(gate_required, list)
-            or set(gate_required) != set(GATE_IDS)
-            or len(gate_required) != len(GATE_IDS)
-            or any(not property_allows(gate_properties.get(gate), "READY") for gate in GATE_IDS)
-        ):
+        if gate_schema and gate_schema.get("type") == "object":
+            gate_required = gate_schema.get("required")
+            object_gate_schema_valid = (
+                isinstance(gate_properties, dict)
+                and set(gate_properties) == set(GATE_IDS)
+                and isinstance(gate_required, list)
+                and set(gate_required) == set(GATE_IDS)
+                and len(gate_required) == len(GATE_IDS)
+                and all(property_allows(gate_properties.get(gate), "READY") for gate in GATE_IDS)
+            )
+            array_gate_schema_valid = False
+        elif gate_schema and gate_schema.get("type") == "array":
+            item_schema = gate_schema.get("items")
+            item_properties = item_schema.get("properties") if isinstance(item_schema, dict) else None
+            item_required = item_schema.get("required") if isinstance(item_schema, dict) else None
+            id_enum = item_properties.get("id", {}).get("enum") if isinstance(item_properties, dict) and isinstance(item_properties.get("id"), dict) else None
+            rules = gate_schema.get("allOf")
+            exact_occurrence_rules = (
+                isinstance(rules, list)
+                and len(rules) == len(GATE_IDS)
+                and all(any(
+                    isinstance(rule, dict)
+                    and isinstance(rule.get("contains"), dict)
+                    and rule["contains"].get("properties", {}).get("id", {}).get("const") == gate
+                    and "id" in rule["contains"].get("required", [])
+                    and rule.get("minContains") == 1
+                    and rule.get("maxContains") == 1
+                    for rule in rules
+                ) for gate in GATE_IDS)
+            )
+            array_gate_schema_valid = (
+                gate_schema.get("minItems") == len(GATE_IDS)
+                and gate_schema.get("maxItems") == len(GATE_IDS)
+                and gate_schema.get("uniqueItems") is True
+                and isinstance(item_schema, dict)
+                and item_schema.get("type") == "object"
+                and isinstance(item_required, list)
+                and "id" in item_required and "status" in item_required
+                and isinstance(id_enum, list)
+                and len(id_enum) == len(GATE_IDS)
+                and set(id_enum) == set(GATE_IDS)
+                and property_allows(item_properties.get("status"), "READY")
+                and exact_occurrence_rules
+            )
+            object_gate_schema_valid = False
+        else:
+            object_gate_schema_valid = False
+            array_gate_schema_valid = False
+        if not object_gate_schema_valid and not array_gate_schema_valid:
             failures.append("schema.properties.gates")
 
     required = schema.get("required")
@@ -181,6 +233,36 @@ def test_explicit_local_opt_in_is_only_the_degraded_fallback_path():
 
 
 
+
+def array_status():
+    return {**EXPECTED, "overall": "READY", "gates": [{"id": gate, "status": "READY"} for gate in GATE_IDS]}
+
+
+def array_schema():
+    schema = good_schema()
+    schema["properties"]["gates"] = {
+        "type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": True,
+        "allOf": [
+            {"contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": gate}}}, "minContains": 1, "maxContains": 1}
+            for gate in GATE_IDS
+        ],
+        "items": {"type": "object", "required": ["id", "status"], "properties": {"id": {"enum": list(GATE_IDS)}, "status": allow("READY")}},
+    }
+    return schema
+
+
+def test_array_gate_schema_requires_one_of_each_g0_g6():
+    valid, failures = validate_status_schema(array_status(), array_schema())
+    assert valid, failures
+
+
+def test_array_schema_missing_exactly_once_gate_rule_fails_closed():
+    schema = array_schema()
+    schema["properties"]["gates"]["allOf"] = schema["properties"]["gates"]["allOf"][:-1]
+    valid, failures = validate_status_schema(array_status(), schema)
+    assert not valid
+    assert "schema.properties.gates" in failures
+
 def test_schema_must_require_all_seven_gate_keys():
     schema = good_schema()
     schema["properties"]["gates"]["required"] = list(GATE_IDS[:-1])
@@ -208,6 +290,8 @@ if __name__ == "__main__":
         test_explicit_local_opt_in_is_only_the_degraded_fallback_path,
         test_schema_must_require_all_seven_gate_keys,
         test_unknown_gate_set_does_not_pass,
+        test_array_gate_schema_requires_one_of_each_g0_g6,
+        test_array_schema_missing_exactly_once_gate_rule_fails_closed,
     ]
     for test_fn in tests:
         test_fn()
