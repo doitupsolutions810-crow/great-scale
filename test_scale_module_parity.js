@@ -61,6 +61,21 @@ const cjs = require('./public/scale.cjs');
     assert.deepEqual(esm.stateAt(t), cjs.stateAt(t), 'stateAt differs at t=' + t);
   }
 
+  // Canonical phase must agree cross-language for negative time and remain in [0, 1).
+  for (const t of [-12.5, -3.75, -1, -0.25, 0, 0.25, 1, 12.5]) {
+    const state = esm.stateAt(t);
+    assert.ok(state.phase >= 0 && state.phase < 1,
+      'phase must be canonical in [0, 1) at t=' + t);
+    assert.deepEqual(state, cjs.stateAt(t), 'negative-time stateAt differs at t=' + t);
+  }
+  for (const t of [-5.75, -1.25, -0.25, 0, 0.375, 1.5]) {
+    const period = 1 / 0.85;
+    const a = esm.stateAt(t);
+    const b = esm.stateAt(t + period);
+    assert.ok(Math.abs(a.phase - b.phase) < 1e-12,
+      'phase should repeat after one period at t=' + t);
+  }
+
   const esmEngine = new esm.DescentEngine({ start: 1 });
   const cjsEngine = new cjs.DescentEngine({ start: 1 });
   assert.deepEqual(esmEngine.snapshot(), cjsEngine.snapshot(),
