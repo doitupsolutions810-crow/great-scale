@@ -48,6 +48,90 @@ class LossEnvelopeTests(unittest.TestCase):
         self.assertAlmostEqual(result["bound"], 0.9881707006336746, places=12)
         self.assertAlmostEqual(result["witness"][1]["probability"], 0.19801980198019808, places=12)
 
+
+    def test_negative_log_boundary_asymptotic_and_first_correction(self):
+        # Fixed p=1/2, v=0.05. The boundary atom's probability tends to 1/6;
+        # the interior atom tends to c=0.4 and contributes (5/6) ln(5/3).
+        epsilons = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+        interior_constant = (5.0 / 6.0) * math.log(5.0 / 3.0)
+        previous_gap = None
+
+        for requested_epsilon in epsilons:
+            result = fixed_moment_envelope(
+                0.5, 0.05, requested_epsilon, loss=NEGATIVE_LOG, scale=1.0
+            )
+            # The representable support endpoint can round 1-epsilon; use the
+            # effective margin 1-b to compare against the implementation's log1p.
+            b = result["support"][1]
+            epsilon = 1.0 - b
+            c = result["witness"][0]["point"]
+            alpha = result["witness"][1]["probability"]
+            self.assertAlmostEqual(c, 0.5 - 0.05 / (b - 0.5), places=12)
+            self.assertAlmostEqual(
+                alpha, 0.05 / ((b - 0.5) ** 2 + 0.05), places=12
+            )
+
+            log_term = -math.log1p(-b)
+            leading_plus_constant = (1.0 / 6.0) * log_term + interior_constant
+            remainder = result["bound"] - leading_plus_constant
+            first_correction = (
+                (5.0 / 9.0) * epsilon * log_term
+                - (5.0 / 18.0 + (5.0 / 9.0) * math.log(5.0 / 3.0)) * epsilon
+            )
+            # The next Taylor remainder is O(epsilon**2 * log(1/epsilon)).
+            self.assertLessEqual(
+                abs(remainder - first_correction),
+                1.3 * epsilon * epsilon * log_term + 1e-14,
+            )
+            gap = abs(remainder)
+            if previous_gap is not None:
+                self.assertLess(gap, previous_gap)
+            previous_gap = gap
+
+        self.assertAlmostEqual(alpha, 1.0 / 6.0, delta=1e-7)
+        self.assertAlmostEqual(c, 0.4, delta=3e-8)
+
+
+    def test_power_barrier_boundary_asymptotic_coefficient_is_boundary_mass(self):
+        # For positive variance, the singular-boundary atom controls the
+        # leading epsilon**(-r) divergence. Zero variance has no boundary atom.
+        mean = 0.5
+        variance = 0.05
+        scale = 1.7
+        power = 2.0
+        alpha0 = variance / ((1.0 - mean) ** 2 + variance)
+        normalized_gaps = []
+        alpha_gaps = []
+
+        for requested_epsilon in (1e-2, 1e-3, 1e-4, 1e-5, 1e-6):
+            result = fixed_moment_envelope(
+                mean, variance, requested_epsilon,
+                loss=POWER_BARRIER, scale=scale, power=power,
+            )
+            b = result["support"][1]
+            epsilon = 1.0 - b
+            alpha = result["witness"][1]["probability"]
+            normalized = result["bound"] / (scale * epsilon ** (-power))
+            normalized_gaps.append(abs(normalized - alpha0))
+            alpha_gaps.append(abs(alpha - alpha0))
+
+        self.assertTrue(all(a > b for a, b in zip(normalized_gaps, normalized_gaps[1:])))
+        self.assertTrue(all(a > b for a, b in zip(alpha_gaps, alpha_gaps[1:])))
+        self.assertLess(normalized_gaps[-1], 1e-6)
+        self.assertLess(alpha_gaps[-1], 1e-6)
+
+        # v=0 makes the extremal law a point mass at mean; there is no
+        # boundary atom and the expected loss remains finite as epsilon shrinks.
+        degenerate = fixed_moment_envelope(
+            mean, 0.0, 1e-6, loss=POWER_BARRIER, scale=scale, power=power,
+        )
+        self.assertEqual(degenerate["witness"][1]["probability"], 0.0)
+        self.assertEqual(
+            degenerate["bound"],
+            loss_value(POWER_BARRIER, mean, scale=scale, power=power),
+        )
+        self.assertTrue(math.isfinite(degenerate["bound"]))
+
     def test_hermite_quadratic_majorizes_each_supported_loss(self):
         b = 0.95
         for loss, power in ((NEGATIVE_LOG, 1.0), (POWER_BARRIER, 1.3)):

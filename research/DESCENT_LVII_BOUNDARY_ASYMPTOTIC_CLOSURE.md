@@ -1,0 +1,213 @@
+# Descent LVII — Boundary asymptotic closure and witness accounting
+
+**Status:** analytic consequence of the Descent LV/LVI fixed-moment envelope, with regression coverage. This is mathematics and software verification, not an empirical physical claim.
+
+## Finding
+
+For the supported negative-log loss
+\[
+f(P)=-a\ln(1-P),\qquad a>0,
+\]
+let \(P\in[0,b]\), \(b=1-\varepsilon\), and hold its mean \(p\) and variance \(v\) fixed as the boundary margin \(\varepsilon\downarrow0\). For each feasible pair, LV/LVI's sharp two-point extremizer is
+\[
+c_\varepsilon=p-\frac{v}{1-p-\varepsilon},\qquad
+\alpha_\varepsilon=\frac{v}{(1-p-\varepsilon)^2+v},
+\]
+with probability \(\alpha_\varepsilon\) at the support boundary \(b=1-\varepsilon\), and probability \(1-\alpha_\varepsilon\) at \(c_\varepsilon\). Thus
+\[
+U_*(\varepsilon)
+=(1-\alpha_\varepsilon)\big[-a\ln(1-c_\varepsilon)\big]
++\alpha_\varepsilon a\ln\frac1\varepsilon.
+\]
+
+Assume \(0<p<1\) and \(0\le v<p(1-p)\), so the fixed moment pair remains feasible for all sufficiently small positive \(\varepsilon\). Put
+\[
+c_0=p-\frac{v}{1-p},\qquad
+\alpha_0=\frac{v}{(1-p)^2+v}.
+\]
+Then \(c_\varepsilon=c_0+O(\varepsilon)\) and \(\alpha_\varepsilon=\alpha_0+O(\varepsilon)\), giving the boundary asymptotic
+\[
+\boxed{
+U_*(\varepsilon)
+=a\alpha_0\ln\frac1\varepsilon
++a(1-\alpha_0)\big[-\ln(1-c_0)\big]
++O\!\left(\varepsilon\ln\frac1\varepsilon\right).
+}
+\]
+
+**Interpretation:** the coefficient of the logarithmic divergence is the limiting probability mass of the extremizer placed on the singular boundary. The finite constant is the loss contribution of the interior atom. A single reported risk number hides this decomposition; the witness reveals it.
+
+
+## General boundary-singularity closure for LVI's power barrier
+
+The leading-coefficient result is not specific to the logarithm. The same witness parameters satisfy
+\[
+\alpha_\varepsilon=\alpha_0+O(\varepsilon),\qquad c_\varepsilon=c_0+O(\varepsilon).
+\]
+For any supported loss whose value and derivative remain finite near \(c_0\), this gives
+\[
+U_f^*(\varepsilon)
+=\alpha_0 f(1-\varepsilon)+(1-\alpha_0)f(c_0)
++O\!\left(\varepsilon |f(1-\varepsilon)|+\varepsilon\right).
+\]
+Consequently, for LVI's power-barrier family
+\[
+f_{\rm barrier}(P)=a\big[(1-P)^{-r}-1\big],\qquad a>0,\ r>0,
+\]
+and \(v>0\) (so \(\alpha_0>0\)),
+\[
+U_{\rm barrier}^*(\varepsilon)
+=a\alpha_0\varepsilon^{-r}+O(\varepsilon^{1-r}+1),
+\qquad
+\frac{U_{\rm barrier}^*(\varepsilon)}{a\varepsilon^{-r}}\longrightarrow\alpha_0.
+\]
+Unlike the logarithmic case, for \(r\geq1\) the subleading correction can itself diverge; it is not generally correct to declare the finite interior contribution the entire constant remainder after only subtracting the leading power.
+
+The degenerate case \(v=0\) is important: the witness is the point mass at \(p\), \(\alpha_\varepsilon=0\) exactly, and \(U_f^*(\varepsilon)=f(p)\) stays finite as \(\varepsilon\downarrow0\). Thus a singular loss does not automatically produce a divergent envelope; the extremal witness must place nonzero probability at the singular boundary.
+
+## Explicit expansion for the repository's regression case
+
+For \(p=\frac12\), \(v=0.05\), \(a=1\):
+\[
+c_0=0.4,\qquad \alpha_0=\frac16,
+\]
+so
+\[
+U_*(\varepsilon)
+=\frac16\ln\frac1\varepsilon
++\frac56\ln\frac53
++O\!\left(\varepsilon\ln\frac1\varepsilon\right).
+\]
+Expanding one order further gives
+\[
+\boxed{
+\begin{aligned}
+U_*(\varepsilon)
+={}&\frac16\ln\frac1\varepsilon
++\frac56\ln\frac53\\
+&+\frac59\varepsilon\ln\frac1\varepsilon
+-\left(\frac5{18}+\frac59\ln\frac53\right)\varepsilon\\
+&+O\!\left(\varepsilon^2\ln\frac1\varepsilon\right).
+\end{aligned}
+}
+\]
+The coefficients follow from
+\[
+\alpha_\varepsilon=\frac16+\frac59\varepsilon+O(\varepsilon^2),\qquad
+c_\varepsilon=\frac25-\frac15\varepsilon+O(\varepsilon^2).
+\]
+This resolves the apparent blow-up at \(x=1\): the expected loss does diverge as the support approaches the singularity, but its leading coefficient and finite remainder are derivable from the extremal witness. One must not evaluate the loss at \(P=1\); the support margin is strictly positive throughout the limit.
+
+## What this adds to LV and LVI
+
+- **LV:** a sharp fixed-moment Hermite-majorant bound does not prove that an uncertain-moment robust maximum is at the upper-right corner. The maximum must be certified over the full feasible set; otherwise report the conservative chord fallback.
+- **LVI:** for the negative-log and power-barrier families, the positive third derivative justifies the quadratic Hermite majorant and the fixed-moment two-point witness. The global uncertain-moment maximum remains separately uncertified unless its optimization is proved.
+- **LVII:** the boundary margin is not just an input-validity switch. It controls the divergence rate of the sharp loss envelope, and that rate equals the boundary atom's limiting probability. The constant term retains the interior atom's contribution.
+
+The first two results are about the extremal value and how it is certified; this descent makes the singular-limit behavior of that value explicit and testable.
+
+## Great Scale mapping
+
+The risk envelope is an additional typed channel; it does not replace Great Scale's existing state law:
+\[
+S(h)=h(1-h),\qquad
+\Psi=\phi^{-2}+S,\qquad
+\Psi\ge\phi^{-2}\approx0.381966.
+\]
+A risk certificate should travel as a tuple, not a bare scalar:
+\[
+\mathcal C=(U,\mathcal F,\varepsilon,W,\mathsf{method},\mathsf{status}),
+\]
+where \(U\) is the reported bound, \(\mathcal F\) is the feasible moment set, \(\varepsilon\) is the support margin, \(W\) is the two-point witness, and method/status distinguish a proved fixed-moment extremum, a certified analytic fallback, and an uncertified robust-global maximum.
+
+This is the same projection discipline being integrated into CycleKernel: its score \(N=\sqrt{s n}\) is non-injective, so the raw symbolic/neural channels, source metadata, decision margins, and state witness must remain alongside the scalar. The linked CycleKernel [GS–LVI evidence PR](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9) carries that proposal but remains open/draft; its source and CI status must not be represented as merged or production-verified.
+
+
+## Cross-repository descent: missingness is part of the observation state
+
+A second non-injective projection appears in CycleKernel's evidence pipeline. Python truthiness mapped both an absent mapping and an explicitly empty mapping to the same default. Great Scale's typed-certificate rule implies those inputs must remain distinguishable: input presence, effective values, and source labels belong in the witness.
+
+The integrated CycleKernel branch now distinguishes:
+\[
+\operatorname{Absent}\mapsto\text{documented baseline},\qquad
+\operatorname{Present}(\{\})\mapsto\text{explicit empty input}.
+\]
+For the current symbolic formula, the baseline score is \(0.4325\), while the explicit empty-resource score is \(0.275\). The resulting state fingerprints differ, and the evidence witness is checked against the reported fingerprint. This is not a change to Great Scale's heat law; it is a shared rule for preserving conditions that a scalar otherwise discards.
+
+Field-level presence is now preserved too: an omitted field and an explicitly supplied zero remain distinct in the canonical witness, and validated belief.deception is recorded even though the existing score does not use it. See [CycleKernel Descent C — Typed missingness](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_C_TYPED_MISSINGNESS.md), [Descent CI — Field-presence closure](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CI_WITNESS_COMPLETENESS.md), and the open [GS–LVI integration PR #9](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9). These source changes are under review and are not yet merge- or production-verified.
+
+## Regression criteria
+
+The new test in test_loss_envelope.py:
+1. reproduces the limiting boundary mass \(1/6\) and interior point \(0.4\);
+2. subtracts the leading logarithm and finite constant and verifies the remainder shrinks as the support margin decreases;
+3. verifies the first-order correction and its \(O(\varepsilon^2\ln(1/\varepsilon))\) remainder over a deterministic epsilon sweep;
+4. verifies that the power-barrier envelope normalized by \(a\varepsilon^{-r}\) converges to the extremal boundary mass, while the zero-variance case remains finite;
+5. leaves the existing fixed-moment and chord-fallback tests intact.
+
+Run the branch's existing checks:
+~~~bash
+npm run build
+npm test
+python3 test_descent.py
+python3 test_loss_envelope.py
+npm run all
+~~~
+
+The test implementation is added to the existing LVI suite. Hosted CI had previously reported failure before runner allocation, with empty step lists; that is not a test pass or a test assertion failure. Until an Actions job executes real steps on this head, repository-wide runtime verification remains pending.
+
+## Scientific boundary
+
+The Hermite remainder and the asymptotic expansion are mathematical claims about the specified loss and support/moment assumptions. They do not establish empirical calibration of a risk model, prove that a real-world distribution obeys the assumed moments, or authorize an operational decision. The support margin and proof status must be visible at the point where the scalar is consumed.
+
+
+## Cross-repository continuation: explicit-null closure (CycleKernel Descent CII)
+
+The same typed-observation principle catches a further ambiguity below the empty-mapping fix. In Python, `metrics.get(k)` maps both an omitted key and a supplied `null`/`None` to the same value. The CycleKernel backend and both maintained bridge fusion copies now treat omission as absent/defaulted, preserve supplied mappings (including empty mappings), and reject a supplied null/non-mapping value. This does not alter the Great Scale heat/cone law or CycleKernel's fitness formula; it makes malformed input fail closed. See [Descent CII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CII_EXPLICIT_NULL_CLOSURE.md) and [GS–LVI PR #9](https://github.com/doitupsolutions810-crow/CycleKernal/pull/9). As before, source integration and test additions are not equivalent to a passing hosted build.
+
+
+## Cross-repository continuation: evidence/identity concordance (CycleKernel Descent CIII)
+
+The next audit found that the CycleKernel scheduler scored the current civilization belief/resource state but called the evidence builder without that context, so the readable receipt could show fallback values and false missing-field metadata while the fingerprint witness used live values. The scheduler also omitted the canonical witness field required to recompute the reported digest. A shared `build_fusion_receipt` constructor now creates the evidence, witness, and fingerprint from one context and is used by both `apply_fusion` and the scheduler. Regression assertions compare evidence values and presence flags against the actual state. See [Descent CIII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CIII_EVIDENCE_IDENTITY_CONCORDANCE.md). The Great Scale risk envelope and heat/cone law remain unchanged; source additions are not claimed to have passed hosted CI while Actions jobs fail before runner allocation.
+
+
+## Cross-repository continuation: promotion context closure (CycleKernel Descent CIV)
+
+The next descent found a policy-hysteresis metadata gap in CycleKernel: an already-promoted civilization can correctly `hold` at a score between 0.28 and 0.62, but the previous result still reported 0.62 as its threshold even though 0.28 is the active demotion boundary. The fusion-state fingerprint also did not identify the prior-state bit that selects the policy branch. The integration now reports the active threshold and produces a separate `pd-` decision fingerprint over the fusion ID, score, prior promotion state, action, and threshold; the original `fs-` fusion fingerprint and fitness policy remain distinct and unchanged. See [Descent CIV](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CIV_PROMOTION_CONTEXT_CLOSURE.md). This is an auditability result, not an empirical or physical-law claim; hosted tests/builds remain unverified until runners execute steps.
+
+
+## Cross-repository continuation: execution-evidence closure (CycleKernel Descent CV)
+
+The connected `swarm-vm-runner` repository documents that hosted Ubuntu jobs fail with `runner_id=0`, while its success criteria allow the runner to be not yet registered as a degraded state. The latest CycleKernal and Great Scale Actions runs show zero assigned runners and empty step lists, so neither code tests nor Docker builds have actually run. This is an execution-evidence gap, not an observed assertion failure. The typed verification certificate must include source SHA, run identity, runner assignment, executed steps, and conclusion. Because the repositories are public and the candidate self-hosted runner mounts the Docker socket, changing `runs-on` without a trusted event/runner policy is unsafe and may merely queue jobs. See [Descent CV](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CV_EXECUTION_EVIDENCE_CLOSURE.md). The heat/cone law and LVII risk-envelope mathematics remain unchanged.
+
+
+## Cross-repository continuation: typed numerical admission (CycleKernel Descent CVI)
+
+A further code audit found that Python `float(...)` converted JSON booleans to 0/1 and numeric strings to floats, allowing schema-invalid data to affect fusion scores. The backend and both bridge implementations now reject booleans and numeric strings before scoring for belief/resource values and the `Core`/`L5`/`L2`/`stress_residual` fields; tests cover malformed-type rejection and copy parity. The legacy score and thresholds remain unchanged. See [Descent CVI](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVI_TYPED_NUMERIC_ADMISSION.md). As in Descent CV, hosted test/build execution is still blocked before step execution; this is not claimed as a passed run.
+
+
+### Descent CVI follow-up: relay ingress
+
+The strict numerical admission invariant is now enforced before normalization in both CycleKernel bridge parsers as well as at the fusion layer. Without the ingress guard, `true` and `"0.5"` could be converted to floats before the later validator saw them. Cross-copy regression tests now check primary and master relay parser parity, including the optional residual field. See [the typed numeric admission note](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVI_TYPED_NUMERIC_ADMISSION.md).
+
+
+## System 30 — validation frontier (CycleKernel Descent CVII)
+
+The next descent formalizes why the relay parser correction must precede float coercion: if a normalization map is non-injective, a downstream validator cannot distinguish raw inputs that map to the same normalized value. CycleKernel's primary and master relay parsers now type-check raw numeric values before normalization, and regression tests cover parser parity. This preserves the distinctions required by downstream evidence and identity witnesses; it does not change the LVII analytic bound or imply a new physical law. See [Descent CVII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVII_VALIDATION_FRONTIER.md).
+
+
+## Cross-repository continuation — Descent CVIII / System 31: alias concordance
+
+The CycleKernel ingress audit found a boundary beneath typed numeric admission: JSON text with repeated identical object keys can be decoded with last-key-wins semantics, and alias normalization can select L5 while silently discarding a conflicting entropy value. Validating only the selected value therefore does not validate the whole observation.
+
+The primary and master relay parsers now reject repeated JSON keys before dictionary construction and validate all present aliases for Core/U2/L2/L5. Matching finite in-domain aliases remain compatible; invalid or contradictory aliases fail closed. This strengthens observation integrity, but neither canonicalization nor a content hash authenticates the relay publisher. See [CycleKernel Descent CVIII](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIII_ALIAS_CONCORDANCE.md). Great Scale's heat/cone law remains S(h)=h(1-h), Ψ=φ⁻²+S(h)≥φ⁻²; no new physical law is asserted.
+
+
+## Cross-repository continuation — Descent CVIX / System 32: relay envelope closure
+
+After duplicate-key and alias concordance, the next audit found that payload selection itself was non-injective: selecting payload.metrics when present silently ignored recognized metric fields at the outer level. The CycleKernel bridge now accepts either a direct metrics object or a wrapped metrics object, but rejects recognized outer shadow fields in the wrapped form while allowing ordinary metadata. Regression tests cover outer Core/coupling, Great Scale residual/schema, symbolic fields, and both parser copies. See [CycleKernel Descent CVIX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIX_RELAY_ENVELOPE_CLOSURE.md). The Great Scale heat/cone law is unchanged; no physical-law claim is made.
+
+
+## Cross-repository continuation — Descent CX / System 33: strict token boundary
+
+The relay audit descended from metric values to envelope choice and then to lexical JSON admission. Python's default decoder accepts `NaN`, `Infinity`, and `-Infinity` as extensions; field validators reject these when used as metrics, but unused nested metadata could escape those checks. Both bridge parsers now reject such tokens during decoding using `parse_constant`, while retaining duplicate-key rejection. See [CycleKernel Descent CX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CX_STRICT_JSON_TOKENS.md). This is a parser contract, not a physical law or relay authentication.
