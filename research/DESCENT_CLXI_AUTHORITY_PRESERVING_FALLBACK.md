@@ -6,7 +6,7 @@ Inspected `living-intermediate-control-plane/integrate.mjs`, `lib/evidence-conso
 
 The original integration accepted local fallback implicitly when `authority === 'local'` and `status !== 'ok'`. That clause has now been removed from `integrate.mjs`. The policy is isolated in `lib/evidence-authorization.mjs` as `acceptsLocalEvidence`, and the procurement decision consumes that helper.
 
-The helper accepts local evidence only when `ACCEPT_LOCAL_EVIDENCE=1`, `ACCEPT_LOCAL_EVIDENCE=true`, or `config.acceptLocalEvidenceByDefault === true`. The existing `npm run procure` command explicitly sets `ACCEPT_LOCAL_EVIDENCE=1`, so that command remains an explicit local-evidence mode. Plain invocations do not implicitly authorize local fallback.
+The helper accepts local evidence only when `ACCEPT_LOCAL_EVIDENCE=1`, `ACCEPT_LOCAL_EVIDENCE=true`, or `config.acceptLocalEvidenceByDefault === true`. The default `npm run procure` and `npm run procure:gated` commands have now been changed to **not** inject `ACCEPT_LOCAL_EVIDENCE`. Explicit fallback modes are available as `npm run procure:local` and `npm run procure:gated:local`. The README operator loop documents the distinction, and the control-plane self-test checks the script definitions.
 
 Commits on the control-plane main branch:
 - helper module: `31418d7a711f0b8c4b7bd3b8449551fd42f0be3d`
@@ -44,7 +44,7 @@ otRightarrow	ext{EvidenceAuthorized}
 
 `test_great_scale_clxi_authority_preserving_fallback.py` models the corrected helper. It covers degraded local statuses, explicit opt-in, public success, and unknown/mismatched authority. The test is included in Great Scale's aggregate suite.
 
-The control-plane self-test now directly exercises the actual JavaScript helper. The full control-plane suite and a production deployment verification remain outstanding.
+The control-plane self-test now directly exercises the actual JavaScript helper and asserts that the default procurement scripts do not enable local fallback. The full control-plane suite and a production deployment verification remain outstanding.
 
 ## Operational note
 
@@ -52,4 +52,4 @@ The explicit local mode is still available by design. Operators should treat it 
 
 ## Verification limits
 
-The source edits and self-test assertions are committed to the control-plane main branch. The complete cross-repository suites have not been run in this environment. No claim is made that hosted CI passed or that deployed behavior has changed.
+The source edits, explicit-mode script split, README clarification, and self-test assertions are committed to the control-plane main branch. The complete cross-repository suites have not been run in this environment. No claim is made that hosted CI passed or that deployed behavior has changed.
