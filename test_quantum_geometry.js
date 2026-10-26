@@ -85,5 +85,44 @@ test('metric conditioning diagnostics are invariant under common positive scalin
  assert.strictEqual(a.metricConditionStatus,b.metricConditionStatus);
 });
 
+test('raw determinant outputs explicitly classify overflow and underflow', () => {
+ const tiny=quantumGeometryBridge({g11:1e-200,g12:0,g22:1e-200,curvature:0});
+ assert.strictEqual(tiny.detG,null);
+ assert.strictEqual(tiny.detQ,null);
+ assert.strictEqual(tiny.detGStatus,'underflow');
+ assert.strictEqual(tiny.detQStatus,'underflow');
+ assert.ok(tiny.metricEigenvalues.every(Number.isFinite));
+ const huge=quantumGeometryBridge({g11:1e308,g12:0,g22:1e308,curvature:0});
+ assert.strictEqual(huge.detG,null);
+ assert.strictEqual(huge.detQ,null);
+ assert.strictEqual(huge.detGStatus,'overflow');
+ assert.strictEqual(huge.detQStatus,'overflow');
+ assert.ok(huge.metricEigenvalues.every(Number.isFinite));
+ assert.strictEqual(quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:0}).detGStatus,'finite');
+});
+
+test('subnormal positive eigenvalue is preserved and marked unresolved', () => {
+ const r=quantumGeometryBridge({g11:Number.MIN_VALUE,g12:0,g22:1,curvature:0});
+ assert.strictEqual(r.detG,Number.MIN_VALUE);
+ assert.strictEqual(r.detGStatus,'finite');
+ assert.strictEqual(r.metricEigenvalues[0],Number.MIN_VALUE);
+ assert.strictEqual(r.metricConditionStatus,'numerically-unresolved');
+ assert.ok(!Number.isNaN(r.metricConditionNumber));
+});
+
+test('near-degenerate determinant agrees with analytic binary64-input identity', () => {
+ for (const epsilon of [2**-20,2**-26,2**-40,2**-52,2**-53]) {
+  const b=1-epsilon;
+  const r=quantumGeometryBridge({g11:1,g12:b,g22:1,curvature:0});
+  const expected=(1-b)*(1+b);
+  assert.ok(expected>0, 'reference determinant must remain positive');
+  assert.ok(Math.abs(r.detG-expected) <= Math.max(Number.MIN_VALUE,Math.abs(expected)*1e-12),
+    'determinant mismatch at epsilon='+epsilon+': '+r.detG+' vs '+expected);
+  assert.ok(Math.abs(r.metricEigenvalues[0] - expected/r.metricEigenvalues[1]) <= Math.max(Number.MIN_VALUE,Math.abs(expected)*1e-12),
+    'small eigenvalue mismatch at epsilon='+epsilon);
+  assert.strictEqual(r.detGStatus,'finite');
+ }
+});
+
 console.log('\nquantum geometry bridge tests: '+passed+' passed, '+failed+' failed');
 process.exit(failed?1:0);
