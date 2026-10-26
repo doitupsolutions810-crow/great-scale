@@ -1,49 +1,39 @@
 # Descent CLXI — Availability Fallback Must Not Imply Authorization
 
-## Cross-repository evidence
+## Cross-repository source change
 
-Inspected `living-intermediate-control-plane/lib/evidence-console.mjs` and `integrate.mjs` on 2026-10-26.
+Inspected `living-intermediate-control-plane/integrate.mjs`, `lib/evidence-console.mjs`, and `test/self-test.mjs` on 2026-10-26.
 
-The probe returns `authority: 'local'` for missing, 404, non-OK, or unreachable public evidence when `acceptLocal: true`. The integration caller invokes `probeEvidenceConsole({ acceptLocal: true })`, then computes:
+The original integration accepted local fallback implicitly when `authority === 'local'` and `status !== 'ok'`. That clause has now been removed from `integrate.mjs`. The policy is isolated in `lib/evidence-authorization.mjs` as `acceptsLocalEvidence`, and the procurement decision consumes that helper.
 
-```js
-const localEvidenceAuthority =
-  process.env.ACCEPT_LOCAL_EVIDENCE === '1' ||
-  process.env.ACCEPT_LOCAL_EVIDENCE === 'true' ||
-  config.acceptLocalEvidenceByDefault === true ||
-  (evidenceConsole.authority === 'local' && evidenceConsole.status !== 'ok');
-```
+The helper accepts local evidence only when `ACCEPT_LOCAL_EVIDENCE=1`, `ACCEPT_LOCAL_EVIDENCE=true`, or `config.acceptLocalEvidenceByDefault === true`. The existing `npm run procure` command explicitly sets `ACCEPT_LOCAL_EVIDENCE=1`, so that command remains an explicit local-evidence mode. Plain invocations do not implicitly authorize local fallback.
 
-The final clause independently accepts degraded local authority. Consequently, a missing or unreachable public evidence console can make `localEvidenceAuthority` true even when neither explicit environment opt-in nor configuration opt-in is set. This is not merely a theoretical state: the repository README says the URL may be unset and local authority is used, and its self-test intentionally verifies local authority on unconfigured, 404, and unreachable responses.
+Commits on the control-plane main branch:
+- helper module: `31418d7a711f0b8c4b7bd3b8449551fd42f0be3d`
+- integration refactor: `aaa2a88a15d26c4cc64c46857139d89358b9a5b1`
+- self-test coverage: `451eaba2d6c3dc835a861cf675e9d3e861780b0e`
 
 ## Profound finding
 
-**Availability fallback is being promoted into authorization.** The code preserves the label `authority: 'local'` in the result, but the procurement decision predicate treats that local result as sufficient. A system can therefore remain operational while silently weakening the evidence requirement.
+Availability fallback is not merely a monitoring detail: it sits on the path to procurement authorization. The former code preserved `authority: 'local'` as metadata but then treated a degraded local result as sufficient. The source change removes that implicit widening of authority.
 
-This is a policy mismatch, not proof of exploitation or of an external attacker. It may be intentional for a lab or availability-first mode, but then the mode should be explicitly configured and unmistakably reported.
+This establishes a policy correction in source, not proof that a production deployment has already adopted the new commits.
 
 ## Formal model
 
-Let (A) be availability, (U) be explicit local-evidence opt-in, (P) be a successful public evidence check, and (R) be procurement readiness.
-
-The observed predicate includes an implicit fallback term:
+Let (P) mean a successful public response, (U_e) explicit environment opt-in, and (U_c) explicit configuration opt-in.
 
 [
-U = U_{env} lor U_{config} lor
-(	ext{authority}=	ext{local}land	ext{status}
-e	ext{ok})
+operatorname{EvidenceAccepted}=Plor U_elor U_c
 ]
 
-A fail-closed authorization policy separates the two:
+with:
 
 [
-operatorname{EvidenceAccepted}
-= P lor U
+P=(	ext{status}=	ext{ok})land(	ext{authority}=	ext{public})
 ]
 
-where (P=(	ext{status}=	ext{ok}land	ext{authority}=	ext{public})), and local evidence is accepted only when (U_{env}lor U_{config}) is explicitly true.
-
-Thus:
+Therefore:
 
 [
 	ext{FallbackAvailable}
@@ -52,14 +42,14 @@ otRightarrow	ext{EvidenceAuthorized}
 
 ## Regression
 
-`test_great_scale_clxi_authority_preserving_fallback.py` reproduces the current predicate's counterexample and tests the corrected decision rule across 404, unreachable, unconfigured, invalid, public success, and unknown-authority cases. It is included in Great Scale's aggregate test manifest.
+`test_great_scale_clxi_authority_preserving_fallback.py` models the corrected helper. It covers degraded local statuses, explicit opt-in, public success, and unknown/mismatched authority. The test is included in Great Scale's aggregate suite.
 
-The test is a model regression; it does not import or execute the other repository's JavaScript. Source-level integration should follow by extracting a pure authorization helper in the control-plane repo and testing the real helper.
+The control-plane self-test now directly exercises the actual JavaScript helper. The full control-plane suite and a production deployment verification remain outstanding.
 
-## Recommended source fix
+## Operational note
 
-In `living-intermediate-control-plane/integrate.mjs`, remove the implicit final clause from `localEvidenceAuthority`. Keep local fallback available for diagnostics and readiness reporting, but require `ACCEPT_LOCAL_EVIDENCE=1` or `config.acceptLocalEvidenceByDefault === true` before it authorizes procurement. Add explicit output such as `evidenceMode: 'public' | 'local-opt-in' | 'local-not-authorized'` and ensure public-console failure cannot be mistaken for public verification.
+The explicit local mode is still available by design. Operators should treat it as a weaker, deliberate mode and ensure decision outputs make that mode visible. If local evidence is not acceptable for a particular procurement action, do not set the opt-in and require public evidence.
 
-## Limits
+## Verification limits
 
-This finding is grounded in inspected source and self-test code. The remote domain's current HTTP behavior was not freshly probed in this step. No production behavior was changed in the control-plane repository, and no full cross-repository suite was run.
+The source edits and self-test assertions are committed to the control-plane main branch. The complete cross-repository suites have not been run in this environment. No claim is made that hosted CI passed or that deployed behavior has changed.
