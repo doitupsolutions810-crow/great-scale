@@ -17,10 +17,10 @@ These defects connect to CLXI (fallback cannot silently gain authority) and CLXI
 Let:
 
 - (H): the configured public endpoint uses HTTPS.
-- (E): each response remains bound to its exact requested HTTPS URL; redirects are refused.
+- (E): the response remains bound to the exact requested HTTPS URL; redirects are refused.
 - (S): the live status document contains every required v5.3.1 trust field.
 - (J): the JSON Schema independently requires and constrains those fields.
-- (G): the exact set (\{G0,G1,G2,G3,G4,G5,G6\}) appears once, and every status is READY.
+- (G): the exact set `G0`–`G6` appears once, and every status is READY.
 - (R): core readiness is satisfied.
 - (D): a degraded local-fallback state has actually been observed.
 - (L): local-evidence opt-in is explicit.
@@ -28,29 +28,23 @@ Let:
 
 The public contract predicate is:
 
-[
-P = H \land E \land S \land J \land G
-]
+```text
+P = H ∧ E ∧ S ∧ J ∧ G
+```
 
 The authorization rule is:
 
-[
-A = R \land \big(P \lor (D \land L)\big)
-]
+```text
+A = R ∧ (P ∨ (D ∧ L))
+```
 
-Force has no effect on authorization:
+Force must not change authorization when every other input is fixed:
 
-[
-A(F=0)=A(F=1)
-]
+```text
+A(F=0) = A(F=1)
+```
 
-when every other input is fixed. The source-binding invariant is:
-
-[
-S_k \text{ is proved by the status document; } J_k \text{ by its schema}
-]
-
-A claim in one document cannot fill a missing claim or weakened constraint in the other.
+Source binding is another independent condition: `S_k` must be proven by the live status document, while `J_k` must be proven by the schema. A claim in one document cannot fill a missing claim or weakened constraint in the other.
 
 For array-form gates, the schema must constrain each item’s `id` to G0–G6 and `status` to READY, require exactly seven items, and include a `contains` constraint with `minContains: 1` and `maxContains: 1` for each ID. For object-form gate maps, all seven keys must be required and each value must be constrained to READY.
 
