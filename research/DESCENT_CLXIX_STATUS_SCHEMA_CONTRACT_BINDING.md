@@ -60,7 +60,7 @@ A claim in one document cannot fill a missing claim or weakened constraint in th
 
 ### Verification
 
-The CLXIX Python model now covers ten cases: valid paired documents, split-source claims, weakened schema, generic HTTP-200 bodies, a held gate, non-HTTPS public endpoints, force invariance, explicit local fallback, missing gate requirements in the schema, and an unknown/duplicate gate set. The exact G0–G6 key set and schema-required gate list are independently validated. It is a specification-level regression model, not a substitute for executing the JavaScript production implementation.
+The CLXIX Python model now covers twelve cases: valid paired documents, split-source claims, weakened schema, generic HTTP-200 bodies, a held gate, non-HTTPS public endpoints, force invariance, explicit local fallback, missing gate requirements in the schema, an unknown/duplicate gate set, a valid array-form gate schema with exactly-once constraints, and a weakened array schema missing one gate-specific constraint. Object-form schemas must require all G0–G6 keys; array-form schemas must require seven items and a per-ID `contains` rule with `minContains: 1` and `maxContains: 1`. It is a specification-level regression model, not a substitute for executing the JavaScript production implementation.
 
 The focused isolated Node harness for the proposed control-plane helper/probe passed **15/15 selected tests**. A separately reconstructed focused harness for the CONTROL12 evaluator passed **8/8 selected tests**. Full repository suites were not run in this isolated session.
 
