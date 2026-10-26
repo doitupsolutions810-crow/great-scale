@@ -122,8 +122,8 @@ def test_audit_rejects_a_bare_reference_to_test_function():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_reference_only.py"
         path.write_text(
-            "def test_regression():\\n    assert False\\n\\n"
-            'if __name__ == "__main__":\\n    print(test_regression)\\n',
+            "def test_regression():\n    assert False\n\n"
+            'if __name__ == "__main__":\n    print(test_regression)\n',
             encoding="utf-8",
         )
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
