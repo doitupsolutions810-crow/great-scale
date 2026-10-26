@@ -5,7 +5,7 @@ import re
 import sys
 import tempfile
 
-USES = re.compile(r"^\s*-\s*uses:\s*([^@\s]+)@([^\s#]+)", re.MULTILINE)
+USES = re.compile(r"^\s*(?:-\s*)?uses:\s*([^@\s]+)@([^\s#]+)", re.MULTILINE)
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 WORKFLOW_ROOT = Path(".github/workflows")
 
