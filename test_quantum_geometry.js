@@ -124,5 +124,38 @@ test('near-degenerate determinant agrees with analytic binary64-input identity',
  }
 });
 
+test('rejects non-finite values in every numeric input field', () => {
+ const base={g11:1,g12:0,g22:1,curvature:0};
+ for (const field of Object.keys(base)) {
+  for (const value of [Number.NaN,Number.POSITIVE_INFINITY,Number.NEGATIVE_INFINITY]) {
+   assert.throws(()=>quantumGeometryBridge({...base,[field]:value}),/must be finite numbers/);
+  }
+ }
+});
+
+test('deterministic randomized common-scale metamorphic campaign', () => {
+ let state=0x6d2b79f5;
+ function next() {
+  state=(Math.imul(state ^ (state >>> 15),1 | state)+0x9e3779b9)|0;
+  const t=Math.imul(state ^ (state >>> 7),61 | state);
+  return ((t ^ (t >>> 14)) >>> 0)/4294967296;
+ }
+ for(let i=0;i<1000;i++) {
+  const x=2*next()-1,y=2*next()-1,eps=1e-4+next()*1e-2;
+  const a=x*x+eps,b=x*y,d=y*y+eps;
+  const detBase=a*d-b*b,chi=next()*0.999,curvature=2*chi*Math.sqrt(detBase);
+  const scale=10**(-100+next()*200);
+  const base=quantumGeometryBridge({g11:a,g12:b,g22:d,curvature});
+  const scaled=quantumGeometryBridge({g11:scale*a,g12:scale*b,g22:scale*d,curvature:scale*curvature});
+  close(scaled.curvatureFraction,base.curvatureFraction,2e-8);
+  close(scaled.SQuantum,base.SQuantum,2e-8);
+  close(scaled.metricAnisotropy,base.metricAnisotropy,2e-7);
+  assert.strictEqual(scaled.metricConditionStatus,base.metricConditionStatus);
+  assert.strictEqual(scaled.detGStatus,'finite');
+  assert.strictEqual(scaled.detQStatus,'finite');
+  assert.ok(scaled.metricEigenvalues.every(Number.isFinite));
+ }
+});
+
 console.log('\nquantum geometry bridge tests: '+passed+' passed, '+failed+' failed');
 process.exit(failed?1:0);
