@@ -37,3 +37,20 @@ The test and documentation were added to the PR branch. The repository's full `n
 ## Great Scale interpretation
 
 Verification has two levels: the tests check the system, and the manifest audit checks whether the intended tests are reachable. A green execution result is incomplete if the verifier has silently excluded part of its own specification. This is analogous to a proof whose lemmas are valid but whose dependency graph omits a required lemma.
+
+
+## Descent CLXII — Reachable test files are not necessarily executed tests
+
+The CLVIII manifest invariant establishes that test modules are referenced by the aggregate command and exist on disk. But the canonical command invokes Python modules directly (\`python3 test_*.py\`), not through pytest. Python does not automatically discover and execute functions named \`test_*\` when a file is run as a script. If a new module defines an assertion-bearing \`test_regression()\` but never calls it from its \`if __name__ == "__main__":\` entrypoint, the command can exit zero while the intended test never executes.
+
+Let T be the test functions defined in a module and I the functions invoked by its direct-script entrypoint. File-level reachability does not prove:
+
+\[
+T \subseteq I
+\]
+
+Extended \`test_great_scale_clviii_test_manifest_completeness.py\` with an AST-based check that validates direct-runner invocation, detects a synthetic uninvoked test, and accepts a test called from the \`__main__\` guard. The regression remains included through the existing \`npm run all\` entry.
+
+This is a structural check, not proof that assertions are non-vacuous, that all branches execute, or that hosted CI ran the exact candidate. The full aggregate and hosted Actions still need to pass against the same reviewed revision.
+
+**Great Scale interpretation:** a test file in the manifest is analogous to a theorem written in a book; existence is not proof that it was used. Verification needs a traceable path from specification to invocation to observed result, bound to one revision.
