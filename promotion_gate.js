@@ -239,6 +239,10 @@ function evaluatePromotionEvidence(evidence) {
   for (const key of ['node', 'npm', 'python', 'runner_name']) {
     if (typeof receipt[key] !== 'string' || !receipt[key].trim() || receipt[key] === 'unavailable') reasons.push('receipt runtime field is missing or unavailable: ' + key);
   }
+  if (typeof job.runnerName === 'string' && typeof receipt.runner_name === 'string' &&
+      receipt.runner_name !== job.runnerName) {
+    reasons.push('receipt runner name does not match the observed platform job runner name');
+  }
   if (receipt.overall !== 'passed' || receipt.javascript_suite !== 'passed' ||
       receipt.python_descent_suite !== 'passed') {
     reasons.push('receipt does not record both required suites and overall status as passed');
