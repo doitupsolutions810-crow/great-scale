@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """CLXIX: HTTP reachability and cross-document claims do not establish trust."""
 
+from urllib.parse import urlparse
+
 EXPECTED = {
     "version": "5.3.1",
     "runtime": "static",
@@ -54,10 +56,21 @@ def property_allows(schema_property, expected):
     return isinstance(enum, list) and expected in enum
 
 
-def validate_status_schema(status, schema, url="https://evidence.example.invalid/api/status"):
+def validate_status_schema(status, schema, url="https://evidence.example.invalid/api/status", final_url=None):
     failures = []
     if not isinstance(url, str) or not url.startswith("https://"):
         failures.append("public_endpoint_not_https")
+    elif final_url is not None:
+        requested = urlparse(url)
+        final = urlparse(final_url) if isinstance(final_url, str) else None
+        if (
+            final is None
+            or final.scheme != "https"
+            or final.netloc != requested.netloc
+            or final.path != requested.path
+            or final.query != requested.query
+        ):
+            failures.append("response_url_not_pinned")
     if not isinstance(status, dict):
         return False, ["status_document_not_object", *failures]
     if not isinstance(schema, dict):
@@ -278,6 +291,16 @@ def test_unknown_gate_set_does_not_pass():
     assert not valid
     assert "status.gates" in failures
 
+
+def test_cross_origin_final_response_url_is_not_trusted():
+    valid, failures = validate_status_schema(
+        good_status(),
+        good_schema(),
+        final_url="https://attacker.example/api/status"
+    )
+    assert not valid
+    assert "response_url_not_pinned" in failures
+
 if __name__ == "__main__":
     tests = [
         test_valid_independent_status_and_schema_contract_passes,
@@ -292,6 +315,7 @@ if __name__ == "__main__":
         test_unknown_gate_set_does_not_pass,
         test_array_gate_schema_requires_one_of_each_g0_g6,
         test_array_schema_missing_exactly_once_gate_rule_fails_closed,
+        test_cross_origin_final_response_url_is_not_trusted,
     ]
     for test_fn in tests:
         test_fn()
