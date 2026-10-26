@@ -206,3 +206,8 @@ The primary and master relay parsers now reject repeated JSON keys before dictio
 ## Cross-repository continuation — Descent CVIX / System 32: relay envelope closure
 
 After duplicate-key and alias concordance, the next audit found that payload selection itself was non-injective: selecting payload.metrics when present silently ignored recognized metric fields at the outer level. The CycleKernel bridge now accepts either a direct metrics object or a wrapped metrics object, but rejects recognized outer shadow fields in the wrapped form while allowing ordinary metadata. Regression tests cover outer Core/coupling, Great Scale residual/schema, symbolic fields, and both parser copies. See [CycleKernel Descent CVIX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIX_RELAY_ENVELOPE_CLOSURE.md). The Great Scale heat/cone law is unchanged; no physical-law claim is made.
+
+
+## Cross-repository continuation — Descent CX / System 33: strict token boundary
+
+The relay audit descended from metric values to envelope choice and then to lexical JSON admission. Python's default decoder accepts `NaN`, `Infinity`, and `-Infinity` as extensions; field validators reject these when used as metrics, but unused nested metadata could escape those checks. Both bridge parsers now reject such tokens during decoding using `parse_constant`, while retaining duplicate-key rejection. See [CycleKernel Descent CX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CX_STRICT_JSON_TOKENS.md). This is a parser contract, not a physical law or relay authentication.
