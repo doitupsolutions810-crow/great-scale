@@ -113,6 +113,17 @@ def main():
 
     checks.append(("softMap(4.5)=4.5", abs(soft_map(4.5) - 4.5) < 1e-9))
 
+    # Levels 8373–8384: periodic phase canonicalization for negative time.
+    phase_cases = [-12.5, -3.75, -1.0, -0.25, 0.0, 0.25, 1.0, 12.5]
+    phases = [state_at(t)["phase"] for t in phase_cases]
+    checks.append(("phase is canonical in [0, 1) for negative and positive times",
+                   all(0.0 <= phase < 1.0 for phase in phases)))
+    checks.append(("negative phase follows canonical modulo-one representation",
+                   abs(state_at(-0.25)["phase"] - 0.7875) < 1e-12))
+    checks.append(("phase is periodic under one cycle",
+                   all(abs(state_at(t)["phase"] - state_at(t + 1.0 / 0.85)["phase"]) < 1e-12
+                       for t in [-5.75, -1.25, -0.25, 0.0, 0.375, 1.5])))
+
     s = state_at(0)
     checks.append(("stateAt Ψ ≥ CONE", s["psi"] + 1e-12 >= CONE))
     checks.append(("stateAt λ may be < CONE at low heat", s["lam"] < CONE or s["S"] > 0.1))
