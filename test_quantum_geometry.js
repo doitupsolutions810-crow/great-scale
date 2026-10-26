@@ -157,5 +157,38 @@ test('deterministic randomized common-scale metamorphic campaign', () => {
  }
 });
 
+function exactBinary64(value) {
+ const view=new DataView(new ArrayBuffer(8));
+ view.setFloat64(0,value,false);
+ const bits=view.getBigUint64(0,false);
+ const exponentBits=Number((bits >> 52n) & 0x7ffn);
+ const fraction=bits & ((1n << 52n)-1n);
+ if(exponentBits===0) return {significand:fraction,exponent:-1074};
+ return {significand:(1n << 52n)|fraction,exponent:exponentBits-1023-52};
+}
+function exactDeterminantReference(a,b,d) {
+ const pa=exactBinary64(a),pb=exactBinary64(b),pd=exactBinary64(d);
+ const ea=pa.exponent+pd.exponent, eb=2*pb.exponent, e=Math.min(ea,eb);
+ const left=(pa.significand*pd.significand) << BigInt(ea-e);
+ const right=(pb.significand*pb.significand) << BigInt(eb-e);
+ const numerator=left-right;
+ return Number(numerator)*Math.pow(2,e);
+}
+
+test('compensated determinant agrees with an exact-BigInt binary64-input reference', () => {
+ for(const epsilon of [2**-20,2**-26,2**-40,2**-52,2**-53]) {
+  const b=1-epsilon;
+  const expected=exactDeterminantReference(1,b,1);
+  const actual=quantumGeometryBridge({g11:1,g12:b,g22:1,curvature:0}).detG;
+  assert.ok(expected>0 && Number.isFinite(expected));
+  assert.ok(Math.abs(actual-expected)<=Math.max(Number.MIN_VALUE,Math.abs(expected)*2*Number.EPSILON),
+   'exact-reference determinant mismatch at '+epsilon+': '+actual+' vs '+expected);
+ }
+ const input={g11:3.125,g12:2.5,g22:2.000000000000001};
+ const expected=exactDeterminantReference(input.g11,input.g12,input.g22);
+ const actual=quantumGeometryBridge({...input,curvature:0}).detG;
+ assert.ok(Math.abs(actual-expected)<=Math.max(Number.MIN_VALUE,Math.abs(expected)*2*Number.EPSILON));
+});
+
 console.log('\nquantum geometry bridge tests: '+passed+' passed, '+failed+' failed');
 process.exit(failed?1:0);
