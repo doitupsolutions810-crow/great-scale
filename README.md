@@ -70,3 +70,8 @@ The risk channel is additional to the existing Great Scale heat/cone law; no new
 ## System 32 — relay envelope closure
 
 [CycleKernel Descent CVIX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CVIX_RELAY_ENVELOPE_CLOSURE.md) closes the next normalization boundary: direct and wrapped observations are distinct envelope forms, and a wrapped form cannot also carry recognized metric inputs at the outer level. This prevents shadow values from being silently discarded. It is an integrity constraint, not relay authentication; Great Scale's heat/cone law remains unchanged.
+
+
+## System 33 — strict JSON token boundary
+
+[CycleKernel Descent CX](https://github.com/doitupsolutions810-crow/CycleKernal/blob/feature/gs-lvi-closed-loop-evidence/docs/DESCENT_CX_STRICT_JSON_TOKENS.md) extends the relay ingress contract: the JSON decoder rejects non-standard `NaN` / `Infinity` constants everywhere in the document, not only in scored fields. This is strict parsing, not source authentication; the Great Scale heat/cone invariant is unchanged.
