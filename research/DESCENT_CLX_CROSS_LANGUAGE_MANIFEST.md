@@ -26,7 +26,7 @@ Added `test_great_scale_clx_cross_language_manifest.py` and wired it into `npm r
 
 ## Verification boundary
 
-The remote Git tree at the inspected candidate contains three top-level Node test entrypoints and twenty top-level Python test modules. The aggregate command references nineteen Python test modules, and `npm test` references the three discovered Node entrypoints. These are source-tree comparisons; they do not establish that the suites ran successfully. A clean checkout and qualifying hosted Actions result remain necessary.
+The remote Git tree at the inspected candidate contains three top-level Node test entrypoints and twenty-one top-level Python test modules. The aggregate command references twenty-one Python test modules, and `npm test` references the three discovered Node entrypoints. These are source-tree comparisons; they do not establish that the suites ran successfully. A clean checkout and qualifying hosted Actions result remain necessary.
 
 ## Great Scale interpretation
 
