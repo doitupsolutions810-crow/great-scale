@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs",
     "descent": "python3 test_descent.py",
-    "all": "npm test && python3 test_descent.py && python3 test_effect_evidence_boundary.py && python3 test_great_scale_cxlv_atomic_projection.py && python3 test_great_scale_cxlvii_quotient_seam.py && python3 test_great_scale_cxlviii_verification_reachability.py && python3 test_great_scale_cxlix_pr_candidate_binding.py && python3 test_great_scale_cl_provenance_binding.py && python3 test_great_scale_cli_ci_freshness.py"
+    "all": "npm test && python3 test_descent.py && python3 test_effect_evidence_boundary.py && python3 test_great_scale_cxlv_atomic_projection.py && python3 test_great_scale_cxlvii_quotient_seam.py && python3 test_great_scale_cxlviii_verification_reachability.py && python3 test_great_scale_cxlix_pr_candidate_binding.py && python3 test_great_scale_cl_provenance_binding.py && python3 test_great_scale_cli_ci_freshness.py && python3 test_great_scale_cliii_merge_boundary_freshness.py"
   },
   "license": "UNLICENSED"
 }
