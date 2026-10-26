@@ -39,7 +39,11 @@ def classify(evidence: CiEvidence | None, *, head_sha: str, base_sha: str,
         or evidence.conclusion not in {"success", "failure", "cancelled", "timed_out", "action_required"}
     ):
         return Decision.UNKNOWN
-    return Decision.PASS if evidence.conclusion == "success" else Decision.FAIL
+    if evidence.conclusion == "success":
+        return Decision.PASS
+    if evidence.conclusion == "failure":
+        return Decision.FAIL
+    return Decision.UNKNOWN
 
 
 def test_no_run_is_unknown_not_pass_or_fail():
@@ -65,6 +69,15 @@ def test_exact_success_is_pass_and_exact_failure_is_fail():
     assert classify(failure, head_sha="head", base_sha="base") is Decision.FAIL
 
 
+def test_cancelled_or_timed_out_run_is_unknown():
+    for conclusion in ("cancelled", "timed_out", "action_required"):
+        evidence = CiEvidence(
+            "github_actions", "run-3", "head", "base",
+            ".github/workflows/ci.yml", "pull_request", "completed", conclusion
+        )
+        assert classify(evidence, head_sha="head", base_sha="base") is Decision.UNKNOWN
+
+
 def test_stale_or_incomplete_run_is_unknown():
     stale = CiEvidence(
         "github_actions", "run-1", "old-head", "base",
@@ -83,6 +96,7 @@ if __name__ == "__main__":
         test_no_run_is_unknown_not_pass_or_fail,
         test_green_external_status_is_unknown,
         test_exact_success_is_pass_and_exact_failure_is_fail,
+        test_cancelled_or_timed_out_run_is_unknown,
         test_stale_or_incomplete_run_is_unknown,
     ]
     for test in tests:
