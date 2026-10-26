@@ -47,7 +47,7 @@ def test_audit_rejects_test_hidden_behind_success_fallback():
             root, "npm test && python3 test_alpha.py || true"
         )
         assert missing == []
-        assert omitted == []
+        assert omitted == ["test_alpha.py"]
         assert unsafe == ["python3 test_alpha.py || true"]
 
 
