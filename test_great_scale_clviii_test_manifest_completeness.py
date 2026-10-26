@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLVIII/CLXII: audit test reachability and executable Python test entrypoints."""
+"""CLVIII/CLXII/CLXV: audit test reachability and executable Python test entrypoints."""
 import ast
 import json
 from pathlib import Path
@@ -21,13 +21,73 @@ def audit_suite(root: Path, all_command: str):
 
 
 def tests_not_invoked_by_direct_runner(path: Path):
-    """Find test_* functions not called by a module's direct Python entrypoint."""
+    """Find test_* functions not called directly or through an executed registry."""
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     defined = {
         node.name for node in tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and node.name.startswith("test_")
     }
+
+    def referenced_tests(node):
+        return {
+            child.id for child in ast.walk(node)
+            if isinstance(child, ast.Name) and child.id in defined
+        }
+
+    def assigned_names(node):
+        if isinstance(node, ast.Name):
+            return {node.id}
+        if isinstance(node, (ast.Tuple, ast.List)):
+            return {
+                child.id for child in ast.walk(node)
+                if isinstance(child, ast.Name)
+            }
+        return set()
+
+    def inspect_block(statements, registry):
+        invoked = set()
+        known_registries = dict(registry)
+        for statement in statements:
+            invoked.update(
+                child.func.id for child in ast.walk(statement)
+                if isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Name)
+                and child.func.id in defined
+            )
+
+            if isinstance(statement, ast.Assign):
+                value = statement.value
+                if isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+                    tests = referenced_tests(value)
+                    for target in statement.targets:
+                        for name in assigned_names(target):
+                            known_registries[name] = tests
+            elif isinstance(statement, ast.AnnAssign) and statement.value is not None:
+                value = statement.value
+                if isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+                    tests = referenced_tests(value)
+                    for name in assigned_names(statement.target):
+                        known_registries[name] = tests
+
+            if isinstance(statement, ast.For):
+                loop_targets = assigned_names(statement.target)
+                loop_calls = {
+                    child.func.id for child in ast.walk(statement)
+                    if isinstance(child, ast.Call) and isinstance(child.func, ast.Name)
+                }
+                if loop_targets & loop_calls:
+                    if isinstance(statement.iter, ast.Name):
+                        invoked.update(known_registries.get(statement.iter.id, set()))
+                    elif isinstance(statement.iter, (ast.List, ast.Tuple, ast.Set)):
+                        invoked.update(referenced_tests(statement.iter))
+                invoked.update(inspect_block(statement.body, known_registries))
+                invoked.update(inspect_block(statement.orelse, known_registries))
+            elif isinstance(statement, ast.If):
+                invoked.update(inspect_block(statement.body, known_registries))
+                invoked.update(inspect_block(statement.orelse, known_registries))
+        return invoked
+
     invoked = set()
     for node in tree.body:
         if not isinstance(node, ast.If):
@@ -44,13 +104,7 @@ def tests_not_invoked_by_direct_runner(path: Path):
             and test.comparators[0].value == "__main__"
         )
         if is_main_guard:
-            invoked.update(
-                child.func.id
-                for child in ast.walk(node)
-                if isinstance(child, ast.Call)
-                and isinstance(child.func, ast.Name)
-                and child.func.id in defined
-            )
+            invoked.update(inspect_block(node.body, {}))
     return sorted(defined - invoked)
 
 
@@ -70,7 +124,6 @@ def test_current_python_test_functions_are_invoked():
         if path.is_file() and tests_not_invoked_by_direct_runner(path)
     }
     assert not bad, f"Python test functions not invoked by direct runner: {bad}"
-
 
 
 def test_ci_invokes_the_canonical_aggregate():
@@ -117,6 +170,31 @@ def test_audit_accepts_test_functions_called_by_main_guard():
         assert tests_not_invoked_by_direct_runner(path) == []
 
 
+def test_audit_accepts_functions_dispatched_from_a_main_guard_registry():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_registry.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    tests = [test_regression]\n"
+            "    for test in tests:\n        test()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == []
+
+
+def test_audit_rejects_an_unexecuted_test_registry():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_unexecuted_registry.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    tests = [test_regression]\n"
+            "    print(tests)\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
 
 def test_audit_rejects_a_bare_reference_to_test_function():
     with tempfile.TemporaryDirectory() as directory:
@@ -138,6 +216,8 @@ if __name__ == "__main__":
         test_audit_detects_a_dangling_command_target,
         test_audit_detects_test_functions_that_python_would_not_run,
         test_audit_accepts_test_functions_called_by_main_guard,
+        test_audit_accepts_functions_dispatched_from_a_main_guard_registry,
+        test_audit_rejects_an_unexecuted_test_registry,
         test_audit_rejects_a_bare_reference_to_test_function,
     ]
     for test in tests:
