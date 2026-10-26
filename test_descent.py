@@ -35,7 +35,7 @@ def run_descent(start=1.0, steps=40, k=CONE):
     return trail
 
 def state_at(t, rate=0.85):
-    phase = (t * rate) % 1
+    phase = ((t * rate) % 1 + 1) % 1
     h = 0.5 - 0.5 * math.cos(2 * math.pi * phase)
     S = heat(h)
     n = 8 - 4 * S
