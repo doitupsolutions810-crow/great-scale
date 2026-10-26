@@ -16,7 +16,7 @@ const REQUIRED_STEPS = [
 ];
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-const UTC_ISO_SECONDS_RE = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/;
+const UTC_ISO_SECONDS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 
 function jobLogsUrlMatches(value, repository, runId, jobId) {
   if (typeof value !== 'string' || typeof repository !== 'string' ||
