@@ -45,8 +45,11 @@ def tests_not_invoked_by_direct_runner(path: Path):
         )
         if is_main_guard:
             invoked.update(
-                child.id for child in ast.walk(node)
-                if isinstance(child, ast.Name) and child.id in defined
+                child.func.id
+                for child in ast.walk(node)
+                if isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Name)
+                and child.func.id in defined
             )
     return sorted(defined - invoked)
 
@@ -114,6 +117,18 @@ def test_audit_accepts_test_functions_called_by_main_guard():
         assert tests_not_invoked_by_direct_runner(path) == []
 
 
+
+def test_audit_rejects_a_bare_reference_to_test_function():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_reference_only.py"
+        path.write_text(
+            "def test_regression():\\n    assert False\\n\\n"
+            'if __name__ == "__main__":\\n    print(test_regression)\\n',
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 if __name__ == "__main__":
     tests = [
         test_current_aggregate_references_existing_python_files,
@@ -123,6 +138,7 @@ if __name__ == "__main__":
         test_audit_detects_a_dangling_command_target,
         test_audit_detects_test_functions_that_python_would_not_run,
         test_audit_accepts_test_functions_called_by_main_guard,
+        test_audit_rejects_a_bare_reference_to_test_function,
     ]
     for test in tests:
         test()
