@@ -237,7 +237,7 @@ function evaluatePromotionEvidence(evidence) {
   if (String(receipt.github_run_attempt ?? '') !== String(run.runAttempt ?? '')) reasons.push('receipt run attempt does not match platform run attempt');
   const receiptTime = typeof receipt.created_utc === 'string' ? Date.parse(receipt.created_utc) : NaN;
   if (!Number.isFinite(receiptTime) ||
-      !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(receipt.created_utc) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(receipt.created_utc) ||
       !Number.isFinite(Date.parse(receipt.created_utc))) {
     reasons.push('receipt creation timestamp must be a valid UTC ISO-8601 timestamp');
   } else if (receiptTime > Date.now() + 5 * 60 * 1000) {
