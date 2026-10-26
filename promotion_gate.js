@@ -16,6 +16,7 @@ const REQUIRED_STEPS = [
 ];
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const UTC_ISO_SECONDS_RE = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/;
 
 function jobLogsUrlMatches(value, repository, runId, jobId) {
   if (typeof value !== 'string' || typeof repository !== 'string' ||
@@ -237,8 +238,9 @@ function evaluatePromotionEvidence(evidence) {
   if (String(receipt.github_run_attempt ?? '') !== String(run.runAttempt ?? '')) reasons.push('receipt run attempt does not match platform run attempt');
   const receiptTime = typeof receipt.created_utc === 'string' ? Date.parse(receipt.created_utc) : NaN;
   if (!Number.isFinite(receiptTime) ||
-      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(receipt.created_utc) ||
-      !Number.isFinite(Date.parse(receipt.created_utc))) {
+      !UTC_ISO_SECONDS_RE.test(receipt.created_utc) ||
+      !Number.isFinite(Date.parse(receipt.created_utc)) ||
+      new Date(receiptTime).toISOString() !== receipt.created_utc) {
     reasons.push('receipt creation timestamp must be a valid UTC ISO-8601 timestamp');
   } else if (receiptTime > Date.now() + 5 * 60 * 1000) {
     reasons.push('receipt creation timestamp is too far in the future');
