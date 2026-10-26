@@ -14,7 +14,7 @@ const force = process.env.FORCE_PROCUREMENT === '1';
 }
 ```
 
-This means `FORCE_PROCUREMENT=1` can make a core-ready state enter `READY_FOR_PROCUREMENT` even when public evidence has not been verified and local evidence has not been explicitly authorized. The variable is an override of the evidence gate, not merely a request to run an operation. This is a source-level control-flow finding; no exploit or production invocation is claimed.
+This means `FORCE_PROCUREMENT=1` can make a core-ready state enter `READY_FOR_PROCUREMENT` even when public evidence has not been verified and local evidence has not been explicitly authorized. There is a second asymmetry: the decision predicate does not consult `evidenceConsole.status` / `evidenceConsole.authority` at all, so a healthy public evidence-console result does not itself authorize procurement. The variable is an override of the evidence gate, not merely a request to run an operation, while the positive public-evidence path is absent from the gate. This is a source-level control-flow finding; no exploit or production invocation is claimed.
 
 ## Formal model
 
