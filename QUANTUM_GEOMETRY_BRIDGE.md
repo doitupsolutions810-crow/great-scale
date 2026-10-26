@@ -67,3 +67,15 @@ The bridge now computes the normalized 2×2 determinant with compensated product
 For \(g_\varepsilon=\begin{pmatrix}1&1-\varepsilon\\1-\varepsilon&1\end{pmatrix}\), the exact determinant is \(\varepsilon(2-\varepsilon)\) and the eigenvalues are \(\varepsilon\) and \(2-\varepsilon\). Near this boundary, validity and scale covariance alone do not guarantee reliable floating-point output. The scalar embedding remains \(S_Q=(1-\chi^2)/4\) and \(\Psi_Q=\mathrm{CONE}+S_Q\); conditioning is a separate trust channel.
 
 See [Descent XCVI](research/DESCENT_XCVI_COMPENSATED_METRIC_TRUST.md) for the numerical method, classification thresholds, and verification limits.
+
+## Raw determinant representability — extreme-scale diagnostics
+
+The normalized geometry and eigenvalue diagnostics can remain usable even when the raw determinants are outside binary64's representable range. The bridge therefore does not return Infinity for detG or detQ, and it does not conflate a positive underflowed determinant with a true zero.
+
+- detGStatus and detQStatus are finite, overflow, or underflow.
+- When a raw determinant overflows or underflows, the corresponding value is null and its status identifies the condition.
+- A true zero determinant of Q under the admitted saturation mapping remains numeric 0 with status finite.
+- Consumers must check the status before using the raw determinant; the dimensionless curvature fraction, Great Scale scalar, and conditioning diagnostics remain separate fields.
+- This is a representability classification, not an arbitrary-precision determinant. It does not replace a high-precision oracle for numerical verification.
+
+The stress suite includes near-degenerate metrics, the smallest positive binary64 subnormal eigenvalue, raw determinant overflow/underflow, scale-invariance checks, and positivity-boundary cases. Numerical output should be treated as a mathematical computation over the represented floating-point inputs, not as empirical evidence for a physical law.
