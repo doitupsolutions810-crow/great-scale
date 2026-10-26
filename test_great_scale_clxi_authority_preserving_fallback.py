@@ -29,6 +29,13 @@ def test_unknown_or_mismatched_authority_fails_closed():
     assert authorization("unreachable", "public", False, False) is False
     assert authorization("ok", "local", False, False) is False
 
+def test_default_procurement_command_is_fail_closed():
+    # Mirrors package.json: procure does not inject ACCEPT_LOCAL_EVIDENCE.
+    default_env = {}
+    local_mode_env = {"ACCEPT_LOCAL_EVIDENCE": "1"}
+    assert authorization("unconfigured", "local", default_env.get("ACCEPT_LOCAL_EVIDENCE") == "1") is False
+    assert authorization("unconfigured", "local", local_mode_env.get("ACCEPT_LOCAL_EVIDENCE") == "1") is True
+
 
 if __name__ == "__main__":
     tests = [
@@ -36,6 +43,7 @@ if __name__ == "__main__":
         test_local_fallback_is_accepted_with_explicit_opt_in,
         test_public_success_is_accepted_without_local_opt_in,
         test_unknown_or_mismatched_authority_fails_closed,
+        test_default_procurement_command_is_fail_closed,
     ]
     for test in tests:
         test()
