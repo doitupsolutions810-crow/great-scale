@@ -3,6 +3,7 @@
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 USES = re.compile(r"^\s*-\s*uses:\s*([^@\s]+)@([^\s#]+)", re.MULTILINE)
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
@@ -50,10 +51,7 @@ def test_all_actual_workflows_are_pinned():
     if not paths:
         print(f"FAIL CLVI: no workflow YAML files found under {WORKFLOW_ROOT}", file=sys.stderr)
         raise AssertionError("workflow scan must not silently pass on empty input")
-    violations = []
-    for path in paths:
-        for repository, ref in mutable_action_refs(path.read_text(encoding="utf-8")):
-            violations.append(f"{path}: {repository}@{ref}")
+    _, violations = scan_workflows(WORKFLOW_ROOT)
     assert not violations, "mutable action references: " + ", ".join(violations)
 
 
