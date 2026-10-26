@@ -45,8 +45,8 @@ def tests_not_invoked_by_direct_runner(path: Path):
         )
         if is_main_guard:
             invoked.update(
-                call.func.id for call in ast.walk(node)
-                if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+                child.id for child in ast.walk(node)
+                if isinstance(child, ast.Name) and child.id in defined
             )
     return sorted(defined - invoked)
 
