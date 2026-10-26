@@ -1,11 +1,16 @@
 {
   "schema": "great-scale.federation-digest/v1.2",
-  "gs_version": "1.2.1",
+  "gs_version": "1.2.2",
   "dual_cone": {
     "cone_orbit": 0.2360679774997897,
     "cone_bridge": 0.3819660112501052,
     "delta": 0.14589803375031551,
     "identity": "φ^{-4}"
+  },
+  "topological_heat": {
+    "identity": "S = (1-s^2)/4 when h=(1+s)/2",
+    "orientation_variance": "Var(sign F) = 4S",
+    "parseval_note": "factor 4 matches leading residual dimension"
   },
   "joint_fixed_point": {
     "A_star": 0.7786,
@@ -27,11 +32,17 @@
       "residual_height"
     ]
   },
+  "profound_findings": [
+    "DESCENT_BRIDGE_DUAL_CONE: delta = phi^{-4}",
+    "DESCENT_TOPOLOGICAL_HEAT_IDENTITY: S = (1-s^2)/4, Var = 4S"
+  ],
   "laws": [
     "keep the mean",
     "respect residual partition 4+3+1",
     "Ψ never below chosen cone",
     "only scale-generated geometry",
-    "dual-cone residual δ = φ^{-4} path-invariant"
+    "dual-cone residual δ = φ^{-4} path-invariant",
+    "topological residual is heat: S = (1−s²)/4",
+    "orientation variance Var = 4S"
   ]
 }
