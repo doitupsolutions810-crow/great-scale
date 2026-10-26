@@ -38,7 +38,12 @@ function quantumGeometryBridge({ g11, g12, g22, curvature }, tolerance = 1e-10) 
   // Normalize the metric before determinant arithmetic. Under a common positive
   // rescaling (g,F) -> (s g,s F), chi is invariant, but raw determinants may
   // underflow/overflow even when normalized geometry remains representable.
-  const metricScale = Math.max(g11, Math.abs(g12), g22);
+  const metricMagnitude = Math.max(g11, Math.abs(g12), g22);
+  // Use a power-of-two scale: division by an arbitrary maximum can round
+  // each entry before determinant evaluation and erase relative information
+  // in an ill-conditioned matrix. Binary exponent scaling is exact for
+  // normal binary64 values and keeps Dekker splitting away from overflow.
+  const metricScale = Math.pow(2, Math.floor(Math.log2(metricMagnitude)));
   const a11 = g11 / metricScale, a12 = g12 / metricScale, a22 = g22 / metricScale;
   const detScaled = compensatedDeterminant2x2(a11, a12, a22);
   if (!(detScaled > 0) || !Number.isFinite(detScaled)) throw new RangeError('The two-direction metric must be positive and nondegenerate (scaled detG > 0).');
