@@ -29,7 +29,7 @@ function softMap(x) { return 9 - x; }
 function stressResidual(x) { return modDist(x, involution(x)); }
 function descentStep(x, k = CONE) { return softContract(x, k); }
 function stateAt(t, rate = RATE) {
-  const phase = (t * rate) % 1;
+  const phase = (((t * rate) % 1) + 1) % 1;
   const h = 0.5 - 0.5 * Math.cos(2 * Math.PI * phase);
   const S = heat(h);
   const n = 8 - 4 * S;
