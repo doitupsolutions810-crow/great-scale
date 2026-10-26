@@ -50,6 +50,12 @@ The control-plane self-test now directly exercises the actual JavaScript helper 
 
 The explicit local mode is still available by design. Operators should treat it as a weaker, deliberate mode and ensure decision outputs make that mode visible. If local evidence is not acceptable for a particular procurement action, do not set the opt-in and require public evidence.
 
+## Hosted CI status observed after the source fix
+
+The latest Living Intermediate Control Plane main commit observed was `8510bff879dd4f21ae5d8f7265a49ff9a53fec57`. Its GitHub Actions run `40401004658` (Plane CI) completed with conclusion `failure`; the container job was skipped. The connected integration could retrieve job metadata but not the hosted log blob, so the cause is unknown and must not be attributed to these changes without further evidence.
+
+For the current Great Scale research head `03266e32310bfd560b287c7fb61d7a01fc35a604`, the queried Actions endpoint returned zero runs. Therefore, the isolated tests below are not a substitute for hosted CI.
+
 ## Verification limits
 
 The source edits, explicit-mode script split, README clarification, and self-test assertions are committed to the control-plane main branch. The complete cross-repository suites have not been run in this environment. No claim is made that hosted CI passed or that deployed behavior has changed.
