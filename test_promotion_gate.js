@@ -38,7 +38,7 @@ const fixture = () => ({
     overall: 'passed',
     javascript_suite: 'passed',
     python_descent_suite: 'passed',
-    created_utc: '2026-10-22T12:00:00Z',
+    created_utc: new Date().toISOString().replace(/\\.\\d{3}Z$/, 'Z'),
     github_run_id: '12345',
     github_run_attempt: '1',
     github_repository: 'doitupsolutions810-crow/great-scale',
@@ -88,6 +88,8 @@ test('receipt tested SHA mismatch blocks', () => blocked(x => { x.receipt.commit
 test('receipt GitHub SHA mismatch blocks', () => blocked(x => { x.receipt.github_sha = 'b'.repeat(40); }));
 test('receipt run attempt mismatch blocks', () => blocked(x => { x.receipt.github_run_attempt = '2'; }));
 test('receipt timestamp malformed blocks', () => blocked(x => { x.receipt.created_utc = 'not-a-date'; }));
+test('receipt timestamp without explicit UTC zone blocks', () => blocked(x => { x.receipt.created_utc = '2026-10-22T12:00:00'; }));
+test('future-dated receipt blocks', () => blocked(x => { x.receipt.created_utc = new Date(Date.now() + 60 * 60 * 1000).toISOString().replace(/\\.\\d{3}Z$/, 'Z'); }));
 test('receipt unavailable runtime field blocks', () => blocked(x => { x.receipt.python = 'unavailable'; }));
 test('unknown evidence source blocks', () => blocked(x => { x.run.source = 'local-json'; }));
 test('wrong repository blocks', () => blocked(x => { x.run.repository = 'someone/else'; }));
