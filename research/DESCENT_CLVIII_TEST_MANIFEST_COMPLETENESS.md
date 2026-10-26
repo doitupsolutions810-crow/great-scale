@@ -54,3 +54,22 @@ Extended \`test_great_scale_clviii_test_manifest_completeness.py\` with an AST-b
 This is a structural check, not proof that assertions are non-vacuous, that all branches execute, or that hosted CI ran the exact candidate. The full aggregate and hosted Actions still need to pass against the same reviewed revision.
 
 **Great Scale interpretation:** a test file in the manifest is analogous to a theorem written in a book; existence is not proof that it was used. Verification needs a traceable path from specification to invocation to observed result, bound to one revision.
+
+
+## Descent CLXIII — CI must invoke the aggregate, not merely define it
+
+The next boundary is between the package's canonical aggregate and the workflow that actually runs in CI. A test can be present in the manifest and npm run all yet remain absent from CI if the workflow calls only npm test plus a hand-picked subset. Therefore, the required reachability chain is:
+
+\[
+\text{Test module} \rightarrow \text{npm run all} \rightarrow \text{CI workflow} \rightarrow \text{successful run on candidate}
+\]
+
+A manifest audit that stops at package.json does not prove the workflow invokes the aggregate. Added test_ci_invokes_the_canonical_aggregate() to require .github/workflows/ci.yml to contain npm run all and reject a workflow that substitutes the narrower npm test command. This is a source-level wiring guard, not evidence that a hosted workflow actually triggered or passed.
+
+The complete acceptance condition remains:
+
+\[
+\operatorname{AcceptCI}(R)=M\land R_t\land W\land(\operatorname{RunHead}=R)\land(\operatorname{Conclusion}=\text{success})
+\]
+
+where M is manifest completeness, R_t is test-function reachability, and W is workflow-to-aggregate wiring. Hosted execution and exact-candidate provenance remain independently required.
