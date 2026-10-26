@@ -69,6 +69,14 @@ def test_current_python_test_functions_are_invoked():
     assert not bad, f"Python test functions not invoked by direct runner: {bad}"
 
 
+
+def test_ci_invokes_the_canonical_aggregate():
+    root = Path(__file__).resolve().parent
+    workflow = (root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "npm run all" in workflow, "CI must invoke the canonical npm run all aggregate"
+    assert "npm test" not in workflow, "CI must not bypass the aggregate with a narrower test command"
+
+
 def test_audit_detects_an_omitted_test_module():
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -110,6 +118,7 @@ if __name__ == "__main__":
     tests = [
         test_current_aggregate_references_existing_python_files,
         test_current_python_test_functions_are_invoked,
+        test_ci_invokes_the_canonical_aggregate,
         test_audit_detects_an_omitted_test_module,
         test_audit_detects_a_dangling_command_target,
         test_audit_detects_test_functions_that_python_would_not_run,
@@ -117,4 +126,4 @@ if __name__ == "__main__":
     ]
     for test in tests:
         test()
-    print(f"PASS manifest and executable-entrypoint audit ({len(tests)}/{len(tests)} tests)")
+    print(f"PASS CI-wired manifest and executable-entrypoint audit ({len(tests)}/{len(tests)} tests)")
