@@ -98,6 +98,15 @@ test('raw determinant outputs explicitly classify overflow and underflow', () =>
  assert.strictEqual(huge.detGStatus,'overflow');
  assert.strictEqual(huge.detQStatus,'overflow');
  assert.ok(huge.metricEigenvalues.every(Number.isFinite));
+ const largest=quantumGeometryBridge({g11:Number.MAX_VALUE,g12:0,g22:Number.MAX_VALUE,curvature:0});
+ assert.strictEqual(largest.detG,null);
+ assert.strictEqual(largest.detGStatus,'overflow');
+ assert.ok(largest.metricEigenvalues.every(Number.isFinite));
+ close(largest.metricEigenvalues[0]/Number.MAX_VALUE,1,1e-15);
+ const minimum=quantumGeometryBridge({g11:Number.MIN_VALUE,g12:0,g22:Number.MIN_VALUE,curvature:0});
+ assert.strictEqual(minimum.detG,null);
+ assert.strictEqual(minimum.detGStatus,'underflow');
+ assert.ok(minimum.metricEigenvalues.every(Number.isFinite));
  assert.strictEqual(quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:0}).detGStatus,'finite');
 });
 
