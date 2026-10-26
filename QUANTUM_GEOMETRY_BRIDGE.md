@@ -62,7 +62,7 @@ The bridge suite covers zero curvature, saturation, intermediate curvature, scal
 
 ## Numerical trust diagnostics — Descent XCVI
 
-The bridge now computes the normalized 2×2 determinant with compensated products/subtraction and obtains the smaller eigenvalue as \(\lambda_{\min}=\det(g)/\lambda_{\max}\), reducing cancellation in near-degenerate metrics. It also returns `metricConditionNumber` and `metricConditionStatus` (`well-conditioned`, `ill-conditioned`, or `numerically-unresolved`). These fields are diagnostic and do not silently regularize the input or change the Great Scale scalar.
+The bridge normalizes using a power-of-two scale extracted from the binary64 exponent, avoiding the extra rounding caused by dividing every matrix entry by an arbitrary maximum. The scale extraction handles both maximum finite values and subnormals. It computes the normalized 2×2 determinant with compensated products/subtraction and obtains the smaller eigenvalue as \(\lambda_{\min}=\det(g)/\lambda_{\max}\), reducing cancellation in near-degenerate metrics. It also returns `metricConditionNumber` and `metricConditionStatus` (`well-conditioned`, `ill-conditioned`, or `numerically-unresolved`). These fields are diagnostic and do not silently regularize the input or change the Great Scale scalar.
 
 For \(g_\varepsilon=\begin{pmatrix}1&1-\varepsilon\\1-\varepsilon&1\end{pmatrix}\), the exact determinant is \(\varepsilon(2-\varepsilon)\) and the eigenvalues are \(\varepsilon\) and \(2-\varepsilon\). Near this boundary, validity and scale covariance alone do not guarantee reliable floating-point output. The scalar embedding remains \(S_Q=(1-\chi^2)/4\) and \(\Psi_Q=\mathrm{CONE}+S_Q\); conditioning is a separate trust channel.
 
@@ -79,3 +79,5 @@ The normalized geometry and eigenvalue diagnostics can remain usable even when t
 - This is a representability classification, not an arbitrary-precision determinant. It does not replace a high-precision oracle for numerical verification.
 
 The stress suite includes near-degenerate metrics, the smallest positive binary64 subnormal eigenvalue, raw determinant overflow/underflow, scale-invariance checks, and positivity-boundary cases. Numerical output should be treated as a mathematical computation over the represented floating-point inputs, not as empirical evidence for a physical law.
+
+The near-degenerate regression now also includes an exact-BigInt reference derived from the actual binary64 input encodings. This checks the represented-input determinant rather than an idealized decimal value and helps catch precision loss introduced during normalization.
