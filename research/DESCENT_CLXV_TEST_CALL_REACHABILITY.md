@@ -41,7 +41,8 @@ D(f) \land C(f) \not\Rightarrow X(f)
 - Source inspection: confirmed the previous implementation counted any matching `ast.Name` inside the main guard.
 - Regression added: bare reference via `print(test_regression)` must be reported as uninvoked.
 - Aggregate wiring: the existing `npm run all` command already invokes `test_great_scale_clviii_test_manifest_completeness.py`; no package-script edit was required for this correction.
-- Runtime validation: a focused local mutation harness should check both the old false positive and the corrected call-detection behavior. The committed full aggregate and hosted Actions run must be verified separately; this note does not claim either passed.
+- Runtime validation: focused local mutation harness passed 3/3 assertions (exit 0): it reproduced the old false negative, verified that the corrected audit flags a bare reference, and verified that a direct call is accepted.
+- Limits: the harness exercised a copied AST predicate, not the committed test module in a clean checkout. The full aggregate and hosted Actions run remain unverified.
 
 ## Next boundary
 
