@@ -6,7 +6,7 @@ import re
 import tempfile
 
 
-NODE_TEST = re.compile(r"node\s+(test[A-Za-z0-9_.-]+\.(?:js|cjs|mjs))")
+NODE_TEST = re.compile(r"node\s+(test(?:[A-Za-z0-9_.-]*)\.(?:js|cjs|mjs))")
 
 
 def audit_node_tests(root: Path, test_command: str):
