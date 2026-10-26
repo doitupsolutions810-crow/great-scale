@@ -41,6 +41,7 @@ def good_schema():
             "gates": {
                 "type": "object",
                 "required": list(GATE_IDS),
+                "additionalProperties": False,
                 "properties": {gate: allow("READY") for gate in GATE_IDS},
             },
         },
@@ -126,6 +127,7 @@ def validate_status_schema(status, schema, url="https://evidence.example.invalid
                 and isinstance(gate_required, list)
                 and set(gate_required) == set(GATE_IDS)
                 and len(gate_required) == len(GATE_IDS)
+                and gate_schema.get("additionalProperties") is False
                 and all(property_allows(gate_properties.get(gate), "READY") for gate in GATE_IDS)
             )
             array_gate_schema_valid = False
@@ -301,6 +303,14 @@ def test_cross_origin_final_response_url_is_not_trusted():
     assert not valid
     assert "response_url_not_pinned" in failures
 
+
+def test_object_gate_schema_rejects_additional_gate_ids():
+    schema = good_schema()
+    schema["properties"]["gates"]["additionalProperties"] = True
+    valid, failures = validate_status_schema(good_status(), schema)
+    assert not valid
+    assert "schema.properties.gates" in failures
+
 if __name__ == "__main__":
     tests = [
         test_valid_independent_status_and_schema_contract_passes,
@@ -316,6 +326,7 @@ if __name__ == "__main__":
         test_array_gate_schema_requires_one_of_each_g0_g6,
         test_array_schema_missing_exactly_once_gate_rule_fails_closed,
         test_cross_origin_final_response_url_is_not_trusted,
+        test_object_gate_schema_rejects_additional_gate_ids,
     ]
     for test_fn in tests:
         test_fn()
