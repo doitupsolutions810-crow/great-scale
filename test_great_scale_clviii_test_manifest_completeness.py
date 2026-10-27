@@ -68,6 +68,37 @@ def tests_not_invoked_by_direct_runner(path: Path):
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
             known, value = literal_truth(node.operand)
             return (True, not value) if known else (False, False)
+        if isinstance(node, ast.Compare) and isinstance(node.left, ast.Constant):
+            left = node.left.value
+            try:
+                for op, comparator in zip(node.ops, node.comparators):
+                    if not isinstance(comparator, ast.Constant):
+                        return False, False
+                    right = comparator.value
+                    if isinstance(op, ast.Eq):
+                        matched = left == right
+                    elif isinstance(op, ast.NotEq):
+                        matched = left != right
+                    elif isinstance(op, ast.Lt):
+                        matched = left < right
+                    elif isinstance(op, ast.LtE):
+                        matched = left <= right
+                    elif isinstance(op, ast.Gt):
+                        matched = left > right
+                    elif isinstance(op, ast.GtE):
+                        matched = left >= right
+                    elif isinstance(op, ast.Is):
+                        matched = left is right
+                    elif isinstance(op, ast.IsNot):
+                        matched = left is not right
+                    else:
+                        return False, False
+                    if not matched:
+                        return True, False
+                    left = right
+                return True, True
+            except TypeError:
+                return False, False
         if isinstance(node, ast.BoolOp):
             values = [literal_truth(value) for value in node.values]
             if not all(known for known, _ in values):
@@ -133,7 +164,7 @@ def tests_not_invoked_by_direct_runner(path: Path):
 
             def visit_For(self, node):
                 self.visit(node.iter)
-                selected = node.orelse if definitely_empty_iterable(node.iter) else node.body + node.orelse
+                selected = node.orelse if definitely_empty_iterable(node.iter) else node.body
                 for child in selected:
                     self.visit(child)
 
@@ -190,7 +221,10 @@ def tests_not_invoked_by_direct_runner(path: Path):
                 selected = statement.body if known and truth else statement.orelse if known else statement.body + statement.orelse
                 invoked.update(inspect_block(selected, known_registries))
             elif isinstance(statement, ast.For):
-                if not definitely_empty_iterable(statement.iter):
+                if definitely_empty_iterable(statement.iter):
+                    # For an empty iterable the body is unreachable and else is guaranteed.
+                    invoked.update(inspect_block(statement.orelse, known_registries))
+                else:
                     loop_targets = assigned_names(statement.target)
                     if calls_loop_target_in_reachable_block(statement.body, loop_targets):
                         if isinstance(statement.iter, ast.Name):
@@ -198,14 +232,17 @@ def tests_not_invoked_by_direct_runner(path: Path):
                         elif isinstance(statement.iter, (ast.List, ast.Tuple, ast.Set)):
                             invoked.update(referenced_tests(statement.iter))
                     invoked.update(inspect_block(statement.body, known_registries))
-                invoked.update(inspect_block(statement.orelse, known_registries))
+                    # A for-else may be bypassed by break; this auditor does not prove
+                    # absence of break and therefore does not count calls in that branch.
             elif isinstance(statement, ast.While):
                 known, truth = literal_truth(statement.test)
                 if known and not truth:
+                    # A false loop never executes its body and always proceeds to else.
                     invoked.update(inspect_block(statement.orelse, known_registries))
                 else:
                     invoked.update(inspect_block(statement.body, known_registries))
-                    invoked.update(inspect_block(statement.orelse, known_registries))
+                    # For other loop conditions, else reachability requires reasoning
+                    # about break paths; conservatively do not count it.
             # Function/class definitions, with/try/match, and other unsupported
             # compound statements are deliberately not traversed: fail closed.
 
@@ -466,6 +503,64 @@ def test_audit_rejects_call_under_unsupported_try_branch():
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
 
 
+def test_audit_rejects_false_comparison_condition():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_false_comparison.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    if 1 == 2:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_accepts_call_in_guaranteed_empty_loop_else():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_empty_loop_else.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for unused in []:\n"
+            "        pass\n"
+            "    else:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == []
+
+
+def test_audit_rejects_call_in_for_else_with_break_path():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_for_else_break.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for unused in [1]:\n"
+            "        break\n"
+            "    else:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_call_in_while_else_with_break_path():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_while_else_break.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    while True:\n"
+            "        break\n"
+            "    else:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 def test_audit_accepts_functions_dispatched_from_a_main_guard_registry():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_registry.py"
@@ -528,6 +623,10 @@ if __name__ == "__main__":
         test_audit_rejects_call_in_uninvoked_lambda,
         test_audit_rejects_lambda_wrapped_test_in_registry,
         test_audit_rejects_call_under_unsupported_try_branch,
+        test_audit_rejects_false_comparison_condition,
+        test_audit_accepts_call_in_guaranteed_empty_loop_else,
+        test_audit_rejects_call_in_for_else_with_break_path,
+        test_audit_rejects_call_in_while_else_with_break_path,
     ]
     for test in tests:
         test()
