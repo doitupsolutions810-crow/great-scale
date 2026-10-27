@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Great Scale G6 Residual Measurement v1",
-  "description": "A source/build-bound numerical measurement receipt for G6. Schema validity alone does not prove signature authenticity, cross-field binding, execution, live observation, or production authorization.",
+  "description": "A source/build-bound numerical measurement receipt for G6. Great Scale producer/model build identity and target Control Plane build/artifact identity are separate fields and must not be conflated. Schema validity alone does not prove signature authenticity, cross-field binding, execution, live observation, or production authorization.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -9,7 +9,6 @@
     "issuer",
     "keyId",
     "environment",
-    "buildId",
     "generatedAt",
     "expiresAt",
     "source",
@@ -21,7 +20,11 @@
     "signature",
     "measuredAt",
     "canonicalization",
-    "signatureAlgorithm"
+    "signatureAlgorithm",
+    "measurementBuildId",
+    "targetBuildId",
+    "target",
+    "targetArtifact"
   ],
   "properties": {
     "schema": {
@@ -38,13 +41,6 @@
     },
     "environment": {
       "const": "production"
-    },
-    "buildId": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 200,
-      "pattern": "^[A-Za-z0-9._:-]+$",
-      "description": "Shared composite release identifier binding this Great Scale model receipt to the downstream Control Plane production acceptance build. It must equal the final G0-G6 attestation buildId. If independently generated source/target build IDs cannot share this value, v1 is insufficient; introduce versioned sourceBuildId and acceptanceBuildId fields instead."
     },
     "generatedAt": {
       "type": "string",
@@ -133,7 +129,8 @@
           "pattern": "^sha256:[a-f0-9]{64}$",
           "description": "SHA-256 digest of the immutable Great Scale model artifact used to compute this measurement. It is distinct from the Control Plane production acceptance artifact digest."
         }
-      }
+      },
+      "description": "Immutable Great Scale model/measurement artifact. Its digest is distinct from targetArtifact.digest, which binds the intended Control Plane acceptance release."
     },
     "model": {
       "type": "object",
@@ -349,7 +346,7 @@
           "maximum": 131072
         }
       },
-      "description": "Numerical/model diagnostics. STopological is the canonical topology-derived residual coordinate and must be mapped to residual.S in the downstream Control Plane envelope; verifier must reject disagreement between them."
+      "description": "Numerical/model diagnostics. STopological is the canonical topology-derived residual coordinate and maps to downstream residual.S. The verifier must reject disagreement between that value and the final residual scalar."
     },
     "digest": {
       "type": "string",
@@ -373,6 +370,59 @@
     "signatureAlgorithm": {
       "const": "Ed25519",
       "description": "The signature is verified against a deployment-pinned public key identified by keyId; the payload cannot choose its trust anchor."
+    },
+    "measurementBuildId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Build identity of the Great Scale measurement producer/model execution. This identifies the measurement side only and must not be assumed equal to the target Control Plane acceptance build ID."
+    },
+    "targetBuildId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Exact Control Plane release build ID that this measurement is intended to support. It must equal the final G0-G6 production acceptance attestation buildId and downstream residual.buildId."
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commitSha"
+      ],
+      "properties": {
+        "repository": {
+          "const": "doitupsolutions810-crow/living-intermediate-control-plane"
+        },
+        "commitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      },
+      "description": "Exact consumer source revision that will consume this G6 measurement; must match the source identity in the final G0-G6 acceptance attestation."
+    },
+    "targetArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "digest"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "Digest of the target Control Plane acceptance/release artifact; must match the final G0-G6 attestation artifact.digest."
+        }
+      },
+      "description": "Target release artifact. This digest is separate from artifact.digest, which identifies the Great Scale model/measurement artifact."
     }
   }
 }
