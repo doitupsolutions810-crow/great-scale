@@ -28,6 +28,13 @@ def tests_not_invoked_by_direct_runner(path: Path):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and node.name.startswith("test_")
     }
+    # A bare call to async def returns a coroutine; it does not execute the body.
+    # This static audit intentionally fails closed on async tests instead of guessing
+    # whether the runner awaited or scheduled them correctly.
+    synchronous_defined = {
+        node.name for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+    }
 
     def referenced_tests(node):
         return {
@@ -82,12 +89,12 @@ def tests_not_invoked_by_direct_runner(path: Path):
         invoked = set()
         known_registries = dict(registry)
         for statement in statements:
-            if not isinstance(statement, (ast.If, ast.For, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if not isinstance(statement, (ast.If, ast.For, ast.While, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 invoked.update(
                     child.func.id for child in ast.walk(statement)
                     if isinstance(child, ast.Call)
                     and isinstance(child.func, ast.Name)
-                    and child.func.id in defined
+                    and child.func.id in synchronous_defined
                 )
 
             if isinstance(statement, ast.Assign):
@@ -108,11 +115,17 @@ def tests_not_invoked_by_direct_runner(path: Path):
                 loop_targets = assigned_names(statement.target)
                 if loop_target_called_in_reachable_block(statement.body, loop_targets):
                     if isinstance(statement.iter, ast.Name):
-                        invoked.update(known_registries.get(statement.iter.id, set()))
+                        invoked.update(known_registries.get(statement.iter.id, set()) & synchronous_defined)
                     elif isinstance(statement.iter, (ast.List, ast.Tuple, ast.Set)):
-                        invoked.update(referenced_tests(statement.iter))
+                        invoked.update(referenced_tests(statement.iter) & synchronous_defined)
                 invoked.update(inspect_block(statement.body, known_registries))
                 invoked.update(inspect_block(statement.orelse, known_registries))
+            elif isinstance(statement, ast.While):
+                if isinstance(statement.test, ast.Constant) and statement.test.value is False:
+                    invoked.update(inspect_block(statement.orelse, known_registries))
+                else:
+                    invoked.update(inspect_block(statement.body, known_registries))
+                    invoked.update(inspect_block(statement.orelse, known_registries))
             elif isinstance(statement, ast.If):
                 if isinstance(statement.test, ast.Constant) and isinstance(statement.test.value, bool):
                     branch = statement.body if statement.test.value else statement.orelse
@@ -244,6 +257,31 @@ def test_audit_rejects_loop_dispatch_inside_an_uninvoked_helper():
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
 
 
+def test_audit_rejects_test_call_in_false_while_loop():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_dead_while.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    while False:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_unawaited_async_test_invocation():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_unawaited_async.py"
+        path.write_text(
+            "async def test_regression():\n    assert False\n\n"
+            'if __name__ == "__main__":\n'
+            "    test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 def test_audit_accepts_functions_dispatched_from_a_main_guard_registry():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_registry.py"
@@ -296,6 +334,8 @@ if __name__ == "__main__":
         test_audit_rejects_a_test_call_in_a_false_branch,
         test_audit_rejects_loop_dispatch_in_a_false_branch,
         test_audit_rejects_loop_dispatch_inside_an_uninvoked_helper,
+        test_audit_rejects_test_call_in_false_while_loop,
+        test_audit_rejects_unawaited_async_test_invocation,
     ]
     for test in tests:
         test()
