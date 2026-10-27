@@ -68,3 +68,14 @@ Decision: do not merge PR #31 and #33 unchanged; do not promote E0–E6 to G0–
 Added a regression to Control Plane `test/evidence-console.test.mjs` that builds and signs the actual E0–E6 procurement document, submits it to the G0–G6 public production consumer validator, and asserts rejection for runtime mismatch, missing source-issued freshness fields, and absent expected gate structure. This codifies the safe boundary rather than adapting E0–E6 into apparent G0–G6 authority.
 
 Commit: `0bf4ca304682d55681a26b063a0917a4bc4b3f4d` on PR #33's branch. The test has been added to the existing focused workflow's already-covered test path, but it has **not yet executed in hosted CI**. The previous 8/8 isolated parser harness does not include this new cross-contract regression. Full repository tests remain unverified.
+
+
+## CLXCI-B — signature bytes are incompatible even if field names are adapted
+
+The mismatch also exists at the cryptographic boundary:
+- `lib/evidence-status-document.mjs` computes a canonical JSON payload string and signs its UTF-8 bytes with Ed25519.
+- `lib/evidence-console.mjs` computes a SHA-256 hex digest and verifies the Ed25519 signature over the decoded 32-byte digest (`Buffer.from(digest, 'hex')`).
+
+Those are different signed messages. Copying or renaming `digest/keyId/signature` into `sourceEvidenceDigest/sourceKeyId/sourceSignature` cannot make the signature valid. A compatible protocol must specify one exact signed byte sequence, canonicalization rules, digest encoding, signature encoding, key identity, and producer key ID, then use the same rules in producer and consumer.
+
+Added a regression to PR #33's `test/evidence-console.test.mjs` that constructs a consumer-shaped status signed using the producer's canonical-JSON-byte convention and asserts the consumer's raw-digest verifier rejects it with `signature_verification_failed`. Commit: `6ec69a286c0674f486026b5c981835203493c04e`. A local Node syntax check passed for the added test fragment; the actual repository test has not executed because hosted Actions still fails before visible steps. Do not treat this as a runtime test pass.
