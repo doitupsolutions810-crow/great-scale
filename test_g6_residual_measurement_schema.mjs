@@ -59,14 +59,22 @@ test("artifact and model provenance are versioned and bounded", () => {
   assert.equal(parameters.properties.maxRefinements.maximum, 5);
 });
 
-test("build identity is composite and the model artifact digest is distinct from the target artifact", () => {
-  assert.match(schema.properties.buildId.description, /shared composite release identifier/i);
-  assert.match(schema.properties.buildId.description, /must equal the final G0-G6 attestation buildId/i);
-  assert.match(schema.properties.buildId.description, /sourceBuildId and acceptanceBuildId/);
-  assert.match(schema.properties.artifact.properties.digest.description,
-    /distinct from the Control Plane production acceptance artifact digest/i);
-  assert.match(schema.properties.source.properties.commitSha.description,
-    /distinct from the Control Plane target source revision/i);
+test("measurement build identity is distinct from target build and release artifact identities", () => {
+  assert.ok(schema.required.includes("measurementBuildId"));
+  assert.ok(schema.required.includes("targetBuildId"));
+  assert.ok(!schema.required.includes("buildId"), "a single ambiguous buildId must not serve both services");
+  assert.match(schema.properties.measurementBuildId.description,
+    /must not be assumed equal to the target Control Plane acceptance build ID/i);
+  assert.match(schema.properties.targetBuildId.description,
+    /must equal the final G0-G6 production acceptance attestation buildId/i);
+  assert.equal(schema.properties.target.properties.repository.const,
+    "doitupsolutions810-crow/living-intermediate-control-plane");
+  assert.equal(schema.properties.target.properties.commitSha.pattern, "^[a-f0-9]{40}$");
+  assert.equal(schema.properties.targetArtifact.properties.digest.pattern, "^sha256:[a-f0-9]{64}$");
+  assert.match(schema.properties.targetArtifact.properties.digest.description,
+    /must match the final G0-G6 attestation artifact.digest/i);
+  assert.match(schema.properties.artifact.description, /Great Scale model\/measurement artifact/i);
+  assert.match(schema.properties.artifact.properties.digest.description, /distinct from targetArtifact.digest/i);
 });
 
 test("measurement contains explicit QGT, convergence, topology, and error-bound diagnostics", () => {
@@ -111,4 +119,15 @@ test("the schema declares the downstream mapping but does not pretend to verify 
   assert.match(schema.properties.measurement.description, /must be mapped to residual\.S/);
   assert.match(schema.description, /cross-field binding/i);
   assert.match(schema.description, /live observation/i);
+});
+
+test("target commit and target artifact are required independently of Great Scale measurement provenance", () => {
+  assert.ok(schema.required.includes("target"));
+  assert.ok(schema.required.includes("targetArtifact"));
+  assert.equal(schema.properties.target.additionalProperties, false);
+  assert.equal(schema.properties.targetArtifact.additionalProperties, false);
+  assert.deepEqual([...schema.properties.target.required].sort(), ["commitSha", "repository"]);
+  assert.deepEqual([...schema.properties.targetArtifact.required].sort(), ["digest", "name"]);
+  assert.match(schema.properties.target.description, /must match the source identity in the final G0-G6 acceptance attestation/i);
+  assert.match(schema.description, /must not be conflated/i);
 });
