@@ -37,7 +37,7 @@ On branch `fix/mainline-public-evidence-contract-verification`:
 
 - Added `lib/residual-input.mjs` with an explicit parser. Only an unset variable receives the documented default `0`; supplied empty, non-numeric, `NaN`, infinite, or overflow values are invalid.
 - Added `test/residual-input.test.mjs` covering defaulting, finite positive/negative values, empty strings, non-numeric input, `NaN`, infinities, and overflow.
-- Updated `integrate.mjs` and `status/procurement-bridge.mjs` to pass a fail-closed sentinel into the cone check when parsing fails, emit `HOLD_INVALID_RESIDUAL`, and report the parse failure explicitly rather than presenting a fabricated residual snapshot.
+- Updated `integrate.mjs` and `status/procurement-bridge.mjs` to pass a fail-closed sentinel into the cone check when parsing fails, emit `HOLD_INVALID_RESIDUAL` or `HOLD_RESIDUAL_CONE`, and report the parse failure explicitly rather than presenting a fabricated residual snapshot.
 - Added the new test to the package test command and the focused evidence-contract workflow's path filters, syntax checks, and Node test command.
 
 This prevents invalid residual input from yielding a procurement-ready result through silent coercion. It does not implement a live QGT/topology feed and does not enable production authorization.
@@ -46,7 +46,7 @@ This prevents invalid residual input from yielding a procurement-ready result th
 
 - Source updates are committed on PR #33's branch; the latest head must be re-fetched before release decisions.
 - The focused workflow is configured to syntax-check and run the new regression.
-- An isolated Node.js 22 runtime run of the parser module and its regression cases passed **4/4 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
+- An isolated Node.js 22 runtime run of the parser module and its regression cases passed **6/6 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
 - The hosted Actions runner previously failed before exposing any steps. Therefore the newly committed JavaScript test has not yet been proven to execute in hosted CI.
 - The local environment cannot clone GitHub (DNS/network unavailable), so a clean-checkout full-suite run was not possible in this pass.
 - This finding addresses input validity only; it does not close the E0–E6 versus G0–G6 producer/consumer protocol mismatch, production key pinning, live endpoint verification, or PR history divergence.
