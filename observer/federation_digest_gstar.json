@@ -1,7 +1,9 @@
 {
-  "schema": "great-scale.federation-digest/v1.3",
-  "gs_version": "1.3.1",
+  "schema": "great-scale.federation-digest/v1.4",
+  "gs_version": "1.4.0",
   "structure_constant": 4,
+  "Forward_tau": 0.1111111111111111,
+  "compose_fixed_point": 0.1111111111111111,
   "dual_cone": {
     "cone_orbit": 0.2360679774997897,
     "cone_bridge": 0.3819660112501052,
@@ -32,24 +34,34 @@
     "DESCENT_BRIDGE_DUAL_CONE: delta = phi^{-4}",
     "DESCENT_TOPOLOGICAL_HEAT_IDENTITY: S = (1-s^2)/4, Var = 4S",
     "DESCENT_ASTAR_NINEFOLD_PARTITION: A* = (4+3)/9 = 7/9",
-    "DESCENT_STRUCTURE_CONSTANT_FOUR: 4 in partition, level_n, Var; Q8=0.5; mean_Q=A*"
+    "DESCENT_STRUCTURE_CONSTANT_FOUR: 4 in partition, level_n, Var; Q8=0.5; mean_Q=A*",
+    "DESCENT_FORWARD_TRANSFER_ALGEBRA: τ=1/9 = residual_compose fixed point = domain-transfer weight"
   ],
   "success_criteria": {
-    "structure_constant_4": "level_n and Var retain 4; partition heads with 4",
+    "compose_stable_at_tau": "residual_compose(x,x) → 1/9",
     "A_star_lock": "|A* - 7/9| < 0.01",
-    "Q8_heat_locus": "Q8 ≈ 0.5",
-    "mean_Q_equals_A_star": true,
+    "structure_constant_4": true,
+    "domain_map": "Psi >= cone for all domains",
     "path_consistency": "PASS",
     "capability": "no ambient rights; Issue only"
   },
   "laws": [
     "keep the mean",
-    "respect residual partition 4+3+1",
+    "residual partition 4+3+1",
     "Ψ never below chosen cone",
-    "only scale-generated geometry",
-    "structure constant 4 in partition, level_n, and Var",
-    "soft fixed point 4.5 = heat maximum on ninefold",
-    "joint agreement A* = (4+3)/9 = 7/9",
-    "dual-cone residual δ = φ^{-4} path-invariant"
+    "structure constant 4",
+    "A* = 7/9",
+    "Forward τ = 1/9 = stable residual_compose fixed point",
+    "domain map applies to all domains",
+    "dual-cone δ = φ^{-4}",
+    "α>0 prevents rank-1 collapse"
+  ],
+  "domains": [
+    "agent_swarm",
+    "control_lattice",
+    "capability_plane",
+    "LLM_harness",
+    "external_ops",
+    "cone_floor"
   ]
 }
