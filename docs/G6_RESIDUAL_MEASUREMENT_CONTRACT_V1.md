@@ -16,7 +16,7 @@ A valid signed receipt binds all of these inputs to the exact model output:
 
 - **Source:** repository identity and a full 40-character commit SHA. The execution's head SHA must equal the source SHA.
 - **Execution:** successful workflow run ID and attempt, canonical GitHub Actions run URL, start/completion timestamps, and exact head SHA.
-- **Build/artifact:** immutable build ID and SHA-256 artifact digest, both checked against deployment pins.
+- **Build/artifact:** `measurementBuildId` identifies the Great Scale model/measurement execution and `artifact.digest` identifies its immutable model artifact. Separately, `targetBuildId` and `targetArtifact.digest` identify the intended Control Plane release. All four values are checked against their respective deployment pins; measurement-side and target-side identities must not be collapsed.
 - **Model:** fixed model identifier `qi-wu-zhang-two-band`, reviewed model version, explicit mass parameter `m`, base grid size, refinement limit, and an input digest computed from the canonical source/build/model-parameter record.
 - **Measurement:** the fields in the schema's `measurement` object, including signed/absolute curvature data, the derived topological tuple, convergence, grid-origin discrepancies, error bounds, tolerance, and acceptance flags.
 - **Trust:** canonical payload digest plus Ed25519 signature under an independently provisioned key ID and public key. The payload cannot choose its own trust anchor.
@@ -28,7 +28,7 @@ All timestamps must be strict RFC3339/date-time values with sane ordering and bo
 In addition to schema validation, the trusted G6 verifier must check at least:
 
 - `source.commitSha === execution.headSha`, exact run URL ↔ source repository/run ID binding, and a successful run attempt;
-- model identifier/version/parameters, build ID, source commit and artifact digest match external deployment pins;
+- model identifier/version/parameters, `measurementBuildId`, Great Scale source commit and `artifact.digest` match the measurement-side deployment pins; `targetBuildId`, `target.commitSha`, and `targetArtifact.digest` match the target Control Plane release pins;
 - `topologicalMappingValid === true`, `quadratureConverged === true`, and `rigorousBoundFinite === true`;
 - `topologicalFloor = abs(chernNumber)`;
 - `metricAreaExcess = metricAreaBudget - topologicalFloor` within configured numerical tolerance;
@@ -42,7 +42,7 @@ A model output with missing, non-finite, under-resolved, or failed diagnostics i
 
 ## Mapping into production G6
 
-Only after the trusted producer verifies this receipt should it map `measurement.STopological` to the compact production residual scalar `S`. The Control Plane's signed G0-G6 attestation must still bind that scalar to its configured residual source ID, build ID, timestamp, source commit, required workflow attempt and artifact digest.
+Only after the trusted producer verifies this receipt should it translate selected fields into the compact production residual block: `measurement.STopological` → `residual.S`, `measuredAt` → `residual.measuredAt`, the pinned receipt `issuer` → `residual.sourceId`, and `targetBuildId` → `residual.buildId`. The target `target.commitSha` must equal the final Control Plane G0-G6 attestation's `source.commitSha`; `targetArtifact.digest` must equal its `artifact.digest`. The receipt's `source.commitSha` equals its own successful measurement run `execution.headSha`, and `artifact.digest` remains the Great Scale model artifact digest. The consumer `residual.schema` is the compact downstream schema `great-scale.residual-attestation/v1`; the trusted producer validates and maps fields, it does not copy the receipt schema or claim.
 
 The evidence receipt is referenced by the successful `residual-measurement` suite's durable evidence URL and digest. The producer must fetch/inspect that exact artifact independently; the current Control Plane verifier checks the signed envelope's consistency but does not itself fetch Actions metadata or validate the truth of the underlying measurement claims.
 
