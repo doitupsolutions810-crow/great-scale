@@ -37,3 +37,11 @@ A repository-level `verified` claim uses the same run proof and pins its subject
 ## Next step
 
 Keep the public map limited to public repositories. Maintain any complete private inventory only in an access-controlled repository. Refresh the public snapshot as public repositories change, then establish the interface contracts with exact-head integration tests.
+
+
+
+## G6 receipt schema and trust boundary
+
+The Great Scale → Control Plane edge is pinned to `contracts/g6-residual-measurement/v1.schema.json`, Git blob SHA `a0956c825e9a8974f5855054d2c80eb4433391f9`. The checked-in test `test_g6_residual_measurement_schema.mjs` recomputes the Git blob SHA from the file content and checks the source/run/artifact/model fields, residual range, convergence diagnostics, measuredAt, canonicalization and Ed25519 metadata. The public registry validator pins the schema version/path/SHA and the explicit downstream field mapping; the private inventory carries the same mapping.
+
+This is an input contract only. It does not provide live measurement execution, cross-field truth checking, an API, a deployed producer, signing key provisioning, GitHub Actions API verification, or G0-G6 authorization. The G6 edge stays unverified until the receipt is produced from the actual source/model/run/artifact, cryptographically checked with an independently provisioned key, mapped into the signed G0-G6 residual, and exercised by an inspectable exact-head E2E run.
