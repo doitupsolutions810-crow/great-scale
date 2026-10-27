@@ -134,3 +134,14 @@ The Actions log download for Great Scale and LICP returned `BlobNotFound`; job p
 5. Run CycleKernal compile, unit tests, relay/simulation tests, and container builds at its current exact head.
 6. Re-check the full Capability Authority PR stack and durable-ledger tests; Snyk/CodeRabbit green is not evidence for authorization correctness, key lifecycle, or crash consistency.
 
+
+## Descent CLXXXIX — shared operation/evidence contract
+
+The candidate contracts now have a common reference: [Operation and Evidence Contract v1](OPERATION_EVIDENCE_CONTRACT_V1.md). This unifies the intended meaning of stable operation identity, per-service canonical request digest, parent correlation, durable intent, observed effect, receipt read-back, and the `indeterminate` state.
+
+The proposed integrations are still separate draft changes:
+- LICP #34 bounds and verifies the transport of a configured production-attestation document; it does not deploy a trusted producer or provision signing keys.
+- Capability Authority #12 adds operation-level intent/receipt persistence and prevents blind re-execution under the same operation ID after an uncertain effect.
+- CycleKernel #13 adds idempotent MongoDB chat persistence and separates ancillary Redis/metrics failures from the primary write result.
+
+Each candidate has its own local isolated tests, but the hosted runners in this account have failed before recording any steps. None of the above edges is end-to-end verified or ready for production promotion. The common contract is a success criterion for the next integration suite, not a claim that the individual services already exchange one canonical envelope.
