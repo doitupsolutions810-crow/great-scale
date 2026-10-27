@@ -61,3 +61,10 @@ Consequently:
 7. Only after every independent predicate is satisfied may release authorization be reconsidered.
 
 Decision: do not merge PR #31 and #33 unchanged; do not promote E0–E6 to G0–G6; do not enable production. **Production remains HOLD.**
+
+
+## CLXCI-A — executable non-interchangeability regression added
+
+Added a regression to Control Plane `test/evidence-console.test.mjs` that builds and signs the actual E0–E6 procurement document, submits it to the G0–G6 public production consumer validator, and asserts rejection for runtime mismatch, missing source-issued freshness fields, and absent expected gate structure. This codifies the safe boundary rather than adapting E0–E6 into apparent G0–G6 authority.
+
+Commit: `0bf4ca304682d55681a26b063a0917a4bc4b3f4d` on PR #33's branch. The test has been added to the existing focused workflow's already-covered test path, but it has **not yet executed in hosted CI**. The previous 8/8 isolated parser harness does not include this new cross-contract regression. Full repository tests remain unverified.
