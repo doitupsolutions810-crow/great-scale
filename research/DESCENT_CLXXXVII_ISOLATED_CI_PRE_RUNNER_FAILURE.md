@@ -47,3 +47,12 @@ This is not evidence that Node tests failed. No test step is shown as executed. 
 4. Keep production authorization HOLD until those checks and live trust binding pass.
 
 This finding is evidence of a CI observability/execution blocker, not a test pass, not a test failure, and not proof of production readiness.
+
+
+## Follow-up retry and repository permissions check
+
+On 2026-10-26 local time, the failed focused workflow was retried once via GitHub Actions API. GitHub accepted the retry request, queued a new job (job ID `121982755664`), then completed it as failure again. The retry still exposed `steps: []`; the job-step endpoint returned an empty list. This repeat strengthens the diagnosis that the blocker occurs before command execution, but still does not identify the root cause.
+
+Repository metadata reports public repository permissions with admin access available to the repository owner. The available integration does not expose repository Actions settings, runner-group policies, billing/usage limits, or organization-level runner availability, so those settings cannot be verified or changed here. No repository setting has been changed.
+
+The exact candidate source and workflow remain unchanged at `1b2ad196dc6dfd6c6b23083fed5d8238700997da`. The next required action is in GitHub's repository/account Actions settings or platform support; repeating the same workflow retry is not a meaningful mitigation unless that execution issue changes.
