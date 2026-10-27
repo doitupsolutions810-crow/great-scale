@@ -170,3 +170,27 @@ The verifier remains fail-closed when independently configured public-key materi
 - The JavaScript suite has not been run in a clean checkout. The earlier hosted Control Plane and Great Scale test jobs failed without exposed step logs; those results do not validate this new commit. A fresh exact-head CI run is still required.
 
 Release remains HOLD / NO-GO until the exact PR head passes the JavaScript suite and the deployed public endpoint is verified with independently approved key configuration.
+
+## Descent CLXXXVIII — the cross-repository schema dialect was not connected
+
+A deeper source-to-consumer comparison found that the producer and the Control Plane's pre-existing local status verifier speak different document dialects:
+
+- Producer (control12-lattice-ops/evidence-console/api/status.js) emits version, sourceIdentity, sourceKeyId, sourceSchemaDigest, sourceEvidenceDigest, sourceSignature, sourceGeneratedAt, sourceExpiresAt, overall, and gates.
+- The local verifier in the Control Plane expects schema, generatedAt, expiresAt, residual, contractChecks, digest, keyId, and signature.
+
+These are not field aliases. Treating the producer payload as the local format guarantees rejection; translating fields without verifying the producer's original signature would be worse because it would break the signed-byte/field contract.
+
+The producer README and API routes specify two endpoints: /api/status and /api/v1/evidence/schema. The consumer integration has now been adjusted to fetch both, then use a producer-native verifier that:
+1. checks exact status fields, expected source identity/key ID and E0–E6 READY gate set;
+2. verifies freshness and expiry;
+3. recomputes canonical JSON digests for both the status and the independently fetched schema;
+4. verifies the Ed25519 signature over the producer's exact newline-delimited tuple using independently pinned consumer public-key material; and
+5. denies public authority if either endpoint or verification fails.
+
+Added test/producer-evidence-contract.test.mjs with five regression cases: valid signed pair, schema tampering, status tampering, stale signed evidence, and missing pinned key configuration. The package test command now invokes this suite before the existing self-test and platform suite.
+
+### Remaining proof gap
+
+GitHub Actions continues to report the Plane CI job as failed, but the connector exposes neither step summaries nor downloadable job logs for these runs. The exact failing command is therefore still unknown. Source re-fetch confirms the latest head contains the verifier, dual-endpoint probe, and tests; this is not equivalent to executing those tests. The producer README also states that its scaffold has not been deployed and its prior production alias returned 404, so live source verification remains unproven.
+
+Release remains HOLD / NO-GO pending actionable exact-head CI evidence, a clean full suite, approved key configuration, and a live response from both producer endpoints.
