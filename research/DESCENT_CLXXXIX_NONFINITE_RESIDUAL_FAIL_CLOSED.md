@@ -57,3 +57,19 @@ Decision: production remains **HOLD**. Source mitigation is committed; runtime i
 ## Great Scale policy-model integration
 
 Added `test_great_scale_clxxxix_finite_residual_boundary.py` and wired it into the `npm run all` aggregate in this branch. The isolated Python model run passed, covering default/finite values, malformed/non-finite inputs, overflow, and finite cone violation. This is an additional policy-level check, not a substitute for executing the Control Plane JavaScript integration.
+
+
+## Domain-boundary extension — CLXXXIX-B
+
+The source defines the topology-derived coordinate as `S=(1-tau^2)/4` with `tau` clamped to `[0,1]`; therefore the generated coordinate lies in `[0, 0.25]`. The earlier finite-only parser still allowed large finite values such as `1e100`, for which `coneCompliant(S)` returns true because the predicate is only `CONE + S >= CONE - epsilon`. Those values are finite but outside the coordinate's derivation domain, and downstream residual quantities can become meaningless.
+
+The parser now:
+- accepts only decimal numeric notation (not JavaScript-only hexadecimal/binary strings);
+- rejects non-finite values, overflow, and nonzero decimal inputs that underflow to numeric zero;
+- rejects finite values outside `[0, 0.25]` with `HOLD_RESIDUAL_DOMAIN`;
+- preserves the explicit `HOLD_INVALID_RESIDUAL` and `HOLD_RESIDUAL_CONE` paths;
+- reports the domain hold in both integrated and procurement-bridge status output.
+
+The expanded isolated Node.js regression suite passed **7/7 tests**, including domain boundaries, malformed strings, overflow/underflow, and out-of-domain finite inputs. These were run against a temporary isolated harness reproducing the committed helper and its residual predicate; this is not a clean checkout of the full repository. Hosted GitHub Actions still fails before exposing steps, so full integration and hosted execution remain unverified.
+
+The new domain bound is derived from the repository's own `fromTopologicalSaturation` formula; if the intended external QGT feed uses a different coordinate convention, that contract must be documented and versioned before widening the accepted domain. Production remains **HOLD**.
