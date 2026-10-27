@@ -15,6 +15,7 @@ export function validateRepositoryMap(map) {
     return ["map must be an object"];
   }
   if (map.schemaVersion !== 1) add("schemaVersion must equal 1");
+  if (map.scope !== "public-only") add("public registry scope must be public-only");
   if (typeof map.owner !== "string" || !map.owner.trim()) add("owner must be a non-empty string");
   if (typeof map.inventoryAsOf !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(map.inventoryAsOf)) add("inventoryAsOf must be YYYY-MM-DD");
   if (!Number.isInteger(map.expectedRepositoryCount) || map.expectedRepositoryCount < 1) add("expectedRepositoryCount must be a positive integer");
@@ -41,6 +42,7 @@ export function validateRepositoryMap(map) {
     }
     if (repo.owner !== map.owner) add(`${prefix}.owner must equal map.owner`);
     if (!["public", "private"].includes(repo.visibility)) add(`${prefix}.visibility must be public or private`);
+    if (map.scope === "public-only" && repo.visibility !== "public") add(`${prefix}.visibility must be public in a public-only registry`);
     if (typeof repo.defaultBranch !== "string" || !repo.defaultBranch.trim()) add(`${prefix}.defaultBranch must be non-empty`);
     if (typeof repo.role !== "string" || !repo.role.trim()) add(`${prefix}.role must be non-empty`);
     if (!allowedRoleEvidence.has(repo.roleEvidence)) add(`${prefix}.roleEvidence is not recognized`);
