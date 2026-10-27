@@ -106,3 +106,31 @@ Updated release predicate remains:
 `ReleaseAuthorized = C ∧ K ∧ B ∧ F ∧ G ∧ R ∧ O ∧ T ∧ L`
 
 Decision: HOLD / NO-GO. Do not merge, deploy, provision production signing keys, or activate procurement until the current branches are reconciled safely and all independent release predicates are evidenced on the exact candidate revisions.
+
+## Descent CLXXXVI — a verified status label is not contract proof
+
+A deeper inspection of the active Control Plane `main` gate namespace found two fail-open edges in `evaluateProcurementReadiness`:
+1. Public evidence was accepted from `status === "ok"` and `authority === "public"` without requiring `trustContractVerified === true`.
+2. Local fallback accepted an undefined status when local evidence was opted in. An absent status is not proof that a recognized degraded state was observed.
+
+The first edge is a defense-in-depth gap because the probe should only return public/ok after contract verification; the gate helper nevertheless exposed an authorization boundary that did not encode that invariant itself. The second edge could let a caller that supplied incomplete evidence represent it as an eligible local fallback.
+
+### Mitigation staged
+
+A new Control Plane draft PR, [#34](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/34), changes the gate policy to require both the public contract-verification flag and an explicit recognized local degraded status. It adds five repository self-test assertions for these positive and negative cases.
+
+The corrected predicate is:
+
+`EvidenceAuthorized = (PublicOK ∧ TrustContractVerified) ∨ (LocalAuthority ∧ LocalOptIn ∧ RecognizedDegradedStatus)`
+
+`ProcurementReady = CoreReady ∧ EvidenceAuthorized ∧ ConeCompliant`
+
+The recognized degraded statuses are exactly `not_found`, `unreachable`, `unconfigured`, and `invalid`. Missing/unknown status is excluded.
+
+### Verification
+
+- An isolated exhaustive policy harness evaluated 168 combinations across seven status classes, three authority labels, trust proof, local opt-in, and cone compliance. All invariants passed.
+- The CLXXXVI Python model is now added to this branch and the aggregate `npm run all` command.
+- The committed JavaScript self-test and complete aggregate have not been run in a clean checkout; hosted CI remains required. The source fix is staged in a draft PR, not merged or deployed.
+
+This is a refinement of the broader Great Scale rule: availability and a label are observations; neither substitutes for proof of authority.
