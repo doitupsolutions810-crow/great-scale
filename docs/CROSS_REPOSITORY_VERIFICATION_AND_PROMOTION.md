@@ -293,3 +293,7 @@ The contract's focused regression test is wired into `npm test` as `node --test 
 A separate actual-code blocker was fixed in `research/topological-qgt.cjs`: the malformed `require('..//public/scale.cjs)` import is now `require('../public/scale.cjs')`; the existing `npm test` path already executes `test_topological_qgt.cjs`, which imports this module. The exact-head CI run [#40454062166](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40454062166) still has `runner_id=0` and `steps=[]`, so neither this import fix nor the new G6 model tests has been proven by hosted execution.
 
 The Great Scale → Control Plane interface remains `proposed-not-verified`. These changes define what has to be proven; they do not deploy the producer, provision keys, or enable G6/production authority.
+
+### G6 policy digest/version reconciliation
+
+The Control Plane's G0-G6 G6 domain hardening is now versioned as gate policy **1.0.1**. The executable gate policy, canonical policy manifest and acceptance schema's `gatePolicyVersion` must agree, and the digest changes with the G6 wording. Policy 1.0.1 requires `S` to be finite and within the topology-derived domain `[0, 0.25]`, in addition to source/build binding, freshness, and the configured cone predicate. This prevents the verifier's stronger runtime behavior from drifting silently away from the versioned policy digest. The producer is still not verified live and production remains HOLD.
