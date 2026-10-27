@@ -259,3 +259,24 @@ The public and private repository maps now say this explicitly on the `great-sca
 5. Add positive/negative end-to-end tests for valid live samples, stale samples, wrong source/build/revision, artifact mismatch, non-finite/out-of-domain values, missing telemetry, replay, and signature/key mismatch. Only a real test run with inspectable steps and a live response can promote this edge.
 
 No static endpoint has been invented and no scalar has been upgraded to production evidence. This is the outstanding runtime connection, separate from the CI startup blocker and the branch-divergence blocker.
+
+
+
+## Descent CCIII — schema-only G6 receipt and consumer mapping (2026-10-27)
+
+Great Scale now defines a versioned source/build-bound receipt schema at `contracts/g6-residual-measurement/v1.schema.json` (Git blob SHA `a0956c825e9a8974f5855054d2c80eb4433391f9`). It specifies:
+- Source repository + commit SHA, a successful workflow/run attempt and head SHA, artifact name/digest, build ID, fixed QWZ two-band model identity, parameters and input digest.
+- A measured-at timestamp separate from receipt generation and expiry; explicit canonicalization `great-scale.canonical-json/v1`; SHA-256 digest semantics; explicit Ed25519 signature algorithm and base64 wire format.
+- QGT/topological outputs including `STopological ∈ [0, 0.25]`, saturation/polarization bounds, quadrature convergence, mapping validity, finite error-bound flags, and grid-alignment diagnostics.
+
+The proposed downstream mapping is explicit:
+- `measurement.STopological → residual.S`
+- `measuredAt → residual.measuredAt`
+- `issuer → residual.sourceId`
+- `buildId → residual.buildId`
+
+The public and private registries pin the schema blob and this mapping. The registry validators now reject a missing, changed, or falsely promoted schema reference. The public Node suite includes structural checks that recompute the Git blob SHA from the checked-in schema; `npm test` now runs `test_g6_residual_measurement_schema.mjs`.
+
+**What is still missing:** this is a schema and a test contract, not a producer or endpoint. There is no Great Scale `api/`, `functions/`, or server handler, no signing key provisioned, and no live measurement receipt. A future trusted G0-G6 producer must independently retrieve and verify the successful run/attempt and artifact, check `source.commitSha === execution.headSha`, verify freshness/order/expiry, validate the intended artifact/model/input binding, recompute the canonical digest, verify Ed25519 with an independently pinned key, and require `quadratureConverged=true`, `rigorousBoundFinite=true`, `topologicalMappingValid=true`, and `STopological ∈ [0, 0.25]`. It must then carry the mapped residual inside its own independently signed G0-G6 production-acceptance artifact. Schema validity alone does not satisfy any G0-G6 gate.
+
+The newest hosted Great Scale run is still blocked before test execution; the schema test has not yet run in GitHub Actions. The schema/map/tests remain a source-level promotion contract only.
