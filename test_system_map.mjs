@@ -203,6 +203,10 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
     "measurement-build-id-distinct-from-target-build-id",
     "target-build-id-matches-g0-g6-attestation-build-id",
     "target-artifact-digest-matches-g0-g6-attestation-artifact-digest",
+    "quadrature-rigorous-certificate-distinct-from-empirical-estimates",
+    "numerical-certificate-upper-bounds-and-proof-digest-verified",
+    "numerical-certificate-source-commit-and-model-input-digest-bound",
+    "independent-numerical-certificate-verified",
     "target-commit-matches-g0-g6-attestation-source-commit",
     "both-source-model-commit-and-consumer-release-commit-pinned",
   ]) {
@@ -216,7 +220,7 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.deepEqual(contract, {
     repository: "great-scale",
     path: "contracts/g6-residual-measurement/v1.schema.json",
-    schemaBlobSha: "002c4abb141833e1361fa96d36474dece1a77ad1",
+    schemaBlobSha: "89ed8276ea7ba4d65fa9b416a960ad5acba296d2",
     version: "v1",
     status: "schema-only-not-producer",
     mapping: {
@@ -243,6 +247,9 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.equal(schema.properties.measurement.properties.STopological.maximum, 0.25);
   assert.equal(schema.properties.measuredAt.format, "date-time");
   assert.equal(schema.properties.signatureAlgorithm.const, "Ed25519");
+  assert.equal(schema.properties.numericalCertification.additionalProperties, false);
+  assert.equal(schema.properties.numericalCertification.properties.verified.const, true);
+  assert.equal(schema.properties.numericalCertification.properties.proofDigest.pattern, "^[a-f0-9]{64}$");
   assert.ok(schema.required.includes("measurementBuildId"));
   assert.ok(schema.required.includes("targetBuildId"));
   assert.ok(!schema.required.includes("buildId"));
