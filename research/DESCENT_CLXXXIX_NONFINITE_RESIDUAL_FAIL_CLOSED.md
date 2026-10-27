@@ -46,6 +46,7 @@ This prevents invalid residual input from yielding a procurement-ready result th
 
 - Source updates are committed on PR #33's branch; the latest head must be re-fetched before release decisions.
 - The focused workflow is configured to syntax-check and run the new regression.
+- An isolated Node.js 22 runtime run of the parser module and its regression cases passed **4/4 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
 - The hosted Actions runner previously failed before exposing any steps. Therefore the newly committed JavaScript test has not yet been proven to execute in hosted CI.
 - The local environment cannot clone GitHub (DNS/network unavailable), so a clean-checkout full-suite run was not possible in this pass.
 - This finding addresses input validity only; it does not close the E0–E6 versus G0–G6 producer/consumer protocol mismatch, production key pinning, live endpoint verification, or PR history divergence.
