@@ -1,0 +1,14 @@
+{
+  "rung": "CXIX",
+  "title": "Informative Cluster Size and Selection",
+  "synthetic_only": true,
+  "n_clusters": 12,
+  "diagnostics": [
+    "cluster-size versus cluster-excess Pearson correlation",
+    "equal-cluster versus trial-weighted contrast",
+    "selection identifiability status"
+  ],
+  "selection_probabilities": "not supplied in baseline fixture",
+  "expected_selection_status": "NOT_IDENTIFIABLE_FROM_OBSERVED_CLUSTERS_ALONE",
+  "note": "Illustrative metadata only; no field dataset or validated sampling design is represented."
+}

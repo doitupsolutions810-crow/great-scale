@@ -1,0 +1,20 @@
+{
+  "rung": "CXLXVII",
+  "title": "Typed Identity Meets Runtime Equality",
+  "status": "implemented_tests_authored_execution_not_yet_verified",
+  "finding": "Canonical typed encodings do not prevent host-language dictionaries and sets from collapsing labels that compare equal.",
+  "counterexample": {
+    "left": true,
+    "right": 1,
+    "python_equal": true,
+    "canonical_encoding_equal": false,
+    "consequence": "A state list can contain both labels while set/dict-based model structures cannot represent them independently."
+  },
+  "mitigation": "Reject equality/hash collisions between canonically distinct state labels before constructing the state-domain set; recommend distinct external canonical IDs.",
+  "limits": [
+    "This is a Python model-representation boundary, not a mathematical or physical discovery.",
+    "Action-map collisions already erased during dict construction cannot be recovered by validation.",
+    "Regression tests were authored but not independently executed at artifact creation."
+  ],
+  "next_rung": "CXLXVIII: canonical IDs as primary keys throughout the model API, or a formal restricted-label contract with adversarial tests."
+}

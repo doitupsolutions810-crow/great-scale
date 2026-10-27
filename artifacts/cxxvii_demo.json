@@ -1,0 +1,26 @@
+{
+  "system": "Great Scale CXXVII",
+  "title": "Repeated-Sampling Coverage Diagnostics",
+  "synthetic": true,
+  "seed": 20261010,
+  "repetitions": 5000,
+  "population_size": 240,
+  "observed_count": 120,
+  "auxiliary_count": 12,
+  "true_mean": 0.04375,
+  "methods": {
+    "sample_extrema": {
+      "empirical_containment_rate": 0.7376,
+      "mean_interval_width": 0.193525
+    },
+    "fixed_margin_0_1": {
+      "empirical_containment_rate": 1,
+      "mean_interval_width": 0.230015
+    },
+    "known_support_0_1": {
+      "empirical_containment_rate": 1,
+      "mean_interval_width": 0.5
+    }
+  },
+  "interpretation": "Results apply to this synthetic population and seed. Fixed margin's observed 100% containment is not a universal guarantee; known support is valid by construction."
+}
