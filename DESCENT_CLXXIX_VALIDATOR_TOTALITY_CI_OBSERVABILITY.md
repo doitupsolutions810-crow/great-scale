@@ -175,3 +175,6 @@ CLXXXIX latest candidate follow-up: Control Plane PR #33 advanced to `021946b2ef
 
 
 CLXC isolated verification update: after adding the cone-predicate characterization test, the isolated Node.js harness passed **8/8 tests** and parser/test syntax checks. This still is not a clean-checkout full-suite result. Latest hosted Actions run for PR #33 head `654d38437fe06591f30b5fcc881fac699fa11588` failed with `steps: null` and no logs; hosted execution remains unverified.
+
+
+CLXXXIX mergeability recheck: PR #33 remains at head `021946b2efaf0bf892e97aede069a26b70164e7b`; a fresh metadata read now reports `mergeable: true` after an earlier `false` result. PR #31 remains `mergeable: false`. This flag only reports GitHub's merge-conflict assessment; it does not validate the overlapping trust implementation or make the test-runner failures green.
