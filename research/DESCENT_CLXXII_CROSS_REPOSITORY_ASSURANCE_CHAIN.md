@@ -96,3 +96,28 @@ A retry request for the Great Scale run succeeded, but retries for the other two
 ## Descent CLXXIV / Capability Authority recovery refinement
 
 The new source-freshness contract in the control plane is orthogonal to ledger completeness. The Capability Authority projection is now assessed as a rebuildable materialized view with cross-process serialization—not as an unprotected pair of stale snapshots. Acceptance still requires the ledger identity/replay contract, recovery after projection-write failure, proof that the queried projection was reconciled to the verified ledger, and an independent checkpoint if tamper-evident completeness is required. The newest Capability Authority candidate after adding the recovery regression is `dd8c4e38136d3e3e81891045be0ace216a6c5253`; hosted run [40429217283](https://github.com/doitupsolutions810-crow/capability-authority/actions/runs/40429217283) exposed zero steps/logs, so the new test remains unexecuted by hosted CI.
+
+
+## Descent CLXXV — signed source binding and unambiguous contract gates
+
+The cross-repository status path now has a concrete producer candidate in [CONTROL12 Lattice Ops PR #31](https://github.com/doitupsolutions810-crow/control12-lattice-ops/pull/31) and matching source-authentication checks in [Control Plane PR #29](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/29).
+
+The producer candidate exposes read-only GET routes for status and schema, requires an owner-configured Ed25519 keypair, issues source timestamps on each request, digest-binds canonical status JSON, signs the digest envelope, verifies its own timestamp/digest/signature/schema, and returns 503/no authority if signing configuration is missing. The consumer pins source identity/key ID/public key independently and validates status and schema separately. No production key was created, and the producer has not been deployed.
+
+The semantic gate collision is resolved in the contract by giving the evidence-console's own checks identifiers E0–E6. Production readiness gates G0–G6 remain under the production evaluator. This prevents the status service from turning its own contract-health response into a production GO claim.
+
+Local evidence for this descent:
+- Node producer source harness: 8/8 cases passed with an ephemeral Ed25519 keypair.
+- Great Scale signed-evidence acceptance model: 8/8 cases passed. The model treats signature verification as an external predicate and is not the cryptographic implementation.
+- Earlier isolated freshness model: 6/6; isolated JavaScript freshness rule harness: 7/7.
+
+The hosted repository suite still lacks observable execution because the connected GitHub Actions jobs report empty step lists and logs are unavailable. The live evidence hostname is not verified; the producer scaffold must still be deployed to the reviewed Vercel project with an owner-approved key and independently pinned consumer public key. Until those steps and a successful exact-head test run occur, procurement remains HOLD_EVIDENCE_CONTROL and production remains NO_GO.
+
+Acceptance remains a conjunction:
+
+\\[
+Accept(R,P,t) = Policy(P) \\land Complete(E) \\land Authentic(E) \\land Fresh(E,t)
+\\land Reach(T,C) \\land Execute(T,R) \\land Bound(R) \\land Pass(R)
+\\]
+
+An absent runner is unknown execution evidence; freshness without a source signature is not authenticity; and a signed, fresh status object still does not prove complete ledger history without an independent checkpoint.
