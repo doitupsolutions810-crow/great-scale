@@ -301,7 +301,7 @@ The Great Scale → Control Plane interface remains `proposed-not-verified`. The
 
 The Control Plane's G0-G6 G6 domain hardening is now versioned as gate policy **1.0.1**. The executable gate policy, canonical policy manifest and acceptance schema's `gatePolicyVersion` must agree, and the digest changes with the G6 wording. Policy 1.0.1 requires `S` to be finite and within the topology-derived domain `[0, 0.25]`, in addition to source/build binding, freshness, and the configured cone predicate. This prevents the verifier's stronger runtime behavior from drifting silently away from the versioned policy digest. The producer is still not verified live and production remains HOLD.
 
-### Composite release identity across the G6 source receipt and G0-G6 target
+### Separate source/target identities across the G6 receipt and G0-G6 target
 
 The pinned G6 receipt schema has two different artifact roles: `artifact.digest` is the immutable **Great Scale model artifact**; the Control Plane G0-G6 attestation's own `artifact.digest` identifies the **target production artifact**. They must remain distinct and separately verified. The receipt's `source.commitSha` is the Great Scale model revision and must equal its measurement workflow's `execution.headSha`; it is not the Control Plane source SHA.
 
