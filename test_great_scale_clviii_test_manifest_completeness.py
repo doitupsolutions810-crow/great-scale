@@ -21,26 +21,19 @@ def audit_suite(root: Path, all_command: str):
 
 
 def tests_not_invoked_by_direct_runner(path: Path):
-    """Find test_* functions not called directly or through an executed registry."""
+    """Fail closed unless top-level sync tests are provably reachable through a supported runner."""
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     defined = {
         node.name for node in tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and node.name.startswith("test_")
     }
-    # A bare call to async def returns a coroutine; it does not execute the body.
-    # This static audit intentionally fails closed on async tests instead of guessing
-    # whether the runner awaited or scheduled them correctly.
+    # A bare async call only creates a coroutine. This synchronous auditor does not
+    # certify async tests until it has an explicit await/scheduler model.
     synchronous_defined = {
         node.name for node in tree.body
         if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
     }
-
-    def referenced_tests(node):
-        return {
-            child.id for child in ast.walk(node)
-            if isinstance(child, ast.Name) and child.id in defined
-        }
 
     def assigned_names(node):
         if isinstance(node, ast.Name):
@@ -52,8 +45,56 @@ def tests_not_invoked_by_direct_runner(path: Path):
             }
         return set()
 
-    def loop_target_called_in_reachable_block(statements, target_names):
-        """Detect loop-variable dispatch without counting dead branches or nested functions."""
+    def referenced_tests(node):
+        return {
+            child.id for child in ast.walk(node)
+            if isinstance(child, ast.Name) and child.id in synchronous_defined
+        }
+
+    def literal_truth(node):
+        """Return (known, truth) for a deliberately small side-effect-free subset."""
+        if isinstance(node, ast.Constant):
+            return True, bool(node.value)
+        if isinstance(node, (ast.List, ast.Tuple, ast.Set, ast.Dict)):
+            # Only empty literals are accepted: non-empty values may contain effects.
+            if not node.elts if isinstance(node, (ast.List, ast.Tuple, ast.Set)) else not node.keys:
+                return True, False
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            known, value = literal_truth(node.operand)
+            return (True, not value) if known else (False, False)
+        if isinstance(node, ast.BoolOp):
+            values = [literal_truth(value) for value in node.values]
+            if not all(known for known, _ in values):
+                return False, False
+            truths = [value for _, value in values]
+            if isinstance(node.op, ast.And):
+                return True, all(truths)
+            if isinstance(node.op, ast.Or):
+                return True, any(truths)
+        return False, False
+
+    def definitely_empty_iterable(node):
+        if isinstance(node, (ast.List, ast.Tuple, ast.Set)) and len(node.elts) == 0:
+            return True
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id == "range" and not node.keywords
+                and 1 <= len(node.args) <= 3
+                and all(isinstance(arg, ast.Constant) and type(arg.value) is int
+                        for arg in node.args)):
+            values = [arg.value for arg in node.args]
+            if len(values) == 1:
+                start, stop, step = 0, values[0], 1
+            elif len(values) == 2:
+                start, stop, step = values[0], values[1], 1
+            else:
+                start, stop, step = values
+            if step == 0:
+                return True  # range() raises before its body can execute
+            return (step > 0 and start >= stop) or (step < 0 and start <= stop)
+        return False
+
+    def calls_loop_target_in_reachable_block(statements, target_names):
+        """Find loop-variable calls without descending into nested scopes/dead paths."""
         class ReachableCallVisitor(ast.NodeVisitor):
             def __init__(self):
                 self.found = False
@@ -72,32 +113,41 @@ def tests_not_invoked_by_direct_runner(path: Path):
 
             def visit_If(self, node):
                 self.visit(node.test)
-                if isinstance(node.test, ast.Constant):
-                    selected = node.body if bool(node.test.value) else node.orelse
-                    for child in selected:
-                        self.visit(child)
-                else:
-                    for child in node.body + node.orelse:
-                        self.visit(child)
+                known, truth = literal_truth(node.test)
+                selected = node.body if known and truth else node.orelse if known else node.body + node.orelse
+                for child in selected:
+                    self.visit(child)
 
             def visit_While(self, node):
                 self.visit(node.test)
-                if isinstance(node.test, ast.Constant):
-                    selected = node.body if bool(node.test.value) else node.orelse
-                    for child in selected:
-                        self.visit(child)
-                else:
-                    for child in node.body + node.orelse:
-                        self.visit(child)
+                known, truth = literal_truth(node.test)
+                selected = node.body if known and truth else node.orelse if known else node.body + node.orelse
+                for child in selected:
+                    self.visit(child)
 
             def visit_For(self, node):
                 self.visit(node.iter)
-                if isinstance(node.iter, (ast.List, ast.Tuple, ast.Set)) and not node.iter.elts:
-                    for child in node.orelse:
-                        self.visit(child)
-                else:
-                    for child in node.body + node.orelse:
-                        self.visit(child)
+                selected = node.orelse if definitely_empty_iterable(node.iter) else node.body + node.orelse
+                for child in selected:
+                    self.visit(child)
+
+            visit_AsyncFor = visit_For
+
+            def visit_Try(self, node):
+                # Exception reachability is not statically proven by this auditor.
+                return
+
+            visit_TryStar = visit_Try
+
+            def visit_With(self, node):
+                # Context-manager entry can fail; do not certify calls under it.
+                return
+
+            visit_AsyncWith = visit_With
+
+            def visit_Match(self, node):
+                # Pattern reachability is outside the supported static subset.
+                return
 
         visitor = ReachableCallVisitor()
         for statement in statements:
@@ -108,13 +158,12 @@ def tests_not_invoked_by_direct_runner(path: Path):
         invoked = set()
         known_registries = dict(registry)
         for statement in statements:
-            if not isinstance(statement, (ast.If, ast.For, ast.While, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                invoked.update(
-                    child.func.id for child in ast.walk(statement)
-                    if isinstance(child, ast.Call)
-                    and isinstance(child.func, ast.Name)
-                    and child.func.id in synchronous_defined
-                )
+            # Only count a syntactically direct expression call. Avoid ast.walk over
+            # assignments/lambdas/try/match/etc., which can contain non-executed calls.
+            if isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Call):
+                call = statement.value
+                if isinstance(call.func, ast.Name) and call.func.id in synchronous_defined:
+                    invoked.add(call.func.id)
 
             if isinstance(statement, ast.Assign):
                 value = statement.value
@@ -130,28 +179,30 @@ def tests_not_invoked_by_direct_runner(path: Path):
                     for name in assigned_names(statement.target):
                         known_registries[name] = tests
 
-            if isinstance(statement, ast.For):
-                loop_targets = assigned_names(statement.target)
-                if loop_target_called_in_reachable_block(statement.body, loop_targets):
-                    if isinstance(statement.iter, ast.Name):
-                        invoked.update(known_registries.get(statement.iter.id, set()) & synchronous_defined)
-                    elif isinstance(statement.iter, (ast.List, ast.Tuple, ast.Set)):
-                        invoked.update(referenced_tests(statement.iter) & synchronous_defined)
-                invoked.update(inspect_block(statement.body, known_registries))
+            if isinstance(statement, ast.If):
+                known, truth = literal_truth(statement.test)
+                selected = statement.body if known and truth else statement.orelse if known else statement.body + statement.orelse
+                invoked.update(inspect_block(selected, known_registries))
+            elif isinstance(statement, ast.For):
+                if not definitely_empty_iterable(statement.iter):
+                    loop_targets = assigned_names(statement.target)
+                    if calls_loop_target_in_reachable_block(statement.body, loop_targets):
+                        if isinstance(statement.iter, ast.Name):
+                            invoked.update(known_registries.get(statement.iter.id, set()))
+                        elif isinstance(statement.iter, (ast.List, ast.Tuple, ast.Set)):
+                            invoked.update(referenced_tests(statement.iter))
+                    invoked.update(inspect_block(statement.body, known_registries))
                 invoked.update(inspect_block(statement.orelse, known_registries))
             elif isinstance(statement, ast.While):
-                if isinstance(statement.test, ast.Constant) and statement.test.value is False:
+                known, truth = literal_truth(statement.test)
+                if known and not truth:
                     invoked.update(inspect_block(statement.orelse, known_registries))
                 else:
                     invoked.update(inspect_block(statement.body, known_registries))
                     invoked.update(inspect_block(statement.orelse, known_registries))
-            elif isinstance(statement, ast.If):
-                if isinstance(statement.test, ast.Constant) and isinstance(statement.test.value, bool):
-                    branch = statement.body if statement.test.value else statement.orelse
-                    invoked.update(inspect_block(branch, known_registries))
-                else:
-                    invoked.update(inspect_block(statement.body, known_registries))
-                    invoked.update(inspect_block(statement.orelse, known_registries))
+            # Function/class definitions, with/try/match, and other unsupported
+            # compound statements are deliberately not traversed: fail closed.
+
         return invoked
 
     invoked = set()
@@ -329,6 +380,72 @@ def test_audit_rejects_loop_dispatch_inside_empty_nested_loop():
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
 
 
+def test_audit_rejects_false_numeric_condition():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_numeric_false.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    if 0:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_negated_true_condition():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_negated_true.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    if not True:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_direct_call_under_empty_loop():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_direct_empty_loop.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for unused in range(0):\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_call_in_uninvoked_lambda():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_lambda.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    callback = lambda: test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_call_under_unsupported_try_branch():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_try_branch.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    try:\n"
+            "        pass\n"
+            "    except Exception:\n"
+            "        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 def test_audit_accepts_functions_dispatched_from_a_main_guard_registry():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_registry.py"
@@ -385,6 +502,11 @@ if __name__ == "__main__":
         test_audit_rejects_unawaited_async_test_invocation,
         test_audit_rejects_loop_dispatch_inside_false_while,
         test_audit_rejects_loop_dispatch_inside_empty_nested_loop,
+        test_audit_rejects_false_numeric_condition,
+        test_audit_rejects_negated_true_condition,
+        test_audit_rejects_direct_call_under_empty_loop,
+        test_audit_rejects_call_in_uninvoked_lambda,
+        test_audit_rejects_call_under_unsupported_try_branch,
     ]
     for test in tests:
         test()
