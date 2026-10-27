@@ -45,6 +45,16 @@ test("an interface cannot be marked verified without receipt-grade evidence", ()
   assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("cannot be marked verified without commit SHA")));
 });
 
+
+test("registry binds the shared operation evidence contract version", () => {
+  const candidate = structuredClone(baseline);
+  candidate.operationEvidenceContract.version = "v99";
+  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("operationEvidenceContract")));
+  const missing = structuredClone(baseline);
+  delete missing.operationEvidenceContract;
+  assert.ok(validateRepositoryMap(missing).some((message) => message.includes("operationEvidenceContract")));
+});
+
 test("public-only registry rejects a private repository record", () => {
   const candidate = structuredClone(baseline);
   candidate.repositories[0].visibility = "private";
