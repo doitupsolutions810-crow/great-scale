@@ -26,18 +26,21 @@ A valid signed receipt binds all of these inputs to the exact model output:
 
 All timestamps must be strict RFC3339/date-time values with sane ordering and bounded freshness. The schema is only a structural envelope; the trusted verifier must independently enforce these cross-field and live-source rules.
 
+The certificate verifier also requires a deployment-controlled maximum tolerance through `GREAT_SCALE_G6_MAX_QUADRATURE_TOLERANCE`; if the pin is absent, invalid, or the receipt chooses a larger tolerance, verification fails closed. Do not derive this trust limit from the measurement itself.
+
 ## Numerical consistency checks required at verification time
 
 In addition to schema validation, the trusted G6 verifier must check at least:
 
 - `source.commitSha === execution.headSha`, exact run URL ↔ source repository/run ID binding, and a successful run attempt;
 - model identifier/version/parameters, `measurementBuildId`, Great Scale source commit and `artifact.digest` match the measurement-side deployment pins; `targetBuildId`, `target.commitSha`, and `targetArtifact.digest` match the target Control Plane release pins;
-- `topologicalMappingValid === true` and `quadratureConverged === true` are necessary model diagnostics, but they are not certification; the QGT model's `errorBoundMethod` must identify Richardson values as estimates only, and `modelG6CertificationEligible` is `false` until the independent numerical certificate has been checked;
+- the measurement object has exactly the schema's 32 required diagnostic fields; `topologicalMappingValid === true`, `quadratureConverged === true`, and `errorEstimatesFinite === true` are required, but they are not certification; the QGT model's `errorBoundMethod` must identify Richardson values as estimates only, and raw model output has `modelG6CertificationEligible === false`;
 - `topologicalFloor = abs(chernNumber)`;
 - `metricAreaExcess = metricAreaBudget - topologicalFloor` within configured numerical tolerance;
 - `signedTopologicalPolarization = sign(chernNumber) × topologicalSaturation`;
 - `STopological = (1 - topologicalSaturation²) / 4` and `psiTopological = φ⁻² + STopological`;
-- Chern, curvature-cancellation, entropy, grid-origin and quadrature diagnostics satisfy the configured model tolerance;
+- the verifier recomputes Chern/curvature budgets, metric-area and topological saturation/excess, signed polarization, the derived scalar/psi, curvature-cancellation, entropy/variance, residual-domain, and grid-origin identities rather than trusting the provided flags alone;
+- Chern, curvature-cancellation, entropy, grid-origin and empirical quadrature diagnostics satisfy the configured model tolerance;
 - `numericalCertification.method` is an approved certificate method; its `certificateKeyId` and Ed25519 `certificateSignature` verify with an independently pinned numerical-certification key; its `generatedAt`/`expiresAt` are ordered and fresh; its `sourceCommitSha` and `modelInputDigest` match the exact source/input; its proof digest matches the fetched durable evidence bytes; and both certified error upper bounds are within `measurement.quadratureTolerance`;
 - recomputed canonical input digest, payload digest and Ed25519 signature verify with the independent pinned public key;
 - `measuredAt`, `generatedAt` and `expiresAt` are ordered, not future/stale, and all evidence belongs to the same source/build/run.
