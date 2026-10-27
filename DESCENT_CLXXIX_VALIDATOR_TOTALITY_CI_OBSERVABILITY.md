@@ -21,7 +21,7 @@ PR: https://github.com/doitupsolutions810-crow/living-intermediate-control-plane
 
 Static verification confirms the source now declares the required list before use, the test file has one copy of the primary contract test, and the missing-required regression test is present on the current branch head `6b92aeeb2c843ee9d90056d9ca74cf9561e9ef25`.
 
-Hosted verification is **not passed**. The workflow run for this exact head (`40439149122`) completed as failure within seconds. GitHub's job endpoint returned no steps and no log URL; earlier runs show the same empty-step behavior. This does not establish whether the test suite itself fails or whether the runner/service failed before executing steps. A clean checkout and executable local test run remain unavailable in this environment. Do not report CI green.
+Hosted verification is **not passed**. The workflow run for this exact head (`40439149122`) was retried (attempt 2) and again failed within seconds. Both attempts report `runner_id: 0`, zero executed steps, no job log URL, and two check annotations whose payloads are not exposed by the available connector. This is consistent with a workflow/runner initialization failure, but the precise cause is not available, so it cannot be conclusively diagnosed. It does not establish whether the test suite passes. A clean checkout and executable local test run remain unavailable in this environment. Do not report CI green.
 
 ## Great Scale authorization mapping
 
