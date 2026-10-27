@@ -140,7 +140,8 @@
         "id",
         "version",
         "parameters",
-        "inputDigest"
+        "inputDigest",
+        "modelG6CertificationEligible"
       ],
       "properties": {
         "id": {
@@ -185,8 +186,13 @@
         "inputDigest": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "modelG6CertificationEligible": {
+          "const": false,
+          "description": "Must be copied from the QGT model output. The model is never eligible to certify its own G6 result; only the separate numericalCertification with an independently pinned key and verified error proof may qualify the measurement."
         }
-      }
+      },
+      "description": "Model identity, parameters and input digest. modelG6CertificationEligible is required to be false: raw numerical model output cannot self-certify production G6."
     },
     "measurement": {
       "type": "object",
