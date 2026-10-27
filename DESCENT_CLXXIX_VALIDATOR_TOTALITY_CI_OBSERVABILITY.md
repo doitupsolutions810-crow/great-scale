@@ -79,3 +79,8 @@ This is not merely a missing endpoint URL. It is a deliberate trust-domain bound
 A regression test was added in control-plane commit `3004707d31b4928c58a6fa3ca8b02981aa9b810a`: a signed E0–E6 producer document must be rejected by the production consumer and cannot yield public authority. This test is committed but not runtime-verified because hosted CI continues to fail without exposing executed steps or logs.
 
 Updated rule: `A_public = V ∧ T ∧ C ∧ F ∧ K ∧ D ∧ S ∧ G ∧ I ∧ X ∧ H ∧ P`, where (P) means the signed payload came from the explicitly authorized producer/domain (not merely a producer that can sign something). The current local producer establishes procurement evidence only; (P) for production remains false/unverified. Production HOLD remains mandatory.
+
+
+### CLXXX latest exact-head retry
+
+The new procurement-to-production boundary regression is committed at control-plane head `3004707d31b4928c58a6fa3ca8b02981aa9b810a`. Its workflow run `40440181670` was retried (attempt 2) and again failed without exposed steps or logs; the container job was skipped after the first job failed. The combined commit status also shows Snyk success but Vercel failure due a build-rate-limit URL. Neither status proves the Node test suite executed. The producer/consumer protocol mismatch is now documented and a regression test is present, but that test remains unexecuted in the available evidence. Keep the pull requests in draft and production HOLD.
