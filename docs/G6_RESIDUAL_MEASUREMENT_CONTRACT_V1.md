@@ -8,6 +8,8 @@ Machine-readable shape: `contracts/g6-residual-measurement/v1.schema.json`.
 
 The Great Scale residual functions are calculation libraries. A calculated scalar, a default `S=0`, a model output copied into an environment variable, or a signed string saying `S` passed is not by itself an observed production measurement. The production consumer currently accepts a compact residual block only after a separately trusted G0-G6 attestation verifies. The trusted producer must therefore validate the richer underlying measurement before placing its scalar into the compact acceptance artifact.
 
+A critical numerical distinction is now explicit: `research/topological-qgt.cjs` computes Richardson-style estimates (`D/3` with a factor-of-two safety multiplier). Those are empirical/asymptotic error estimates, not rigorous a-posteriori bounds. The code's earlier claim that the estimates bound the unknown maximum Hessian was unsupported by the estimator itself; additionally, the metric-area density includes an absolute value of curvature and is not globally C² across its sign-change set. The model now labels these estimates `richardson-asymptotic-estimate-only` and sets `modelG6CertificationEligible: false`. Its `topologicalMappingValid` result remains a numerical-consistency diagnostic, not production G6 eligibility.
+
 This distinction is material because the topological-QGT model emits more than a scalar: Chern number, integrated and absolute curvature, positive/negative curvature budgets, metric-area budget and excess, signed topological polarization, Great Scale scalar, quadrature errors and tolerances, grid-origin disagreement, and the `topologicalMappingValid` acceptance result. Those diagnostics must not be dropped before G6 acceptance.
 
 ## Required bindings
@@ -18,7 +20,8 @@ A valid signed receipt binds all of these inputs to the exact model output:
 - **Execution:** successful workflow run ID and attempt, canonical GitHub Actions run URL, start/completion timestamps, and exact head SHA.
 - **Build/artifact:** `measurementBuildId` identifies the Great Scale model/measurement execution and `artifact.digest` identifies its immutable model artifact. Separately, `targetBuildId` and `targetArtifact.digest` identify the intended Control Plane release. All four values are checked against their respective deployment pins; measurement-side and target-side identities must not be collapsed.
 - **Model:** fixed model identifier `qi-wu-zhang-two-band`, reviewed model version, explicit mass parameter `m`, base grid size, refinement limit, and an input digest computed from the canonical source/build/model-parameter record.
-- **Measurement:** the fields in the schema's `measurement` object, including signed/absolute curvature data, the derived topological tuple, convergence, grid-origin discrepancies, error bounds, tolerance, and acceptance flags.
+- **Measurement:** the fields in the schema's `measurement` object, including signed/absolute curvature data, the derived topological tuple, convergence, grid-origin discrepancies, *empirical* Richardson estimates, tolerance, and numerical diagnostic flags.
+- **Independent numerical certificate:** a required `numericalCertification` object declaring a reviewed `interval-enclosure-v1` or `analytic-derivative-bound-v1` method, verifier identity, exact model source commit and input digest, certified upper bounds for curvature and metric-area integration error, durable evidence URL, proof digest, and verification status. The trusted producer must independently inspect/verify the referenced proof; the `verified` boolean is a claim, not proof by itself.
 - **Trust:** canonical payload digest plus Ed25519 signature under an independently provisioned key ID and public key. The payload cannot choose its own trust anchor.
 
 All timestamps must be strict RFC3339/date-time values with sane ordering and bounded freshness. The schema is only a structural envelope; the trusted verifier must independently enforce these cross-field and live-source rules.
@@ -29,16 +32,17 @@ In addition to schema validation, the trusted G6 verifier must check at least:
 
 - `source.commitSha === execution.headSha`, exact run URL ↔ source repository/run ID binding, and a successful run attempt;
 - model identifier/version/parameters, `measurementBuildId`, Great Scale source commit and `artifact.digest` match the measurement-side deployment pins; `targetBuildId`, `target.commitSha`, and `targetArtifact.digest` match the target Control Plane release pins;
-- `topologicalMappingValid === true`, `quadratureConverged === true`, and `rigorousBoundFinite === true`;
+- `topologicalMappingValid === true` and `quadratureConverged === true` are necessary model diagnostics, but they are not certification; the QGT model's `errorBoundMethod` must identify Richardson values as estimates only, and `modelG6CertificationEligible` is `false` until the independent numerical certificate has been checked;
 - `topologicalFloor = abs(chernNumber)`;
 - `metricAreaExcess = metricAreaBudget - topologicalFloor` within configured numerical tolerance;
 - `signedTopologicalPolarization = sign(chernNumber) × topologicalSaturation`;
 - `STopological = (1 - topologicalSaturation²) / 4` and `psiTopological = φ⁻² + STopological`;
-- Chern, curvature-cancellation, entropy, grid-origin, quadrature and rigorous-error-bound criteria satisfy the configured model tolerance;
+- Chern, curvature-cancellation, entropy, grid-origin and quadrature diagnostics satisfy the configured model tolerance;
+- `numericalCertification.method` is an approved certificate method, its `sourceCommitSha` and `modelInputDigest` match the exact source/input, its proof digest matches the durable evidence, and both certified error upper bounds are within `measurement.quadratureTolerance`;
 - recomputed canonical input digest, payload digest and Ed25519 signature verify with the independent pinned public key;
 - `measuredAt`, `generatedAt` and `expiresAt` are ordered, not future/stale, and all evidence belongs to the same source/build/run.
 
-A model output with missing, non-finite, under-resolved, or failed diagnostics is not eligible for promotion even if its scalar happens to fall in the allowed numeric range.
+A model output with missing, non-finite, under-resolved, or failed diagnostics is not eligible for promotion even if its scalar happens to fall in the allowed numeric range. The Richardson estimates are retained for diagnostics but are never substituted for `numericalCertification`.
 
 ## Mapping into production G6
 
@@ -60,4 +64,4 @@ The evidence receipt is referenced by the successful `residual-measurement` suit
 node --test test_g6_residual_measurement_contract.mjs
 ```
 
-The focused test checks that the contract names the real model diagnostic fields and that accepted/under-resolved model outputs respect the stated promotion boundary. The full repository suite and live signed producer/consumer integration still require executable hosted CI and independently provisioned trust anchors.
+The focused tests check that the contract names the model's empirical diagnostic fields, that stable/under-resolved QGT outputs are classified correctly, and that a separate numerical certificate is mandatory. The model can report numerical mapping validity without claiming G6 eligibility. The full repository suite and live signed producer/consumer integration still require executable hosted CI, a real interval/analytic certificate producer, and independently provisioned trust anchors.
