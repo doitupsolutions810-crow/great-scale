@@ -79,3 +79,8 @@ The mismatch also exists at the cryptographic boundary:
 Those are different signed messages. Copying or renaming `digest/keyId/signature` into `sourceEvidenceDigest/sourceKeyId/sourceSignature` cannot make the signature valid. A compatible protocol must specify one exact signed byte sequence, canonicalization rules, digest encoding, signature encoding, key identity, and producer key ID, then use the same rules in producer and consumer.
 
 Added a regression to PR #33's `test/evidence-console.test.mjs` that constructs a consumer-shaped status signed using the producer's canonical-JSON-byte convention and asserts the consumer's raw-digest verifier rejects it with `signature_verification_failed`. Commit: `6ec69a286c0674f486026b5c981835203493c04e`. A local Node syntax check passed for the added test fragment; the actual repository test has not executed because hosted Actions still fails before visible steps. Do not treat this as a runtime test pass.
+
+
+### CLXCI-B isolated cryptographic reproduction
+
+A local Node.js 22 cryptographic reproduction signed a 436-byte canonical JSON payload and then attempted to verify that Ed25519 signature over the 32-byte SHA-256 digest. Verification correctly returned `false`; a signature created over the raw digest verified as `true`. This directly confirms the signed-message mismatch. It is a focused crypto reproduction, not execution of the repository test file or full suite.
