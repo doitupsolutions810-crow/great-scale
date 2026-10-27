@@ -139,3 +139,8 @@ This is not evidence that the tests failed; it is also not a pass. The exact pre
 ### CLXXXVII follow-up — retry did not reach runner
 
 Retried the focused workflow once after the initial zero-step failure. GitHub accepted the retry, but the new job `121982755664` again completed as failure with an empty steps list. Repository metadata shows owner admin permission, but the available integration cannot inspect or change Actions runner availability, policy, or usage limits. No settings were changed. The root cause remains unconfirmed and further identical retries are not useful until Actions execution is restored. Production remains HOLD.
+
+
+### CLXXXVIII — overlapping PR history reconciliation
+
+Control Plane PR #31 is reported `mergeable: false`; PR #33 is reported `mergeable: true`. Their branches diverge (comparison reports 38 ahead / 65 behind) and both touch `lib/evidence-console.mjs`, `test/evidence-console.test.mjs`, `package.json`, and `status/procurement-bridge.mjs`. Do not merge them independently or blindly rebase. Select one integration base, reconcile the overlapping implementation and tests, then test the exact combined SHA. GitHub's mergeability flag is not a test result. See [CLXXXVIII in the CI investigation](research/DESCENT_CLXXXVII_ISOLATED_CI_PRE_RUNNER_FAILURE.md). Production remains HOLD.
