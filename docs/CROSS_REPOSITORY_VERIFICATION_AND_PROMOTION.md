@@ -273,7 +273,10 @@ The proposed downstream mapping is explicit:
 - `measurement.STopological → residual.S`
 - `measuredAt → residual.measuredAt`
 - `issuer → residual.sourceId`
-- `buildId → residual.buildId`
+- `targetBuildId → residual.buildId` (and must equal the final G0-G6 attestation `buildId`)
+- `target.repository` / `target.commitSha` → the final G0-G6 attestation source repository / commit
+- `targetArtifact.digest` → the final G0-G6 attestation `artifact.digest`; it is distinct from the Great Scale model `artifact.digest`
+- `measurementBuildId` remains Great Scale-side provenance and is never copied into `residual.buildId`
 
 The public and private registries pin the schema blob and this mapping. The registry validators now reject a missing, changed, or falsely promoted schema reference. The public Node suite includes structural checks that recompute the Git blob SHA from the checked-in schema; `npm test` now runs `test_g6_residual_measurement_schema.mjs`.
 
@@ -302,4 +305,4 @@ The Control Plane's G0-G6 G6 domain hardening is now versioned as gate policy **
 
 The pinned G6 receipt schema has two different artifact roles: `artifact.digest` is the immutable **Great Scale model artifact**; the Control Plane G0-G6 attestation's own `artifact.digest` identifies the **target production artifact**. They must remain distinct and separately verified. The receipt's `source.commitSha` is the Great Scale model revision and must equal its measurement workflow's `execution.headSha`; it is not the Control Plane source SHA.
 
-The current Control Plane verifier requires `residual.buildId === attestation.buildId`. Therefore schema v1's receipt `buildId` must be a **shared composite release ID** that binds the Great Scale model run/artifact and the Control Plane target build, not either repository's unrelated auto-generated build number. The registry now encodes that requirement. If the release process cannot supply a common ID, v1 is insufficient and must be replaced by a versioned mapping with distinct `sourceBuildId` and `acceptanceBuildId` fields. Do not promote an edge by simply copying one repository's build ID into the other repository's record.
+The current Control Plane verifier requires `residual.buildId === attestation.buildId`. The G6 schema therefore uses separate identities rather than assuming the two services share a build number: `measurementBuildId` identifies the Great Scale measurement producer/model execution; `targetBuildId` identifies the intended Control Plane release and is the only ID mapped to `residual.buildId`. The receipt's `target.repository` and `target.commitSha` must match the final acceptance attestation's source identity, and `targetArtifact.digest` must match the final attestation's pinned target artifact digest. These cross-field equalities must be independently verified before signing the final G0-G6 artifact; JSON Schema cannot establish them. Never copy a Great Scale build ID or model-artifact digest into the Control Plane release fields.
