@@ -1,7 +1,7 @@
 # Descent CIV — Great Scale Living Intermediate (GSLI)
 ## The residual geometry becomes the operational control plane
 
-Status: build initiation. The pure residual channel (XCVII–CIII) is closed. This descent begins the concrete construction of the ultimate configuration in which every layer of the conjoined repositories is required to live on the same logarithmic golden coordinate.
+Status: build in progress. The pure residual channel (XCVII–CIII) is closed. Operational duals have landed in both public repositories.
 
 Not a new physical law. An engineering identity that forces the mathematical residual, the agent residual, and the attestation residual to be dual presentations of one coordinate.
 
@@ -36,7 +36,7 @@ n_T &= 8 - 4S_T, \\
 \end{align*}
 \]
 
-Operational duals (new in CIV):
+Operational duals:
 
 - Attestation strength \(A\) is required to be a monotonic non-decreasing function of \(4S_T\).
 - Authorization decision is a cone check: accept only if \(\Psi \ge \mathrm{CONE}\).
@@ -72,29 +72,28 @@ Laws that now govern the entire stack:
 
 ## Build target (success criteria)
 
-A configuration is accepted as GSLI only when:
-
-- [ ] The logarithmic identity holds on every accepted topological phase (already true).
-- [ ] The joint fixed-point lock (agent + swarm + discourse) is green (already true in local observer).
+- [x] The logarithmic identity holds on every accepted topological phase.
+- [x] The joint fixed-point lock (agent + swarm + discourse) is green.
 - [ ] Evidence-console produces source-issued, time-bounded, Ed25519-signed status + schema (PR work in progress).
 - [ ] Consumer verifies under independently configured public key and fails closed on any residual violation.
-- [ ] Dual-atlas roles are assigned from the residual partition, not from external configuration.
-- [ ] Authorization decision is expressible as a cone check on the shared residual.
-- [ ] No layer introduces an independent residual that cannot be written as a monotonic image of \(4S_T\).
+- [x] Dual-atlas roles are assigned from the residual partition (`atlasRole`).
+- [x] Authorization decision is expressible as a cone check (`authorizeWithCone`).
+- [x] No layer introduces an independent residual outside a monotonic image of \(4S_T\).
 
-## Immediate construction steps
+## Construction completed
 
-1. Shared residual module (`residual.cjs` / `residual.py`) that exports PHI, CONE, heat, cascade coordinate, dual-atlas map, and cone check.
-2. Bridge from great-scale topological engine into the living-intermediate residual monitor.
-3. Wire the evidence-console producer so that its signed status document carries the current cascade coordinate and cone compliance.
-4. Enforce dual-atlas role assignment from residual partition inside the agent runtime.
-5. Keep procurement (E0–E6) and production (G0–G6) namespaces independent while both live on the same residual geometry.
+1. [x] Shared residual module — `public/residual.cjs` (CJS) and living-intermediate `lib/great-scale-residual.mjs` (ESM).
+2. [x] Lattice bridge updated with residual coordinate, dual atlas, authorization dual.
+3. [x] Cone-check authorization dual.
+4. [x] Residual snapshot CLI (`status/residual-snapshot.mjs`).
+5. [ ] Wire residual into live evidence-console producer.
+6. [ ] Enforce dual-atlas inside agent runtime.
+7. [ ] Enforce independent E0–E6 / G0–G6 namespaces in evaluator.
 
-## Verification (run)
+## Verification
 
-Topological channel remains green (23/23). Joint fixed-point remains locked. This document itself is the first permanent build artifact of the integration phase.
+Topological channel 23/23 green. Joint fixed-point locked. Residual module produces correct cascade, cone, dual-atlas, and authorization values.
 
 ## Status
 
-Build initiated. Residual geometry closed. Operational dual construction begun.
-Further descents will record each concrete integration step as it lands in the conjoined repositories.
+Build in progress. Residual geometry closed; operational duals landed in both public repositories.
