@@ -121,3 +121,50 @@ Accept(R,P,t) = Policy(P) \land Complete(E) \land Authentic(E) \land Fresh(E,t)
 \]
 
 An absent runner is unknown execution evidence; freshness without a source signature is not authenticity; and a signed, fresh status object still does not prove complete ledger history without an independent checkpoint.
+
+
+## Descent CLXXVI — exact contract surface and nested gate integrity
+
+### New source-level finding
+
+The next review found a second-order schema gap: a validator can check that the expected field is described while still accepting a schema widened by an enum that contains both the expected and a weaker value. It can also miss unexpected fields inside an otherwise valid gate record if it only extracts id and status before checking the payload. Freshness plus a valid signature does not remove the need for exact structure checks.
+
+The current v5.4.0 candidate closes this in both consumers and producer verification:
+
+- Trust fields using enum are accepted only if the enum is the singleton expected value; const remains the canonical form.
+- Status and schema root field sets and schema required keys must exactly match the contract. Unknown root fields, duplicate required keys, and missing fields fail closed.
+- The schema root and array-form gate entries are closed with additionalProperties: false; their property/required sets are checked explicitly.
+- Gate records may contain exactly id and status. The only accepted evidence-console field name is gates; the aliases results and gateStatuses cannot substitute for it.
+- The producer's own verifier applies the same exact-field rules instead of merely generating a permissive schema and assuming the generator is correct.
+
+The evidence-console's E0–E6 are checks on the console's signed contract surface. The separate production gate family G0–G6 is unchanged. A valid console contract may authorize only the procurement-trust step; it cannot turn production to GO.
+
+### Candidate identity and regression inventory
+
+Current draft heads observed during this pass:
+
+- [CONTROL12 Lattice Ops PR #31](https://github.com/doitupsolutions810-crow/control12-lattice-ops/pull/31), head 7358374f173982caaf475fe11a297477e9dcc570: evidence-console producer routes, Ed25519 signing, strict procurement validator, and producer/procurement regressions. The committed test sources currently contain 12 producer tests and 24 procurement evaluator tests.
+- [Living Intermediate Control Plane PR #29](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/29), head cf7088adddfdb14064e08abf6815e7853f8e675f: independent source signature verification, source freshness, exact schema fields, canonical gate identifiers, and nested gate-entry checks. The committed evidence-console test source currently contains 23 tests.
+- [Great Scale PR #128](https://github.com/doitupsolutions810-crow/great-scale/pull/128), head 4c881dec3c186c750d0bc47b26aa566938518966: canonical assurance model and source-freshness test wiring.
+- [Capability Authority PR #12](https://github.com/doitupsolutions810-crow/capability-authority/pull/12), head dd8c4e38136d3e3e81891045be0ace216a6c5253: rebuildable projection/recovery work remains unverified by full suite.
+
+An independent local Node contract harness passed 16/16 bounded cases, including signed fresh acceptance, post-signature payload mutation, stale/expired/future status, wrong key, widened schema values, unknown fields, gate aliases, extra nested gate fields, and keeping production NO_GO separate. This is an isolated model harness—not execution of the committed repository tests or proof that all source files run together.
+
+### Hosted execution and live status
+
+The exact current candidate hosted runs still do not expose test execution:
+
+- Lattice Ops run [40431822210](https://github.com/doitupsolutions810-crow/control12-lattice-ops/actions/runs/40431822210): startup_failure, no jobs exposed.
+- Control Plane run [40431908618](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40431908618): both recorded jobs failed/skipped; step endpoint returned an empty list and log retrieval returned BlobNotFound.
+- Great Scale run [40431757658](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40431757658): step endpoint empty, logs unavailable.
+- Capability Authority run [40429217283](https://github.com/doitupsolutions810-crow/capability-authority/actions/runs/40429217283): prior zero-step run remains the latest observed for its candidate.
+
+These are unknown execution evidence, not source-test failures and not passes. The public evidence-console endpoint could not be freshly retrieved through the available read path in this pass. The previously recorded 404 remains the last explicit HTTP observation; no current HTTP status is asserted here.
+
+No production private key was generated, no Vercel deployment was performed, and no PR was merged. The producer must be deployed under the reviewed project with an owner-approved signing key; the consumer's key ID/public key must be installed independently; both live endpoint responses must then pass the exact contract check. Until those steps and exact-head CI execute successfully, procurement stays held and production remains NO_GO.
+
+The acceptance formula remains conjunctive:
+
+Accept(R,P,t) = Policy(P) AND Complete(E) AND Authentic(E) AND Fresh(E,t) AND Reach(T,C) AND Execute(T,R) AND Bound(R) AND Pass(R)
+
+A signature authenticates the submitted status object; it does not independently prove complete ledger history. The separate sequence/watermark/checkpoint requirement remains open.
