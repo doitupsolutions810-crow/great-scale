@@ -145,3 +145,47 @@ The proposed integrations are still separate draft changes:
 - CycleKernel #13 adds idempotent MongoDB chat persistence and separates ancillary Redis/metrics failures from the primary write result.
 
 Each candidate has its own local isolated tests, but the hosted runners in this account have failed before recording any steps. None of the above edges is end-to-end verified or ready for production promotion. The common contract is a success criterion for the next integration suite, not a claim that the individual services already exchange one canonical envelope.
+
+
+## Descent CXCIX — G0-G6 consumer contract alignment
+
+**Status: proposed consumer contract; no authoritative G0-G6 producer or end-to-end acceptance run has been verified.**
+
+Living Intermediate Control Plane PR [#34](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/34) now carries a candidate proof-carrying production-attestation contract:
+- `contracts/production-acceptance/v1.schema.json` defines source/revision, workflow run/attempt, artifact digest, suite results, G0-G6 evidence, residual, digest, and signature fields.
+- `contracts/production-acceptance/gate-policy-v1.json` maps G0-G6 to versioned policy IDs and named evidence suites.
+- `lib/production-acceptance-attestation.mjs` verifies the signed structure, exact source/run/build/artifact pins, required suite set, per-gate suite evidence, residual freshness, policy version/digest, and Ed25519 signature.
+- `lib/production-acceptance-fetch.mjs` bounds and hardens the network boundary.
+
+These files are on an **unmerged draft branch**. They are a consumer-side contract and verifier candidate, not proof that Great Scale, CycleKernal, or a deployed producer currently emits the artifact. The policy’s seven suite names are proposed semantics; they must not be treated as existing passed workflows until the producer verifies real runs and evidence.
+
+### Release proof obligations
+
+For this system, the relevant obligations are conjunctive:
+
+- **M — Manifest completeness:** every required repository/module and acceptance suite is explicitly enumerated; no required test is omitted.
+- **R — Test reachability:** the committed test runner demonstrably invokes the assertions, rather than merely listing a Python file or checking that it exists.
+- **E — Execution evidence:** test/workflow evidence shows a real runner, executed steps, observed conclusion, and inspectable result. A runnerless failure with zero steps is `UNKNOWN/BLOCKED`, never `PASS`; it is also not proof that source assertions failed.
+- **P — Provenance:** all evidence is tied to the exact repository, full source commit SHA, workflow run and attempt, artifact digest, and independently provisioned signer identity.
+- **A — Authority:** the signer and action are independently authorized; public availability or an opted-in local fallback cannot silently widen permission.
+- **F — Freshness:** the run, source evidence, attestation and residual measurement satisfy the configured timestamp/expiry policy.
+- **B — Boundary separation:** E0-E6 source-contract checks are not relabeled as G0-G6 production acceptance; procurement readiness is not production authorization.
+
+A candidate is eligible for promotion only when each obligation is independently satisfied:
+
+```text
+Promote = M AND R AND E AND P AND A AND F AND B
+```
+
+The G0-G6 policy documents intended criteria for source binding, required CI, immutable artifact provenance, supply-chain attestation, security policy, runtime health, and residual measurement. It does not establish those criteria as true merely by naming the gates or signing a document.
+
+### Current integration disposition
+
+- Great Scale public registry: 14 public repositories and 5 proposed interfaces; all interface statuses remain `proposed-not-verified`.
+- Full account inventory: maintained separately in private CONTROL12 PR [#32](https://github.com/doitupsolutions810-crow/control12-lattice-ops/pull/32); 35 records / 9 proposed interfaces, not runtime proof.
+- LICP G0-G6 contract: [PR #34](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/34), draft and unmerged.
+- Hosted CI evidence currently available for the latest LICP candidate is still failing before any test steps are recorded. The provider-level cause is not exposed through the available job/log data. Vercel's build-rate-limit failure is a separate preview constraint.
+
+### Next acceptance step
+
+The producer connection remains the last unconnected trust boundary. Implement it only where the evidence originates: the producer must fetch/validate the actual run and required suite outcomes, bind the verified artifact and residual to the same build/revision, then sign with an independently provisioned key. The consumer must independently verify the pinned identity and contract. The edge may be marked `verified` only after exact-head hosted CI executes with inspectable passing steps and live positive/negative integration tests pass. Until then: **HOLD / NO-GO**.
