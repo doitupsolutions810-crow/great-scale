@@ -94,3 +94,8 @@ Mitigation:
 - Did not invent a replacement geometric inequality. A stronger cone test requires the authoritative mathematical contract and expected valid/invalid examples from the model owner.
 
 The isolated Node.js suite must be rerun after this additional characterization test. Hosted Actions still fails before exposing execution steps. Production remains **HOLD**.
+
+
+### CLXC verification update
+
+The isolated Node.js harness was rerun after adding the cone-predicate characterization case: **8/8 tests passed**, including syntax checks for the isolated parser/test modules. This remains isolated harness evidence, not a clean-checkout full-suite result; hosted Actions still fails before visible steps.
