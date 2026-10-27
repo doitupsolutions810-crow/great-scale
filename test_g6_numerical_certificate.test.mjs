@@ -204,6 +204,27 @@ test("changed proof bytes, mismatched proof fields, and certificate signature ta
   })).failures.includes("numerical_certificate_signature_invalid"));
 });
 
+test("invalid freshness policy values fail closed instead of disabling timestamp checks", () => {
+  const candidate = fixture();
+  assert.ok(verifyG6NumericalCertification(options(candidate, { now: NaN }))
+    .failures.includes("verification_clock_invalid"));
+  assert.ok(verifyG6NumericalCertification(options(candidate, { maxAgeMs: Infinity }))
+    .failures.includes("numerical_certificate_max_age_policy_invalid"));
+  assert.ok(verifyG6NumericalCertification(options(candidate, { maxClockSkewMs: NaN }))
+    .failures.includes("numerical_certificate_clock_skew_policy_invalid"));
+});
+
+test("non-canonicalizable measurements cannot be certified", () => {
+  const candidate = fixture();
+  const malformedMeasurement = { quadratureTolerance: 1e-3, impossible: 1n };
+  const result = verifyG6NumericalCertification(options(candidate, {
+    measurement: malformedMeasurement
+  }));
+  assert.equal(result.valid, false);
+  assert.ok(result.failures.includes("measurement_not_canonicalizable"));
+  assert.ok(result.failures.includes("numerical_certification_measurement_digest_mismatch"));
+});
+
 test("the proof URL is HTTPS and pinned to an explicitly allowed origin", async () => {
   let calls = 0;
   const candidate = fixture({
