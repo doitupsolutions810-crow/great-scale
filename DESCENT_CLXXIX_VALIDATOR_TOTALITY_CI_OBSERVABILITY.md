@@ -125,3 +125,12 @@ Formal release predicate:
 where (I) is independent producer identity, (M) is protocol/signature agreement, (G) is authoritative G0–G6 evidence, (F) is freshness, (C) is exact contract binding, (X) is observable exact-revision test execution, and (L) is live endpoint/key verification. Procurement-document validity alone does not imply any of these production predicates.
 
 Decision remains **HOLD**. The note is a documented finding and integration sequence, not a production producer implementation; PR #33 and PR #128 remain draft.
+
+
+## CLXXXVII — isolated CI still fails before runner steps
+
+Added [Descent CLXXXVII](https://github.com/doitupsolutions810-crow/great-scale/blob/research/descent-cxli-evidence-projection-reconciliation/research/DESCENT_CLXXXVII_ISOLATED_CI_PRE_RUNNER_FAILURE.md).
+
+A focused, read-only GitHub Actions workflow was committed to control-plane PR #33 at `1b2ad196dc6dfd6c6b23083fed5d8238700997da`. It isolates Node 20 syntax checks and the evidence/namespace regression tests from the wider Docker/security pipeline. The workflow triggered at [run 40441231142](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40441231142), but failed within seconds with no steps, no runner identity, and no downloadable logs. The existing Plane CI run at the same SHA has the same zero-step pattern.
+
+This is not evidence that the tests failed; it is also not a pass. The exact pre-runner cause is not exposed in available metadata. The next mitigation is to inspect repository/account Actions runner availability and execution policy. Production remains HOLD until test steps execute visibly and live production trust binding is independently verified.
