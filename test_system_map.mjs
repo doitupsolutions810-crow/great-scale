@@ -183,6 +183,11 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
     "approved-independent-numerical-certificate-method",
     "certificate-source-commit-and-model-input-digest-match",
     "certificate-proof-artifact-digest-verified",
+    "numerical-certification-certificate-signature-verified-under-independent-key",
+    "numerical-certification-key-id-pinned-separately-from-receipt-key",
+    "numerical-certification-generated-at-expires-at-freshness-validated",
+    "numerical-certification-proof-digest-matches-downloaded-evidence",
+    "numerical-certification-bounds-within-measurement-tolerance",
     "certified-curvature-and-metric-area-error-bounds-within-tolerance",
     "empirical-richardson-estimates-not-treated-as-rigorous",
     "numerical-certifier-identity-pinned-independent-of-receipt",
@@ -237,6 +242,7 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
       numericalCertificationRequired: "A separate numericalCertification object is mandatory; model errorBoundMethod labels Richardson estimates as empirical only and never as rigorous proof.",
       numericalCertificationEvidenceVerified: "Independently fetch and validate numericalCertification.evidenceUrl; recompute proofDigest; pin verifierId and method; require sourceCommitSha=source.commitSha, modelInputDigest=model.inputDigest, and both certified error upper bounds <= measurement.quadratureTolerance.",
       numericalCertificationClaimNotProof: "numericalCertification.verified=true is only a claim; independently verify proof evidence and trust policy before G6 promotion.",
+      numericalCertificationTrustAnchorSeparate: "certificateKeyId and certificateSignature must verify under a separately configured, independently pinned numerical-certificate public key; do not treat the outer G6 receipt signature as proof of the certificate.",
     },
   });
 
@@ -260,6 +266,12 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   ].sort());
   assert.equal(numericalCertification.properties.verified.const, true);
   assert.match(numericalCertification.description, /verified boolean and schema shape alone are not proof/i);
+  assert.ok(numericalCertification.required.includes("certificateKeyId"));
+  assert.ok(numericalCertification.required.includes("certificateSignature"));
+  assert.ok(numericalCertification.required.includes("generatedAt"));
+  assert.ok(numericalCertification.required.includes("expiresAt"));
+  assert.equal(numericalCertification.properties.certificateSignature.pattern, "^[A-Za-z0-9+/]{86}==$");
+  assert.match(numericalCertification.properties.certificateSignature.description, /separately pinned certificate public key/i);
   assert.equal(schema.properties.measurement.properties.errorBoundMethod.const,
     "richardson-asymptotic-estimate-only");
   assert.equal(schema.properties.numericalCertification.additionalProperties, false);
