@@ -57,3 +57,6 @@ Updated authorization rule: treat test-source integrity as a separate gate, (X),
 `A_public = V ∧ T ∧ C ∧ F ∧ K ∧ D ∧ S ∧ G ∧ I ∧ X ∧ H`
 
 Current evidence establishes static shape checks only; (X) and (H) remain unverified. Production HOLD remains mandatory.
+
+
+Latest retry for control-plane head `58712965e93a2c4cc63113553db14faafd49dab0`: run `40439627571`, attempt 2, again completed as failure with no steps and no job log URL (`runner_id` unavailable through this job response). The retry was explicitly requested after the orphaned test fixture was removed; it still did not expose executable verification. The environment/runner fault remains an unresolved blocker, not evidence of test success or a source-level test failure.
