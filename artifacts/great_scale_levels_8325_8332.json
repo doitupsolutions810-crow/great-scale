@@ -1,0 +1,31 @@
+{
+  "schema": "great-scale.descent-artifact/v1",
+  "levels": "8325-8332",
+  "title": "Evidence Is Not Authority",
+  "finding": "Verified execution evidence does not imply permission to deploy; authorization must bind authenticated principal, exact proposal/diff/scope, quorum, validity window, and replay-resistant nonce.",
+  "permit": "V AND I AND B AND Q AND W AND N",
+  "predicates": {
+    "V": "execution evidence verifies against exact tested commit and policy",
+    "I": "principal identity independently authenticated",
+    "B": "approval binds proposal ID, diff SHA-256, and declared scope",
+    "Q": "approval quorum and role policy satisfied",
+    "W": "approval is within validity window and maximum age",
+    "N": "nonce unused and atomically consumed by durable replay store"
+  },
+  "crossRepositoryFindings": {
+    "GreatScale": "execution evidence and policy-bound verification; no hosted pass claimed",
+    "CycleKernal": "PR #4 proposes state-aware demotion; full checkout tests unverified",
+    "TrainLLM": "random trust score > 0.8 can approve proposal; must not substitute for authenticated authorization"
+  },
+  "implementation": "authorization_gate.js",
+  "testFile": "test_authorization_gate.js",
+  "testCount": 20,
+  "limits": [
+    "Pure structural gate does not authenticate identity or verify signatures",
+    "Nonce consumption must be atomic and durable outside the pure function",
+    "A confidence score is not an authorization credential",
+    "Tested-commit identity and pull-request source-head identity must remain separate",
+    "Full repository tests, hosted CI, build, and deployment remain unverified"
+  ],
+  "status": "authored_pending_exact_checkout_and_test_execution"
+}
