@@ -44,3 +44,9 @@ test("an interface cannot be marked verified without receipt-grade evidence", ()
   candidate.interfaces[0].verificationStatus = "verified";
   assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("cannot be marked verified without commit SHA")));
 });
+
+test("public-only registry rejects a private repository record", () => {
+  const candidate = structuredClone(baseline);
+  candidate.repositories[0].visibility = "private";
+  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("public-only registry")));
+});
