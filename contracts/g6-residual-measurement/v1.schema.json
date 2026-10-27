@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Great Scale G6 Residual Measurement v1",
-  "description": "A source/build-bound numerical measurement receipt for G6. Schema validity does not prove signature authenticity, execution, live observation, or production authorization.",
+  "description": "A source/build-bound numerical measurement receipt for G6. Schema validity alone does not prove signature authenticity, cross-field binding, execution, live observation, or production authorization.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,7 +18,10 @@
     "model",
     "measurement",
     "digest",
-    "signature"
+    "signature",
+    "measuredAt",
+    "canonicalization",
+    "signatureAlgorithm"
   ],
   "properties": {
     "schema": {
@@ -342,15 +345,31 @@
           "minimum": 8,
           "maximum": 131072
         }
-      }
+      },
+      "description": "Numerical/model diagnostics. STopological is the canonical topology-derived residual coordinate and must be mapped to residual.S in the downstream Control Plane envelope; verifier must reject disagreement between them."
     },
     "digest": {
       "type": "string",
-      "pattern": "^[a-f0-9]{64}$"
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase SHA-256 hex of the canonical body after removing digest and signature."
     },
     "signature": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9+/]{86}==$"
+      "pattern": "^[A-Za-z0-9+/]{86}==$",
+      "description": "Base64 Ed25519 signature over the same canonical body used for digest, after removing digest and signature."
+    },
+    "measuredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Time at which the numerical measurement was observed; maps to residual.measuredAt in the Control Plane G0-G6 attestation."
+    },
+    "canonicalization": {
+      "const": "great-scale.canonical-json/v1",
+      "description": "UTF-8 JSON serialization with recursively lexicographically sorted object keys, preserved array order, JSON.stringify primitive encoding, and no insignificant whitespace."
+    },
+    "signatureAlgorithm": {
+      "const": "Ed25519",
+      "description": "The signature is verified against a deployment-pinned public key identified by keyId; the payload cannot choose its trust anchor."
     }
   }
 }
