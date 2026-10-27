@@ -60,11 +60,11 @@ Do not claim cryptographic verification based on field presence, a regex, a test
 
 ## Integration gate
 
-This document is a contract and review record, **not a claim that runtime signature verification has been implemented**. The producer endpoint and its deployed key identity have not yet been established from available repository evidence. Until those are confirmed, keep the public-evidence gate fail-closed and production HOLD. Do not invent or generate a production trust anchor merely to make tests pass.
+This document is a contract and review record. A consumer-side Ed25519 verifier has now been added to control-plane PR #33: it recomputes the canonical SHA-256 digest, verifies the signature against a configured PEM public key, and pins source identity plus key ID. Its test fixtures use an ephemeral test-only key. This is not yet an end-to-end production trust chain: the actual producer endpoint, its deployed key identity, its canonicalization implementation, and the real deployment configuration have not been verified. Public evidence remains fail-closed when trust configuration is missing. Keep production HOLD; do not invent or generate a production trust anchor merely to make tests pass.
 
 Completion requires:
 - producer emits the agreed signed envelope;
-- consumer recomputes digest and verifies Ed25519 with pinned configuration;
+- consumer recomputes digest and verifies Ed25519 with pinned configuration (implementation committed; CI and integration validation still required);
 - integration tests exercise real signing/verification and every negative case above;
 - clean-checkout full test/build passes;
 - a successful hosted workflow is observed on the exact candidate commit;
