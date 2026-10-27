@@ -165,3 +165,24 @@ test("public-only registry rejects a private repository record", () => {
   candidate.repositories[0].visibility = "private";
   assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("public-only registry")));
 });
+
+test("Great Scale to control-plane edge requires a live build-bound G6 residual and stays unverified", () => {
+  const edge = baseline.interfaces.find(item =>
+    item.from === "great-scale" && item.to === "living-intermediate-control-plane"
+  );
+  assert.ok(edge);
+  assert.equal(edge.verificationStatus, "proposed-not-verified");
+  assert.match(edge.contract, /not a live production measurement endpoint/);
+  for (const requirement of [
+    "live-measurement-source-identity",
+    "same-build-and-immutable-artifact-digest",
+    "source-issued-measured-at-freshness",
+    "finite-residual-value-and-cone-policy",
+    "no-default-zero-or-caller-supplied-value-as-observation",
+    "authoritative-g0-g6-producer-verification",
+    "independent-signing-key-and-pinned-trust-anchor",
+    "exact-head-end-to-end-test-run",
+  ]) {
+    assert.ok(edge.requiredEvidence.includes(requirement), `missing G6 promotion evidence: ${requirement}`);
+  }
+});
