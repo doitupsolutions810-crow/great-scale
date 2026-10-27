@@ -56,16 +56,16 @@ For array-form gates, the schema must constrain each item’s `id` to G0–G6 an
 
 ### Verification
 
-The CLXIX Python model covers 13 cases: valid paired documents, split-source claims, weakened schema, generic HTTP-200 bodies, a held gate, non-HTTPS endpoints, force invariance, explicit local fallback, missing gate requirements, unknown gate IDs, valid array-form exact-once gate coverage, a weakened array schema, and a cross-origin final response URL.
+The CLXIX Python model covers 14 cases: valid paired documents, split-source claims, weakened schema, generic HTTP-200 bodies, a held gate, non-HTTPS endpoints, force invariance, explicit local fallback, missing gate requirements, unknown gate IDs, valid array-form exact-once gate coverage, a weakened array schema, a cross-origin final response URL, and an object-form schema that attempts to permit extra gate IDs.
 
 Reconstructed focused local harnesses passed:
-- **17/17** Node authorization/probe tests, including redirects, cache directives, exact gate identity, and source binding.
-- **13/13** CONTROL12 evaluator tests, including object- and array-form schemas and pinned HTTPS fetching.
-- **13/13** CLXIX model tests.
+- **19/19** Node authorization/probe tests, including redirects, cache directives, exact gate identity, and source binding.
+- **14/14** CONTROL12 evaluator tests, including object- and array-form schemas and pinned HTTPS fetching.
+- **14/14** CLXIX model tests.
 
 These were isolated, locally reconstructed harnesses. They are not a full clean-checkout execution of the committed repository suites. Native access to the GitHub checkout was unavailable in the local execution environment.
 
-Hosted CI remains unverified. The latest Actions runs have repeatedly failed at startup with `runner_id=0` and `steps=[]` within seconds; the CONTROL12 workflow returned `startup_failure` with no job records. No test step ran, so these results demonstrate neither a code test failure nor a pass. Vercel deployment checks remain blocked by the account deployment-rate limit. Snyk/CodeRabbit success does not replace CI.
+Hosted CI remains unverified. Latest observed Actions runs: control-plane [40423428848](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40423428848) and Great Scale [40423478954](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40423478954) report `runner_id=0` and zero steps; CONTROL12 [40423464960](https://github.com/doitupsolutions810-crow/control12-lattice-ops/actions/runs/40423464960) returned `startup_failure` with no job records. No test step ran, so these results demonstrate neither a code test failure nor a pass. Vercel deployment checks remain blocked by the account deployment-rate limit. Snyk/CodeRabbit success does not replace CI.
 
 ### Remaining acceptance gap: freshness and cryptographic provenance
 
