@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import {
   canonicalG6CertificateJson,
+  G6_MEASUREMENT_FIELDS,
+  G6_NUMERICAL_CERTIFICATION_FIELDS,
   G6_NUMERICAL_CERTIFICATE_SCHEMA,
   fetchAndVerifyG6NumericalCertification,
   fetchG6NumericalProofBytes,
@@ -18,6 +21,9 @@ const sourceCommitSha = "a".repeat(40);
 const modelInputDigest = "b".repeat(64);
 const allowedEvidenceOrigins = ["https://evidence.example.invalid"];
 const evidenceUrl = "https://evidence.example.invalid/certificates/qgt-proof.json";
+const receiptSchema = JSON.parse(readFileSync(
+  new URL("./contracts/g6-residual-measurement/v1.schema.json", import.meta.url), "utf8"
+));
 const now = Date.now();
 const require = createRequire(import.meta.url);
 const { CONE } = require("./public/scale.cjs");
@@ -165,6 +171,19 @@ function responseAt(url, body, init = {}) {
   Object.defineProperty(response, "url", { value: url, configurable: true });
   return response;
 }
+
+test("executable field allowlists match the versioned G6 JSON Schema exactly", () => {
+  assert.deepEqual(
+    [...G6_MEASUREMENT_FIELDS].sort(),
+    [...receiptSchema.properties.measurement.required].sort()
+  );
+  assert.deepEqual(
+    [...G6_NUMERICAL_CERTIFICATION_FIELDS].sort(),
+    [...receiptSchema.properties.numericalCertification.required].sort()
+  );
+  assert.equal(receiptSchema.properties.measurement.additionalProperties, false);
+  assert.equal(receiptSchema.properties.numericalCertification.additionalProperties, false);
+});
 
 test("independent signed numerical certificate verifies and binds the exact measurement and proof bytes", async () => {
   const candidate = fixture();
