@@ -58,3 +58,29 @@ C: PARTIAL — schema/status digest binding is implemented in candidate source, 
 L: HOLD — producer/consumer conformance and live verification are not proven.
 
 Decision: HOLD / NO-GO. No merge, deployment, production key provisioning, or procurement activation was performed.
+
+
+## Follow-up verification — regression integrity and execution observability
+
+The consumer candidate test file was inspected again after the contract correction. It contained 136 test declarations but only 20 unique names, with repeated blocks appended to the same file. The candidate suite was deduplicated in commit `5ff2d60848164c095c6275994ce9aceb11d2ebf1`: 20 declarations remain, all 20 names are unique, and the four schema-binding regression cases are retained. This is a source-level check; no test execution is implied.
+
+The updated consumer commit has these observable status facts:
+- Snyk security check: success.
+- Vercel check: failure, with the target reporting a build-rate-limit/plan limitation.
+- No GitHub Actions workflow run was returned for the exact consumer commit.
+- Producer workflow attempts remain `startup_failure`.
+- Great Scale CI run `40441007768` remains failed; the available connector did not expose actionable step logs.
+
+A clean checkout test run was attempted, but this environment could not resolve `github.com`; therefore JavaScript tests could not be executed locally. This is an environment limitation, not a passing test result.
+
+## Updated release interpretation
+
+Test-file integrity is now improved, but the execution predicate remains false until a reproducible test run and exact-head CI evidence exist. A successful security scan does not compensate for a failed build check or absent test execution.
+
+```
+ReleaseAuthorized = C ∧ K ∧ B ∧ F ∧ G ∧ R ∧ O ∧ T ∧ L
+```
+
+Where `T` is successful, observable test execution and `L` is live status/schema verification against the independently pinned source key. Every predicate is necessary; none is inferred from another.
+
+Decision remains **HOLD / NO-GO**. No merge, deployment, production key provisioning, or procurement activation occurred.
