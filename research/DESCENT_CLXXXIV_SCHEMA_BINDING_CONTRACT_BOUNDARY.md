@@ -84,3 +84,25 @@ ReleaseAuthorized = C ∧ K ∧ B ∧ F ∧ G ∧ R ∧ O ∧ T ∧ L
 Where `T` is successful, observable test execution and `L` is live status/schema verification against the independently pinned source key. Every predicate is necessary; none is inferred from another.
 
 Decision remains **HOLD / NO-GO**. No merge, deployment, production key provisioning, or procurement activation occurred.
+
+## Follow-up verification — CLXXXV model execution and branch topology
+
+The CLXXXV verifier/execution-observability model was executed directly with Python during this review:
+- Result: PASS.
+- Truth-table states: 256.
+- Authorizing states: exactly 1, the all-true state.
+- Single-predicate denial cases: 8/8.
+- Explicit denials for missing production gates, observable CI, and live verification all held.
+- Scope limitation: this validates the Boolean policy model only; it does not execute the producer or consumer JavaScript, authenticate a live endpoint, or prove deployed key configuration.
+
+Current GitHub topology was re-queried:
+- Control Plane PR #31 remains open and draft, head `5ff2d60848164c095c6275994ce9aceb11d2ebf1`, and GitHub reports `mergeable: false`. Its branch compares as 65 commits ahead and 16 behind `main`; reconcile the branch against its current base and inspect conflicts before any merge attempt.
+- Lattice Ops PR #31 remains open and draft; its candidate branch compares as 51 commits ahead and 0 behind `main`, but the latest recorded producer Actions attempts have startup failures without a test job result.
+- Great Scale PR #128 remains open and draft. Its branch compares as 211 commits ahead and 8 behind `main`; the latest observed CI run, `40441441210`, concluded failure. A branch-to-branch history this large requires careful conflict and workflow-trigger review rather than a blind merge.
+
+These observations strengthen the distinction between policy correctness and release evidence. A passing finite-state model cannot compensate for failed or absent repository CI, a conflicted candidate branch, unverified production gates, or missing live endpoint verification.
+
+Updated release predicate remains:
+`ReleaseAuthorized = C ∧ K ∧ B ∧ F ∧ G ∧ R ∧ O ∧ T ∧ L`
+
+Decision: HOLD / NO-GO. Do not merge, deploy, provision production signing keys, or activate procurement until the current branches are reconciled safely and all independent release predicates are evidenced on the exact candidate revisions.
