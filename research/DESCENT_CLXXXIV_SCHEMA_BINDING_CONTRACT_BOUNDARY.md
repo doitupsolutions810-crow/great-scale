@@ -202,3 +202,26 @@ The final gate review found one more authorization ambiguity in the exported pro
 The helper now requires all three local-fallback facts simultaneously: explicit local opt-in, an enumerated observed degraded status, and authority = local. A regression assertion denies the inconsistent combination status = invalid, authority = public, trustContractVerified = false even with local opt-in. This makes the fallback decision a coherent state rather than a status-only heuristic.
 
 The Control Plane PR head is now 2098bfa1aca0e7e925bfd1b6e58f0ad68b307c5c. Its hosted Plane CI job again reports failure without step summaries or downloadable logs; downstream container validation is skipped. This does not identify the failing command and does not count as a test result for the new assertion. Release remains HOLD / NO-GO.
+
+## Descent CXC — verification failure must never be reclassified as availability fallback
+
+A further end-to-end review found a trust downgrade in the Control Plane probe. With local fallback enabled, a reachable public endpoint whose evidence document or schema failed verification could be returned as `status = invalid, authority = local`. The procurement gate accepted `invalid` as a degraded state, so explicit local opt-in could authorize a fallback after a trust failure rather than only after an availability failure.
+
+This is a semantic distinction, not merely an error-label issue:
+
+- **Availability failure**: an explicitly enumerated missing/unreachable/unconfigured source may permit local authority only when local evidence is opted in.
+- **Trust failure**: a reachable endpoint with invalid HTTP status, missing schema, malformed JSON, or failed cryptographic verification must remain non-authorizing; changing its authority label must not make it eligible for local fallback.
+
+### Mitigation staged on Control Plane PR #34
+
+- HTTP responses outside 2xx are no longer relabeled as local authority.
+- Schema-endpoint failures and status/schema verification failures retain public authority with `trustContractVerified = false`, ensuring they cannot satisfy either public verification or local fallback predicates.
+- The procurement gate no longer treats `invalid` as an eligible local-fallback status, even if a caller supplies `authority = local`.
+- Regression assertions cover a reachable but unverified response with local opt-in and an explicitly mislabeled local invalid state.
+- Changes are staged on `fix/procurement-gate-evidence-contract-binding`; current exact head at report update: `23bb1ab742fd515649f040f2ac1a5bce3afe4ec6`.
+
+### Verification and release status
+
+Source-level checks confirmed the mitigation and regression assertions are present on the branch. A new exact-head Plane CI run was queued as run `40443645735`; it has not yet produced a completed result at the time of this report update. The previous run's job-log endpoint returned a missing-blob error, so its failure cause remains unknown. No clean local execution of the JavaScript suite, live public endpoint verification, production key provisioning, merge, or deployment has been established.
+
+**Release remains HOLD / NO-GO** until the exact-head CI run and full JavaScript/platform suite pass, the public status and schema endpoints are verified against independently approved pinned key material, and production behavior is confirmed. No procurement activation is authorized by this mitigation alone.
