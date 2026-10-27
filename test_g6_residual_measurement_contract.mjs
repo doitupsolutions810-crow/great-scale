@@ -74,6 +74,8 @@ test("G6 schema preserves numerical model diagnostics without treating Richardso
   assert.equal(result.errorBoundMethod, "richardson-asymptotic-estimate-only");
   assert.equal(result.modelG6CertificationEligible, false,
     "the model output must not self-certify production G6");
+  assert.equal(schema.properties.model.properties.modelG6CertificationEligible.const, false,
+    "the G6 receipt schema must require the output's non-self-certification flag");
 });
 
 test("stable numerical scalar is algebraically consistent but not independently G6-certified", () => {
