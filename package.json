@@ -3,7 +3,7 @@
   "version": "0.4.2",
   "description": "Test environment — three embeddings of one state. Geometry lab + involution discrete layer.",
   "scripts": {
-    "test": "node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs && node --test test_system_map.mjs && node tools/validate-repository-map.mjs",
+    "test": "node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs && node --test test_system_map.mjs && node --test test_operation_evidence_contract.mjs && node tools/validate-repository-map.mjs",
     "descent": "python3 test_descent.py",
     "all": "npm test && python3 test_descent.py"
   },
