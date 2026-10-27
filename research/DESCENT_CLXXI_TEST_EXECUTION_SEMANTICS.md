@@ -25,7 +25,7 @@ This is a syntactic reachability guard, not a general Python control-flow proof.
 
 ## Reconstructed local validation
 
-A copied-source harness for the patched algorithm produced the expected results on **10/10 cases**:
+A copied-source harness for the patched algorithm produced the expected results on **17/17 cases**:
 
 | Case | Expected auditor result | Observed |
 |---|---|---|
@@ -38,11 +38,17 @@ A copied-source harness for the patched algorithm produced the expected results 
 | Registry call only inside an empty nested loop | missing | pass |
 | Direct registry dispatch in loop | accepted | pass |
 | Bare invocation of async def | missing | pass |
+| False numeric condition (`if 0`) | missing | pass |
+| Negated constant condition (`if not True`) | missing | pass |
+| Direct invocation in an empty `range(0)` loop | missing | pass |
+| Call inside an uninvoked lambda | missing | pass |
+| Call in unsupported `try`/`except` body | missing | pass |
+| Lambda-wrapped test reference in a registry | missing | pass |
 | Bare reference without call | missing | pass |
 
 This was a reconstructed local harness, not execution of the committed repository file or the full npm run all suite.
 
-Hosted CI run 40425726921 on head e30885ef4c228d9a85648cdd05794b570e3f8233 and follow-up run 40425906056 on head 298a3c3fca25f594c396523a5b113cd1b5427e68 both failed before any job steps ran (runner_id=0; zero step summaries). These are execution-environment blockers, not evidence that tests passed or that source tests failed. No full suite, deployment, or production behavior has been verified on these heads.
+Hosted CI runs 40425726921 (head e30885ef4c228d9a85648cdd05794b570e3f8233), 40425906056 (head 298a3c3fca25f594c396523a5b113cd1b5427e68), and latest run 40427759572 (head 8de26732bc2592a6e71ff1c1cbaf3c7dc97e1925) failed before any job steps ran (runner_id=0; zero step summaries). These are execution-environment blockers, not evidence that tests passed or that source tests failed. A clean checkout was also attempted from the available container, but outbound DNS for github.com failed, so the exact committed suite could not be run locally in this environment. No full suite, deployment, or production behavior has been verified.
 
 ## Great Scale mapping
 
