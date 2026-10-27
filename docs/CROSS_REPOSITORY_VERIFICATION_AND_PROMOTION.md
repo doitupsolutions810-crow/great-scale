@@ -189,3 +189,28 @@ The G0-G6 policy documents intended criteria for source binding, required CI, im
 ### Next acceptance step
 
 The producer connection remains the last unconnected trust boundary. Implement it only where the evidence originates: the producer must fetch/validate the actual run and required suite outcomes, bind the verified artifact and residual to the same build/revision, then sign with an independently provisioned key. The consumer must independently verify the pinned identity and contract. The edge may be marked `verified` only after exact-head hosted CI executes with inspectable passing steps and live positive/negative integration tests pass. Until then: **HOLD / NO-GO**.
+
+
+## Descent CC — Shared hosted execution blocker (2026-10-27)
+
+A fresh exact-head check across the candidate repositories shows the same evidence pattern: GitHub reports the workflow job as failed, but the job has no executed steps, no runner assignment (`runner_id: 0` where exposed), and no downloadable log blob. That makes the source test result **UNKNOWN/BLOCKED**, not pass and not a demonstrated code assertion failure.
+
+| Candidate | Exact head SHA | Workflow run | Observed job state |
+|---|---|---|---|
+| Great Scale PR #129 | `636dc6ff6cd0aaec065f5451875c97ea88044e45` | [#40451340121](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40451340121) | `failure`, no step list |
+| LICP PR #34 | `3a9c43e9122b92a6bfcdc282478d5afae6fe86b5` | [#40451230072](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40451230072) | `failure`, no step list |
+| LICP Plane CI | `3a9c43e9122b92a6bfcdc282478d5afae6fe86b5` | [#40451230049](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40451230049) | verification job has no step list; dependent container job skipped |
+| Capability Authority PR #12 | `dd8c4e38136d3e3e81891045be0ace216a6c5253` | [#40429217283](https://github.com/doitupsolutions810-crow/capability-authority/actions/runs/40429217283) | both jobs `failure`, no step lists |
+| CycleKernal PR #9 | `be0d13764ee3ff4e8d4e60a24cc1f446d9631126` | [#40417726051](https://github.com/doitupsolutions810-crow/CycleKernal/actions/runs/40417726051) | `failure`, no step list |
+
+The available job/log interface does not expose the provider's precise cause. Do not infer billing lock, source failure, or a green result from this evidence. Vercel separately reports a build-rate-limit failure for preview deployments; that does not explain the runnerless Actions jobs.
+
+### Mitigation decision
+
+- Preserve all CI and authorization gates; do not weaken the test requirement to obtain a green badge.
+- Keep the contract and inventory PRs draft while hosted execution remains unavailable.
+- Treat the isolated local harnesses as limited unit evidence only. They cannot satisfy **E — observed execution evidence** or **P — exact revision provenance** for promotion.
+- Ask the GitHub account/repository owner to inspect the Actions UI or GitHub Support for the exact runner initialization annotation. The integration tooling available in this session cannot retrieve that annotation or alter account-level Actions settings.
+- After the runner issue is resolved, rerun the focused and full suites at the exact current SHAs; retain run/job IDs, step logs, suite results, artifact digests and the source SHA in the promotion evidence.
+
+The cross-repository integration status remains `proposed-not-verified`. The G0-G6 policy is a consumer contract only until an authoritative producer emits a fresh signed proof and all of M, R, E, P, A, F and B pass.
