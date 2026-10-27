@@ -1,7 +1,7 @@
 # Descent CIV — Great Scale Living Intermediate (GSLI)
 ## The residual geometry becomes the operational control plane
 
-Status: build in progress. The pure residual channel (XCVII–CIII) is closed. Operational duals have landed in both public repositories.
+Status: build in progress. The pure residual channel (XCVII–CIII) is closed. Operational duals and dual-atlas agent runtime have landed.
 
 Not a new physical law. An engineering identity that forces the mathematical residual, the agent residual, and the attestation residual to be dual presentations of one coordinate.
 
@@ -76,7 +76,7 @@ Laws that now govern the entire stack:
 - [x] The joint fixed-point lock (agent + swarm + discourse) is green.
 - [ ] Evidence-console produces source-issued, time-bounded, Ed25519-signed status + schema (PR work in progress).
 - [ ] Consumer verifies under independently configured public key and fails closed on any residual violation.
-- [x] Dual-atlas roles are assigned from the residual partition (`atlasRole`).
+- [x] Dual-atlas roles are assigned from the residual partition (`atlasRole` + agent runtime).
 - [x] Authorization decision is expressible as a cone check (`authorizeWithCone`).
 - [x] No layer introduces an independent residual outside a monotonic image of \(4S_T\).
 
@@ -86,14 +86,14 @@ Laws that now govern the entire stack:
 2. [x] Lattice bridge updated with residual coordinate, dual atlas, authorization dual.
 3. [x] Cone-check authorization dual.
 4. [x] Residual snapshot CLI (`status/residual-snapshot.mjs`).
-5. [ ] Wire residual into live evidence-console producer.
-6. [ ] Enforce dual-atlas inside agent runtime.
+5. [x] Dual-atlas inside agent runtime (`agents/dual-atlas.mjs`, orchestration, llama agent status).
+6. [ ] Wire residual into live evidence-console producer (open PRs #29 / #31).
 7. [ ] Enforce independent E0–E6 / G0–G6 namespaces in evaluator.
 
 ## Verification
 
-Topological channel 23/23 green. Joint fixed-point locked. Residual module produces correct cascade, cone, dual-atlas, and authorization values.
+Topological channel 23/23 green. Joint fixed-point locked. Residual module, cone dual, dual-atlas swarm assignment, and orchestration residual identity all verified locally.
 
 ## Status
 
-Build in progress. Residual geometry closed; operational duals landed in both public repositories.
+Build advancing. Residual geometry closed; dual-atlas and cone duals operational in the living-intermediate agent layer.
