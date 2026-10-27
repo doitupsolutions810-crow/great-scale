@@ -1,0 +1,11 @@
+{
+  "system":"Great Scale",
+  "rung":"XCV",
+  "title":"Evidence-Gated Model Admission and Decision Stability",
+  "current_models":{"A":0.8,"B":0.6},
+  "candidate":{"id":"C","value":-0.1,"status":"PENDING_INDEPENDENT_VALIDATION"},
+  "before":{"worst_case":0.6,"decision":"ACCEPT"},
+  "after_stress_test":{"worst_case":-0.1,"decision":"NOT_CERTIFIED"},
+  "decision_impact_is_not_evidence_of_truth":true,
+  "status":"illustrative mathematical example, not empirical validation"
+}

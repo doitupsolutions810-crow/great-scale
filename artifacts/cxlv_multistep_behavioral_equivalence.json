@@ -1,0 +1,8 @@
+{
+  "rung": "CXLV",
+  "title": "Multi-Step Behavioral Equivalence",
+  "status": "implementation-authored-tests-not-executed",
+  "claim": "One-step agreement can conceal later observable divergence; finite-horizon comparison and stable partition refinement detect distinctions in finite deterministic systems.",
+  "checks": ["current observation", "enabled-action availability", "terminal behavior", "successor behavioral class"],
+  "scope": "Finite deterministic domains only; not a probabilistic bisimulation proof."
+}
