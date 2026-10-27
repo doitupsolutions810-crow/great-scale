@@ -38,7 +38,9 @@
         "string",
         "null"
       ],
-      "maxLength": 128
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$"
     },
     "parent_request_digest": {
       "type": [
@@ -126,14 +128,59 @@
         "string",
         "null"
       ],
-      "maxLength": 2048
+      "maxLength": 2048,
+      "minLength": 1
     },
     "authority_ref": {
       "type": [
         "string",
         "null"
       ],
-      "maxLength": 512
+      "maxLength": 512,
+      "minLength": 1
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "key_id",
+        "signature"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "Ed25519"
+        },
+        "key_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==$"
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "receipt"
+          }
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "then": {
+        "required": [
+          "attestation"
+        ]
+      }
+    }
+  ]
 }
