@@ -102,6 +102,27 @@ export function validateRepositoryMap(map) {
   if (map.schemaVersion !== 1) add("schemaVersion must equal 1");
   if (map.scope !== "public-only") add("public registry scope must be public-only");
   if (!map.operationEvidenceContract || map.operationEvidenceContract.version !== "v1" || map.operationEvidenceContract.path !== "docs/OPERATION_EVIDENCE_CONTRACT_V1.md" || map.operationEvidenceContract.schemaPath !== "contracts/operation-evidence/v1.schema.json" || map.operationEvidenceContract.status !== "proposed") add("operationEvidenceContract must bind the proposed v1 contract document and schema");
+  const g6Contract = map.g6ResidualMeasurementContract;
+  const g6Mapping = {
+    measurementSTopologicalToResidualS: "measurement.STopological -> residual.S",
+    measuredAtToResidualMeasuredAt: "measuredAt -> residual.measuredAt",
+    issuerToResidualSourceId: "issuer -> residual.sourceId",
+    buildIdToResidualBuildId: "buildId -> residual.buildId",
+    sourceCommitEqualsWorkflowHead: "source.commitSha must equal execution.headSha",
+    artifactBinding: "artifact.digest and model.inputDigest must be verified against the intended source/build/artifact scope",
+    trustBoundary: "verify Ed25519 against an independently configured public key; receipt cannot choose its trust anchor",
+  };
+  if (!g6Contract ||
+      g6Contract.repository !== "great-scale" ||
+      g6Contract.path !== "contracts/g6-residual-measurement/v1.schema.json" ||
+      g6Contract.schemaBlobSha !== "a0956c825e9a8974f5855054d2c80eb4433391f9" ||
+      g6Contract.version !== "v1" ||
+      g6Contract.status !== "schema-only-not-producer" ||
+      !g6Contract.mapping ||
+      Object.keys(g6Contract.mapping).length !== Object.keys(g6Mapping).length ||
+      Object.entries(g6Mapping).some(([key, value]) => g6Contract.mapping[key] !== value)) {
+    add("g6ResidualMeasurementContract must pin the versioned schema blob and explicit downstream mapping");
+  }
   if (typeof map.owner !== "string" || !map.owner.trim()) add("owner must be a non-empty string");
   if (typeof map.inventoryAsOf !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(map.inventoryAsOf)) add("inventoryAsOf must be YYYY-MM-DD");
   if (!Number.isInteger(map.expectedRepositoryCount) || map.expectedRepositoryCount < 1) add("expectedRepositoryCount must be a positive integer");
