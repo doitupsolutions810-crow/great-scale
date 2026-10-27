@@ -436,7 +436,7 @@
     "numericalCertification": {
       "type": "object",
       "additionalProperties": false,
-      "description": "An independent certificate record for rigorous quadrature error bounds. The trusted producer must fetch/verify this evidence under its deployment-pinned policy; the verified boolean and schema shape alone are not proof.",
+      "description": "Independent numerical error certificate. The outer trusted producer must verify certificateSignature under a separately pinned numerical-certificate key, recompute/check proofDigest against evidenceUrl, enforce timestamp freshness, bind sourceCommitSha/modelInputDigest to the measurement, and check both certified upper bounds against measurement.quadratureTolerance. The verified flag and schema shape alone are not proof.",
       "required": [
         "method",
         "verifierId",
@@ -446,7 +446,11 @@
         "metricAreaErrorUpperBound",
         "evidenceUrl",
         "proofDigest",
-        "verified"
+        "verified",
+        "certificateKeyId",
+        "certificateSignature",
+        "generatedAt",
+        "expiresAt"
       ],
       "properties": {
         "method": {
@@ -487,6 +491,26 @@
         },
         "verified": {
           "const": true
+        },
+        "certificateKeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "description": "Key ID for the independent numerical-certificate signer; it must match a separately deployment-pinned trust anchor."
+        },
+        "certificateSignature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==$",
+          "description": "Ed25519 signature over the canonical numericalCertification object with certificateSignature omitted; verify under the independently pinned certificate public key, not the outer receipt key."
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     }
