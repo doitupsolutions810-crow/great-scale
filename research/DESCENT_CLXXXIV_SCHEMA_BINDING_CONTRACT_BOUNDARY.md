@@ -145,3 +145,28 @@ Hosted results remain blocking:
 - Control Plane Snyk check passed; Vercel remains failed due to its external daily build quota. Neither result substitutes for the failed test job.
 
 Thus the mitigation is committed to a review branch and formally modeled, but the JavaScript regression is not yet confirmed by a successful repository run. Keep PR #34 and PR #128 unmerged until failures are diagnosed and the exact reviewed heads pass the required suites.
+
+## Descent CLXXXVII — close the proof-production gap
+
+The CLXXXVI gate correction exposed a necessary integration question: where does `trustContractVerified` come from? Inspection of the actual Control Plane probe showed that the previous `probeEvidenceConsole` implementation treated any HTTP 2xx response as `status: "ok", authority: "public"`. It did not parse the response body or call the existing signed-document verifier. Consequently, the new gate condition would correctly deny all real probe responses because the probe never produced the required proof flag.
+
+This is the deeper systems finding: **a policy predicate is only effective when a trusted component produces its proof, and the consumer can trace that proof to an actual verification operation.** Adding a boolean to a test fixture is not an integration.
+
+### Follow-up mitigation staged
+
+The Control Plane draft PR [#34](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/pull/34) now also updates `lib/evidence-console.mjs`:
+- HTTP 2xx is treated as reachability, not authorization.
+- The response body must parse as a document and pass `verifyEvidenceStatusDocument`, which checks schema, freshness, exact E0–E6 checks, cone state, digest, signature, configured public key, and key ID.
+- Only a successful verifier result emits `status: "ok"`, `authority: "public"`, and `trustContractVerified: true`.
+- Malformed or unverified documents return `status: "invalid"`, explicitly set the trust flag false, and do not gain public authority.
+- Stubbed self-tests now distinguish an HTTP 200 response with failed contract verification from a verified document.
+
+The verifier remains fail-closed when independently configured public-key material and key ID are missing. No production keys were created or changed.
+
+### Verification state
+
+- The finite-state gate policy was re-executed: 168 states evaluated, 10 authorizing states, and five explicit denial invariants passed.
+- The changed probe and self-test files were re-fetched from the PR branch and checked for the expected verifier call and regression assertions.
+- The JavaScript suite has not been run in a clean checkout. The earlier hosted Control Plane and Great Scale test jobs failed without exposed step logs; those results do not validate this new commit. A fresh exact-head CI run is still required.
+
+Release remains HOLD / NO-GO until the exact PR head passes the JavaScript suite and the deployed public endpoint is verified with independently approved key configuration.
