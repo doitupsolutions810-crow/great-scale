@@ -74,6 +74,9 @@ def test_missing_or_timezone_free_timestamps_fail_closed():
     assert "timestamps-invalid" in freshness_failures(
         "2026-10-27T00:00:00", "2026-10-27T00:01:00Z", now
     )
+    assert "timestamps-invalid" in freshness_failures(
+        "2026-02-30T00:00:00Z", "2026-10-27T00:01:00Z", now
+    )
 
 
 def test_overlong_source_validity_window_is_rejected():
