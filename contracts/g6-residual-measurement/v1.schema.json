@@ -436,7 +436,7 @@
     "numericalCertification": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Independent numerical error certificate. The outer trusted producer must verify certificateSignature under a separately pinned numerical-certificate key, recompute/check proofDigest against evidenceUrl, enforce timestamp freshness, bind sourceCommitSha/modelInputDigest to the measurement, and check both certified upper bounds against measurement.quadratureTolerance. The verified flag and schema shape alone are not proof.",
+      "description": "Independent numerical error certificate. The outer trusted producer must verify certificateSignature under a separately pinned numerical-certificate key, recompute/check proofDigest against evidenceUrl, enforce timestamp freshness, bind sourceCommitSha/modelInputDigest/measurementDigest to the receipt, and check both certified upper bounds against measurement.quadratureTolerance. The verified flag and schema shape alone are not proof.",
       "required": [
         "method",
         "verifierId",
@@ -450,7 +450,8 @@
         "certificateKeyId",
         "certificateSignature",
         "generatedAt",
-        "expiresAt"
+        "expiresAt",
+        "measurementDigest"
       ],
       "properties": {
         "method": {
@@ -511,6 +512,11 @@
         "expiresAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "measurementDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 digest of the canonical measurement object; the certificate must be bound to the exact QGT output rather than merely its source revision or parameters."
         }
       }
     }
