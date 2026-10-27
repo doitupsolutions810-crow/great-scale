@@ -35,7 +35,12 @@ def run_descent(start=1.0, steps=40, k=CONE):
     return trail
 
 def state_at(t, rate=0.85):
-    phase = ((t * rate) % 1 + 1) % 1
+    if not math.isfinite(t) or not math.isfinite(rate):
+        raise ValueError("state_at requires finite time and rate")
+    scaled_time = t * rate
+    if not math.isfinite(scaled_time):
+        raise ValueError("state_at time × rate must remain finite")
+    phase = (scaled_time % 1 + 1) % 1
     h = 0.5 - 0.5 * math.cos(2 * math.pi * phase)
     S = heat(h)
     n = 8 - 4 * S
@@ -123,6 +128,25 @@ def main():
     checks.append(("phase is periodic under one cycle",
                    all(abs(state_at(t)["phase"] - state_at(t + 1.0 / 0.85)["phase"]) < 1e-12
                        for t in [-5.75, -1.25, -0.25, 0.0, 0.375, 1.5])))
+
+    invalid_rejected = True
+    for bad in [math.nan, math.inf, -math.inf]:
+        for args in [(bad,), (1.0, bad)]:
+            try:
+                state_at(*args)
+                invalid_rejected = False
+            except ValueError:
+                pass
+    checks.append(("non-finite time/rate rejected", invalid_rejected))
+    try:
+        state_at(float.fromhex("0x1.fffffffffffffp+1023"), 2.0)
+        overflow_rejected = False
+    except ValueError:
+        overflow_rejected = True
+    checks.append(("overflowing time × rate rejected", overflow_rejected))
+    checks.append(("zero rate yields stationary phase", state_at(3.0, 0.0)["phase"] == 0.0))
+    checks.append(("negative rate has canonical phase",
+                   abs(state_at(0.25, -0.85)["phase"] - 0.7875) < 1e-12))
 
     s = state_at(0)
     checks.append(("stateAt Ψ ≥ CONE", s["psi"] + 1e-12 >= CONE))
