@@ -134,3 +134,14 @@ The recognized degraded statuses are exactly `not_found`, `unreachable`, `unconf
 - The committed JavaScript self-test and complete aggregate have not been run in a clean checkout; hosted CI remains required. The source fix is staged in a draft PR, not merged or deployed.
 
 This is a refinement of the broader Great Scale rule: availability and a label are observations; neither substitutes for proof of authority.
+
+### CLXXXVI execution follow-up
+
+The CLXXXVI model was executed directly against its policy logic: **PASS**, 168/168 finite states evaluated, 10 authorizing states, and every authorizing state satisfied either (a) public status plus explicit contract verification or (b) local authority plus recognized degraded status plus explicit opt-in; all also required cone compliance. Negative cases for missing public proof, missing/unknown local status, absent local opt-in, and cone failure passed.
+
+Hosted results remain blocking:
+- Control Plane PR #34 run [40441948369](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40441948369): verification/doctor/test/security job failed; downstream container/security job skipped. The available job response contained no step details or logs.
+- Great Scale run [40442005831](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40442005831): test job failed; no step details or logs were exposed.
+- Control Plane Snyk check passed; Vercel remains failed due to its external daily build quota. Neither result substitutes for the failed test job.
+
+Thus the mitigation is committed to a review branch and formally modeled, but the JavaScript regression is not yet confirmed by a successful repository run. Keep PR #34 and PR #128 unmerged until failures are diagnosed and the exact reviewed heads pass the required suites.
