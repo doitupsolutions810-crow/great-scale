@@ -214,3 +214,26 @@ The available job/log interface does not expose the provider's precise cause. Do
 - After the runner issue is resolved, rerun the focused and full suites at the exact current SHAs; retain run/job IDs, step logs, suite results, artifact digests and the source SHA in the promotion evidence.
 
 The cross-repository integration status remains `proposed-not-verified`. The G0-G6 policy is a consumer contract only until an authoritative producer emits a fresh signed proof and all of M, R, E, P, A, F and B pass.
+
+
+## Descent CC — evidence-console and production-acceptance branch reconciliation (2026-10-27)
+
+This is a live branch-graph finding, not a statement that either candidate is ready:
+
+- Living Intermediate Control Plane PR #33 head: `fe3c75e152c4fcabb5b1eb791072e1c85fb54c77`.
+- Living Intermediate Control Plane PR #34 head: `674555317992faecddccb0aa7f2fb0e7ae39b4e4`.
+- GitHub compare reports the two heads as **diverged**, with a common ancestor `f30cfbd2bac2aa54f2154c2d1ba8213193723b30`; PR #34 is 102 commits ahead and 64 behind PR #33 under that comparison.
+- PR #31 head `5ff2d60848164c095c6275994ce9aceb11d2ebf1` and PR #34 are also diverged (115 ahead / 65 behind from merge base `8510bff879dd4f21ae5d8f7265a49ff9a53fec57`).
+- The candidates overlap on high-risk integration surfaces: `integrate.mjs`, `lib/evidence-console.mjs`, `lib/gate-namespaces.mjs`, `package.json`, and self/evidence tests.
+
+The versions have complementary but non-equivalent responsibilities. PR #33's `lib/evidence-console.mjs` carries the broader E0-E6 public-source contract verifier: pinned Ed25519 source identity/key ID, payload digest, freshness/schema validation, no-redirect fetch, and final endpoint URL binding. PR #34 adds the distinct G0-G6 production acceptance verifier and bounded attestation transport. Its current `lib/production-acceptance-fetch.mjs` refuses redirects, but its separate evidence-console probe still follows redirects and must not be treated as an interchangeable replacement for PR #33's stricter E0-E6 source probe. The two namespaces must stay separate.
+
+**Mitigation/integration order:**
+
+1. Stop independent merges/rebases of #31, #33, and #34 while their shared history and key files are unresolved.
+2. Select a single mainline-based integration candidate. Port the strict E0-E6 public-source verifier from #33 and the proof-carrying G0-G6 verifier from #34 into that candidate, retaining the separate trust anchors, schema/policy digests, decision namespaces, and no-local-fallback-on-invalid-signature rule.
+3. Add one cross-contract regression suite proving that a signed E0-E6 status never satisfies G0-G6; stale, redirect, wrong-origin, wrong-key, wrong-revision, wrong-run-attempt, malformed-time and mismatched-residual documents deny authorization; neither `FORCE_PROCUREMENT` nor `supplyChainOk` alone authorizes production.
+4. Reconcile `package.json` scripts and the full test set only after source conflicts are reviewed. Run tests on the resulting exact SHA; require real job steps/logs, not just a workflow conclusion.
+5. Keep procurement/production authority at HOLD/NO-GO until the live G0-G6 producer and independently provisioned trust roots are verified.
+
+**Current evidence status:** GitHub Actions attempts on these candidates are failing before executable steps (`runner_id=0` / empty step lists or startup failure). Therefore the branch analysis is verified from GitHub metadata and source readback, but no integrated test pass has been established. No merge or production authorization is implied by this note.
