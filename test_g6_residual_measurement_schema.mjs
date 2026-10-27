@@ -59,6 +59,16 @@ test("artifact and model provenance are versioned and bounded", () => {
   assert.equal(parameters.properties.maxRefinements.maximum, 5);
 });
 
+test("build identity is composite and the model artifact digest is distinct from the target artifact", () => {
+  assert.match(schema.properties.buildId.description, /shared composite release identifier/i);
+  assert.match(schema.properties.buildId.description, /must equal the final G0-G6 attestation buildId/i);
+  assert.match(schema.properties.buildId.description, /sourceBuildId and acceptanceBuildId/);
+  assert.match(schema.properties.artifact.properties.digest.description,
+    /distinct from the Control Plane production acceptance artifact digest/i);
+  assert.match(schema.properties.source.properties.commitSha.description,
+    /distinct from the Control Plane target source revision/i);
+});
+
 test("measurement contains explicit QGT, convergence, topology, and error-bound diagnostics", () => {
   const measurement = schema.properties.measurement;
   assert.equal(measurement.additionalProperties, false);
