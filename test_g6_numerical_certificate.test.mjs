@@ -197,7 +197,7 @@ test("changed proof bytes, mismatched proof fields, and certificate signature ta
 
   const badSignature = {
     ...candidate.certification,
-    certificateSignature: "A".repeat(88)
+    certificateSignature: "A".repeat(86) + "=="
   };
   assert.ok(verifyG6NumericalCertification(options({
     ...candidate, certification: badSignature
