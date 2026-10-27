@@ -115,15 +115,10 @@ function qiWuZhangLocalIntegrals(m, gridSize, offset = 0.5) {
 }
 
 /**
- * Bounded refinement with grid-origin sensitivity checks and a rigorous
- * a-posteriori error bound.
- *
- * The FHS plaquette integrand is C^2 on the Brillouin zone wherever the gap
- * is open. A midpoint Riemann sum on spacing h therefore carries an absolute
- * error bounded by (BZ area) * max|Hessian| * h^2 / 8. The unknown max Hessian
- * is estimated from the observed Richardson difference D via D/3, then scaled
- * by a safety factor of 2. The resulting bound is rigorous conditional on
- * the gap-open hypothesis, which is enforced by the RangeError guards.
+ * Bounded refinement with grid-origin sensitivity checks and empirical
+ * Richardson error estimates. The estimates are diagnostics, not rigorous
+ * error bounds: gap openness alone does not prove asymptotic error scaling or
+ * bound the unknown global Hessian from two sampled grids.
  */
 function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   if (!Number.isFinite(m)) throw new TypeError('Mass parameter m must be finite.');
@@ -190,12 +185,13 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     if (quadratureConverged) break;
   }
 
-  // Rigorous a-posteriori bounds: Richardson estimate /3, safety factor 2.
-  // These bound the true quadrature error whenever the gap is open.
-  const rigorousCurvatureErrorBound = 2 * curvatureRichardsonErrorEstimate;
-  const rigorousMetricAreaErrorBound = 2 * metricAreaRichardsonErrorEstimate;
-  const rigorousBoundFinite = Number.isFinite(rigorousCurvatureErrorBound) &&
-    Number.isFinite(rigorousMetricAreaErrorBound);
+  // Empirical Richardson estimate /3 with a safety multiplier. This is not a
+  // theorem-backed upper bound; acceptance also requires direct refinement
+  // and grid-origin convergence below.
+  const curvatureQuadratureSafetyEstimate = 2 * curvatureRichardsonErrorEstimate;
+  const metricAreaQuadratureSafetyEstimate = 2 * metricAreaRichardsonErrorEstimate;
+  const quadratureEstimatesFinite = Number.isFinite(curvatureQuadratureSafetyEstimate) &&
+    Number.isFinite(metricAreaQuadratureSafetyEstimate);
 
   const topologicalFloor = Math.abs(chernNumber);
   const metricAreaExcess = currentMidpoint.metricAreaBudget - topologicalFloor;
@@ -227,10 +223,11 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const curvatureOrientationVarianceFromBudgets = 4 * curvatureMixingIndex;
   const curvatureOrientationVarianceResidual = Math.abs(curvatureOrientationVariance - curvatureOrientationVarianceFromBudgets);
 
-  // Acceptance now requires the rigorous bound, not only the heuristic flag.
-  const topologicalMappingValid = rigorousBoundFinite &&
-    rigorousCurvatureErrorBound <= quadratureTolerance &&
-    rigorousMetricAreaErrorBound <= quadratureTolerance &&
+  // A finite empirical estimate is insufficient if bounded refinement has not
+  // converged under both consecutive-grid and grid-origin checks.
+  const topologicalMappingValid = quadratureConverged && quadratureEstimatesFinite &&
+    curvatureQuadratureSafetyEstimate <= quadratureTolerance &&
+    metricAreaQuadratureSafetyEstimate <= quadratureTolerance &&
     chernIntegerResidual <= 1e-6 &&
     curvatureChernResidual <= quadratureTolerance &&
     curvatureCancellationIdentityResidual <= 2 * quadratureTolerance &&
@@ -256,8 +253,9 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     curvatureOrientationVariance, curvatureOrientationVarianceFromBudgets, curvatureOrientationVarianceResidual,
     acceptedPsiTopological: topologicalMappingValid ? psiTopological : null,
     topologicalMappingValid,
-    // Rigorous a-posteriori bounds (new in this commit).
-    rigorousCurvatureErrorBound, rigorousMetricAreaErrorBound, rigorousBoundFinite,
+    // Empirical Richardson safety estimates; not certified error bounds.
+    curvatureQuadratureSafetyEstimate, metricAreaQuadratureSafetyEstimate,
+    quadratureEstimatesFinite, quadratureErrorEstimateKind: 'empirical-richardson',
     // Prior diagnostics retained as non-gating telemetry.
     baseMetricAreaBudget: initial.metricAreaBudget,
     refinedIntegratedCurvature: currentMidpoint.integratedCurvature,

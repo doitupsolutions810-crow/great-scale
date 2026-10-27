@@ -1,5 +1,11 @@
 # DESCENT XCV — Rigorous A-Posteriori Error Bound for the QGT Engine
 
+> **Status: superseded; the “rigorous” bound claim is withdrawn.** Descent CXCIX
+> demonstrates that a Richardson difference cannot upper-bound the unknown
+> global Hessian from gap openness alone, and reproduces an accepted mapping
+> with the direct refinement test false. Treat the formulas and acceptance
+> language below as historical, not as a mathematical certificate.
+
 ## The problem this descent closes
 
 topological-qgt.cjs previously exposed `quadratureConverged`, a flag built
