@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
+import { createRequire } from "node:module";
 import {
   canonicalG6CertificateJson,
   G6_NUMERICAL_CERTIFICATE_SCHEMA,
@@ -18,14 +19,78 @@ const modelInputDigest = "b".repeat(64);
 const allowedEvidenceOrigins = ["https://evidence.example.invalid"];
 const evidenceUrl = "https://evidence.example.invalid/certificates/qgt-proof.json";
 const now = Date.now();
-const measurement = {
-  quadratureTolerance: 1e-3,
-  STopological: 0.125,
-  topologicalMappingValid: true,
-  quadratureConverged: true,
-  errorEstimatesFinite: true,
-  errorBoundMethod: "richardson-asymptotic-estimate-only"
-};
+const require = createRequire(import.meta.url);
+const { CONE } = require("./public/scale.cjs");
+
+function entropyNats(probability) {
+  const p = Math.max(0, Math.min(1, probability));
+  return (p > 0 ? -p * Math.log(p) : 0) +
+    (p < 1 ? -(1 - p) * Math.log1p(-p) : 0);
+}
+
+function makeMeasurement(overrides = {}) {
+  const chernNumber = -1;
+  const rawChernNumber = -1;
+  const positiveCurvatureBudget = 0.05;
+  const negativeCurvatureBudget = 1.05;
+  const absoluteCurvatureBudget = positiveCurvatureBudget + negativeCurvatureBudget;
+  const metricAreaBudget = absoluteCurvatureBudget;
+  const topologicalFloor = Math.abs(chernNumber);
+  const metricAreaExcess = metricAreaBudget - topologicalFloor;
+  const topologicalSaturationRaw = topologicalFloor / metricAreaBudget;
+  const topologicalSaturation = Math.max(0, Math.min(1, topologicalSaturationRaw));
+  const signedTopologicalPolarization = Math.sign(chernNumber) * topologicalSaturation;
+  const STopological = (1 - topologicalSaturation * topologicalSaturation) / 4;
+  const psiTopological = CONE + STopological;
+  const positiveProbability = positiveCurvatureBudget / absoluteCurvatureBudget;
+  const topologicalPositiveProbability = (1 + signedTopologicalPolarization) / 2;
+  const curvatureOrientationEntropyResidual = Math.abs(
+    entropyNats(topologicalPositiveProbability) - entropyNats(positiveProbability)
+  );
+  const curvatureOrientationVarianceResidual = Math.abs(
+    4 * STopological -
+    4 * positiveCurvatureBudget * negativeCurvatureBudget / (metricAreaBudget * metricAreaBudget)
+  );
+  return {
+    chernNumber,
+    rawChernNumber,
+    chernIntegerResidual: Math.abs(rawChernNumber - chernNumber),
+    integratedCurvature: positiveCurvatureBudget - negativeCurvatureBudget,
+    absoluteCurvatureBudget,
+    positiveCurvatureBudget,
+    negativeCurvatureBudget,
+    curvatureCancellationBudget: Math.max(0, absoluteCurvatureBudget - Math.abs(chernNumber)),
+    metricAreaBudget,
+    topologicalFloor,
+    metricAreaExcess,
+    topologicalSaturationRaw,
+    topologicalSaturation,
+    signedTopologicalPolarization,
+    STopological,
+    psiTopological,
+    acceptedPsiTopological: psiTopological,
+    curvatureOrientationEntropyResidual,
+    curvatureChernResidual: Math.abs((positiveCurvatureBudget - negativeCurvatureBudget) - chernNumber),
+    curvatureCancellationIdentityResidual: Math.abs(
+      metricAreaExcess - 2 * Math.min(positiveCurvatureBudget, negativeCurvatureBudget)
+    ),
+    curvatureOrientationVarianceResidual,
+    gridAlignmentCurvatureDiscrepancy: 1e-5,
+    gridAlignmentAreaDiscrepancy: 1e-5,
+    quadratureTolerance: 1e-3,
+    quadratureConverged: true,
+    topologicalMappingValid: true,
+    refinementCount: 1,
+    refinedGridSize: 80,
+    curvatureErrorEstimateWithSafetyFactor: 1e-4,
+    metricAreaErrorEstimateWithSafetyFactor: 1e-4,
+    errorEstimatesFinite: true,
+    errorBoundMethod: "richardson-asymptotic-estimate-only",
+    ...overrides
+  };
+}
+
+const measurement = makeMeasurement();
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -85,6 +150,7 @@ function options(candidate, overrides = {}) {
     sourceCommitSha,
     modelInputDigest,
     measurement: candidate.measurement,
+    maxQuadratureTolerance: 1e-3,
     allowedEvidenceOrigins,
     now,
     ...overrides
@@ -145,6 +211,26 @@ test("wrong source commit, model input, and measurement digest are independently
   assert.ok(verifyG6NumericalCertification(options(candidate, {
     measurement: changedMeasurement
   })).failures.includes("numerical_certification_measurement_digest_mismatch"));
+});
+
+test("inconsistent topology/metric identities are rejected even when signed", () => {
+  const candidate = fixture({
+    measured: makeMeasurement({ metricAreaBudget: 1.2 })
+  });
+  const result = verifyG6NumericalCertification(options(candidate));
+  assert.equal(result.valid, false);
+  assert.ok(result.failures.includes("g6_metric_area_curvature_budget_identity_mismatch"));
+  assert.ok(result.failures.includes("numerical_certification_measurement_digest_mismatch") === false,
+    "fixture signs the exact altered measurement; rejection must come from the physics identity");
+});
+
+test("a measurement cannot self-select an overly permissive tolerance", () => {
+  const candidate = fixture({
+    measured: makeMeasurement({ quadratureTolerance: 0.02 })
+  });
+  const result = verifyG6NumericalCertification(options(candidate));
+  assert.equal(result.valid, false);
+  assert.ok(result.failures.includes("g6_quadrature_tolerance_outside_deployment_policy"));
 });
 
 test("certified upper bounds above the measured quadrature tolerance cannot authorize G6", () => {
