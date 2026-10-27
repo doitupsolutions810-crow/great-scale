@@ -5,6 +5,43 @@ import { validateRepositoryMap } from "./tools/validate-repository-map.mjs";
 
 const baseline = JSON.parse(readFileSync(new URL("./integration/repository-map.json", import.meta.url), "utf8"));
 
+function edgeProof(overrides = {}) {
+  const testCommitSha = "c".repeat(40);
+  const testRunUrl = "https://github.com/doitupsolutions810-crow/great-scale/actions/runs/123456";
+  return {
+    sourceCommitSha: "a".repeat(40),
+    targetCommitSha: "b".repeat(40),
+    testRepository: "great-scale",
+    testCommitSha,
+    testRunHeadSha: testCommitSha,
+    testRunId: 123456,
+    testRunAttempt: 1,
+    testRunConclusion: "success",
+    testRunUrl,
+    observedResult: "pass",
+    evidenceUrl: testRunUrl + "/artifacts/789",
+    ...overrides,
+  };
+}
+
+function repositoryProof(overrides = {}) {
+  const testCommitSha = "c".repeat(40);
+  const testRunUrl = "https://github.com/doitupsolutions810-crow/great-scale/actions/runs/123456";
+  return {
+    commitSha: "a".repeat(40),
+    testRepository: "great-scale",
+    testCommitSha,
+    testRunHeadSha: testCommitSha,
+    testRunId: 123456,
+    testRunAttempt: 1,
+    testRunConclusion: "success",
+    testRunUrl,
+    observedResult: "pass",
+    evidenceUrl: testRunUrl + "/artifacts/789",
+    ...overrides,
+  };
+}
+
 test("public-only repository snapshot is valid and does not claim runtime verification", () => {
   assert.equal(baseline.scope, "public-only");
   assert.equal(baseline.repositories.length, 14);
@@ -33,18 +70,68 @@ test("inventory count drift is rejected until the snapshot is explicitly updated
   assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("repository count mismatch")));
 });
 
-test("a repository cannot be marked verified without exact-head execution evidence", () => {
+test("a repository cannot be marked verified without exact-run execution evidence", () => {
   const candidate = structuredClone(baseline);
   candidate.repositories[0].integrationStatus = "verified";
-  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("cannot be marked verified without a full commit SHA")));
+  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("complete exact-run proof object")));
 });
 
-test("an interface cannot be marked verified without receipt-grade evidence", () => {
+test("an interface cannot be marked verified without both endpoint revisions and execution proof", () => {
   const candidate = structuredClone(baseline);
   candidate.interfaces[0].verificationStatus = "verified";
-  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("cannot be marked verified without commit SHA")));
+  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("complete exact-run proof object")));
 });
 
+test("a fully bound successful run can support a repository verification claim", () => {
+  const candidate = structuredClone(baseline);
+  candidate.repositories[0].integrationStatus = "verified";
+  candidate.repositories[0].verification = repositoryProof();
+  assert.deepEqual(validateRepositoryMap(candidate), []);
+});
+
+test("a fully bound successful run can support an interface verification claim", () => {
+  const candidate = structuredClone(baseline);
+  candidate.interfaces[0].verificationStatus = "verified";
+  candidate.interfaces[0].verification = edgeProof();
+  assert.deepEqual(validateRepositoryMap(candidate), []);
+});
+
+test("an interface cannot be promoted on a failed or inexact-head run", () => {
+  const failed = structuredClone(baseline);
+  failed.interfaces[0].verificationStatus = "verified";
+  failed.interfaces[0].verification = edgeProof({ testRunConclusion: "failure" });
+  assert.ok(validateRepositoryMap(failed).some((message) => message.includes("testRunConclusion must equal success")));
+
+  const staleHead = structuredClone(baseline);
+  staleHead.interfaces[0].verificationStatus = "verified";
+  staleHead.interfaces[0].verification = edgeProof({ testRunHeadSha: "d".repeat(40) });
+  assert.ok(validateRepositoryMap(staleHead).some((message) => message.includes("testRunHeadSha must equal testCommitSha")));
+});
+
+test("an interface cannot omit either endpoint revision", () => {
+  const candidate = structuredClone(baseline);
+  candidate.interfaces[0].verificationStatus = "verified";
+  const proof = edgeProof();
+  delete proof.targetCommitSha;
+  candidate.interfaces[0].verification = proof;
+  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("targetCommitSha must be a full 40-character SHA")));
+});
+
+test("test run and evidence URLs are bound to a registered repository and exact run", () => {
+  const candidate = structuredClone(baseline);
+  candidate.interfaces[0].verificationStatus = "verified";
+  candidate.interfaces[0].verification = edgeProof({
+    testRunUrl: "https://github.com/doitupsolutions810-crow/another-repo/actions/runs/123456"
+  });
+  assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("testRunUrl must bind the registered test repository and run ID")));
+
+  const badEvidence = structuredClone(baseline);
+  badEvidence.interfaces[0].verificationStatus = "verified";
+  badEvidence.interfaces[0].verification = edgeProof({
+    evidenceUrl: "https://github.com/doitupsolutions810-crow/great-scale/actions/runs/999999/artifacts/789"
+  });
+  assert.ok(validateRepositoryMap(badEvidence).some((message) => message.includes("evidenceUrl must be a durable URL within the exact test run")));
+});
 
 test("registry binds the shared operation evidence contract and its schema", () => {
   const candidate = structuredClone(baseline);
