@@ -21,7 +21,10 @@ const now = Date.now();
 const measurement = {
   quadratureTolerance: 1e-3,
   STopological: 0.125,
-  topologicalMappingValid: true
+  topologicalMappingValid: true,
+  quadratureConverged: true,
+  errorEstimatesFinite: true,
+  errorBoundMethod: "richardson-asymptotic-estimate-only"
 };
 
 function sha256(bytes) {
@@ -155,6 +158,23 @@ test("certified upper bounds above the measured quadrature tolerance cannot auth
   assert.equal(result.valid, false);
   assert.ok(result.failures.includes("certified_curvature_error_exceeds_tolerance_or_invalid"));
   assert.ok(result.failures.includes("certified_metric_area_error_exceeds_tolerance_or_invalid"));
+});
+
+test("an authentic certificate cannot promote an out-of-domain or failed QGT measurement", () => {
+  const invalidCases = [
+    [{ ...measurement, STopological: -0.001 }, "measurement_topological_residual_out_of_domain"],
+    [{ ...measurement, STopological: 0.250001 }, "measurement_topological_residual_out_of_domain"],
+    [{ ...measurement, topologicalMappingValid: false }, "measurement_topological_mapping_invalid"],
+    [{ ...measurement, quadratureConverged: false }, "measurement_quadrature_not_converged"],
+    [{ ...measurement, errorEstimatesFinite: false }, "measurement_empirical_estimates_not_finite"],
+    [{ ...measurement, errorBoundMethod: "heuristic-bound" }, "measurement_empirical_error_method_mismatch"],
+  ];
+  for (const [measured, expectedFailure] of invalidCases) {
+    const candidate = fixture({ measured });
+    const result = verifyG6NumericalCertification(options(candidate));
+    assert.equal(result.valid, false, `rejects ineligible measurement: ${expectedFailure}`);
+    assert.ok(result.failures.includes(expectedFailure), result.failures.join(","));
+  }
 });
 
 test("expired, malformed, or future numerical certificates are rejected", () => {
