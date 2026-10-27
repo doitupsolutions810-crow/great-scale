@@ -30,8 +30,19 @@ test("G6 schema requires source/build/run/artifact/model/digest/signature bindin
   assert.equal(schema.additionalProperties, false);
   for (const key of [
     "source", "execution", "artifact", "model", "measurement",
-    "buildId", "generatedAt", "expiresAt", "keyId", "digest", "signature"
+    "measurementBuildId", "targetBuildId", "target", "targetArtifact",
+    "measuredAt", "generatedAt", "expiresAt", "canonicalization",
+    "signatureAlgorithm", "keyId", "digest", "signature"
   ]) assert.ok(schema.required.includes(key), "missing top-level requirement: " + key);
+  assert.ok(!schema.required.includes("buildId"),
+    "ambiguous buildId must not collapse measurement and target build identities");
+  assert.match(schema.properties.measurementBuildId.description,
+    /must not be assumed equal to the target Control Plane acceptance build ID/i);
+  assert.match(schema.properties.targetBuildId.description,
+    /must equal the final G0-G6 production acceptance attestation buildId/i);
+  assert.equal(schema.properties.target.properties.repository.const,
+    "doitupsolutions810-crow/living-intermediate-control-plane");
+  assert.equal(schema.properties.targetArtifact.properties.digest.pattern, "^sha256:[a-f0-9]{64}$");
   assert.equal(schema.properties.source.properties.repository.const,
     "doitupsolutions810-crow/great-scale");
   assert.equal(schema.properties.execution.properties.conclusion.const, "success");
