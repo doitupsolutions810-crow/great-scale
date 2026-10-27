@@ -115,9 +115,9 @@ The hosted repository suite still lacks observable execution because the connect
 
 Acceptance remains a conjunction:
 
-\\[
-Accept(R,P,t) = Policy(P) \\land Complete(E) \\land Authentic(E) \\land Fresh(E,t)
-\\land Reach(T,C) \\land Execute(T,R) \\land Bound(R) \\land Pass(R)
-\\]
+\[
+Accept(R,P,t) = Policy(P) \land Complete(E) \land Authentic(E) \land Fresh(E,t)
+\land Reach(T,C) \land Execute(T,R) \land Bound(R) \land Pass(R)
+\]
 
 An absent runner is unknown execution evidence; freshness without a source signature is not authenticity; and a signed, fresh status object still does not prove complete ledger history without an independent checkpoint.
