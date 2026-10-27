@@ -1,0 +1,21 @@
+{
+  "rung": "CXLXIV",
+  "title": "Canonical Typed Encoding",
+  "encoding_version": "gs-typed-v1",
+  "supported_types": [
+    "None",
+    "bool",
+    "int",
+    "str",
+    "finite float64",
+    "tuple of supported values"
+  ],
+  "rejected_types": [
+    "arbitrary objects",
+    "non-finite floats"
+  ],
+  "tests_authored": 7,
+  "profound_finding": "Identity must be a typed contract, not a display string.",
+  "limitation": "Utility added but not yet integrated into CXLXII certificate serialization; test execution pending.",
+  "next_rung": "CXLXV — Integrate Encoding and Differential Fuzzing"
+}
