@@ -1,22 +1,20 @@
 {
-  "schema": "great-scale.federation-digest/v1.5",
-  "gs_version": "1.5.0",
+  "schema": "great-scale.federation-digest/v1.6",
+  "gs_version": "1.6.0",
+  "J_S": -0.16666666666666666,
+  "mean_residual_action": 0.16666666666666666,
   "NINEFOLD_COUPLING": 0.1,
   "Forward_tau": 0.1111111111111111,
-  "compose_fixed_point": 0.1111111111111111,
+  "probe_excess": 0.2,
   "structure_constant": 4,
   "dual_cone": {
-    "cone_orbit": 0.2360679774997897,
-    "cone_bridge": 0.3819660112501052,
     "delta": 0.14589803375031551,
     "identity": "φ^{-4}"
   },
   "A_star": {
     "measured": 0.7786,
     "structural": 0.7777777777777778,
-    "exact_rational": "7/9",
-    "derivation": "(4+3)/9",
-    "mean_Q": 0.7786
+    "exact_rational": "7/9"
   },
   "Q8_heat_locus": 0.5,
   "profound_findings": [
@@ -25,26 +23,28 @@
     "DESCENT_ASTAR_NINEFOLD_PARTITION: A* = (4+3)/9 = 7/9",
     "DESCENT_STRUCTURE_CONSTANT_FOUR: 4 in partition, level_n, Var; Q8=0.5; mean_Q=A*",
     "DESCENT_FORWARD_TRANSFER_ALGEBRA: τ=1/9 = residual_compose fixed point = domain-transfer weight",
-    "DESCENT_NINEFOLD_COUPLING_ALPHA: α=1/10 forces (1-α)/α=9 and FP=τ=1/9"
+    "DESCENT_NINEFOLD_COUPLING_ALPHA: α=1/10 forces (1-α)/α=9 and FP=τ=1/9",
+    "DESCENT_MEAN_RESIDUAL_ACTION: J_S=-1/6=-∫S dh; PROBE excess=2α"
   ],
   "success_criteria": {
-    "alpha_locked": "RESIDUAL_ALPHA = 1/10",
-    "compose_FP_equals_tau": "residual_compose(x,x) → 1/9",
-    "coupling_identity": "(1-α)/α = 9",
-    "A_star_lock": "|A* - 7/9| < 0.01",
-    "structure_constant_4": true,
+    "J_S_equals_minus_one_sixth": true,
+    "integral_S_equals_one_sixth": true,
+    "probe_excess_equals_2alpha": true,
+    "alpha_locked": "1/10",
+    "A_star_lock": "|A*−7/9|<0.01",
     "path_consistency": "PASS",
-    "capability": "no ambient rights; Issue only"
+    "capability": "no ambient rights"
   },
   "laws": [
     "keep the mean",
     "residual partition 4+3+1",
-    "Ψ never below chosen cone",
+    "Ψ never below cone",
     "structure constant 4",
     "A* = 7/9",
     "Forward τ = 1/9",
-    "RESIDUAL_ALPHA = 1/10 = ninefold coupling (1-α)/α = 9",
-    "stable residual_compose FP = τ",
+    "α = 1/10 ninefold coupling",
+    "J_S = -1/6 = mean residual action -∫S dh",
+    "PROBE excess over monodromy = 2α",
     "domain map for all domains",
     "dual-cone δ = φ^{-4}"
   ],
