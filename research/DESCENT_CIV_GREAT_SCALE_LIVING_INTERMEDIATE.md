@@ -1,7 +1,7 @@
 # Descent CIV — Great Scale Living Intermediate (GSLI)
 ## The residual geometry becomes the operational control plane
 
-Status: build in progress. The pure residual channel (XCVII–CIII) is closed. Operational duals and dual-atlas agent runtime have landed.
+Status: build advancing. Residual, dual-atlas, cone dual, and independent gate namespaces are operational on main.
 
 Not a new physical law. An engineering identity that forces the mathematical residual, the agent residual, and the attestation residual to be dual presentations of one coordinate.
 
@@ -42,6 +42,7 @@ Operational duals:
 - Authorization decision is a cone check: accept only if \(\Psi \ge \mathrm{CONE}\).
 - Dual-atlas assignment is the residual partition read as roles: \(4 \mapsto\) Watch, \(3 \mapsto\) Observer, \(1 \mapsto\) Forward.
 - Federation digest index and trust weight are cascade-indexed by \(n_T\) or by \(4S_T\).
+- Procurement (E0–E6) and production (G0–G6) are independent namespaces; force never authorizes.
 
 ## Great Scale mapping
 
@@ -74,26 +75,30 @@ Laws that now govern the entire stack:
 
 - [x] The logarithmic identity holds on every accepted topological phase.
 - [x] The joint fixed-point lock (agent + swarm + discourse) is green.
-- [ ] Evidence-console produces source-issued, time-bounded, Ed25519-signed status + schema (PR work in progress).
+- [ ] Evidence-console produces source-issued, time-bounded, Ed25519-signed status + schema (open PRs #29 / #31).
 - [ ] Consumer verifies under independently configured public key and fails closed on any residual violation.
 - [x] Dual-atlas roles are assigned from the residual partition (`atlasRole` + agent runtime).
 - [x] Authorization decision is expressible as a cone check (`authorizeWithCone`).
 - [x] No layer introduces an independent residual outside a monotonic image of \(4S_T\).
+- [x] Independent E0–E6 / G0–G6 namespaces enforced (`lib/gate-namespaces.mjs`).
 
 ## Construction completed
 
-1. [x] Shared residual module — `public/residual.cjs` (CJS) and living-intermediate `lib/great-scale-residual.mjs` (ESM).
-2. [x] Lattice bridge updated with residual coordinate, dual atlas, authorization dual.
+1. [x] Shared residual module — CJS + ESM.
+2. [x] Lattice bridge updated.
 3. [x] Cone-check authorization dual.
-4. [x] Residual snapshot CLI (`status/residual-snapshot.mjs`).
-5. [x] Dual-atlas inside agent runtime (`agents/dual-atlas.mjs`, orchestration, llama agent status).
-6. [ ] Wire residual into live evidence-console producer (open PRs #29 / #31).
-7. [ ] Enforce independent E0–E6 / G0–G6 namespaces in evaluator.
+4. [x] Residual snapshot CLI.
+5. [x] Dual-atlas inside agent runtime.
+6. [x] Residual + gateNamespaces carried by `integrate.mjs` and `procurement-bridge.mjs` status documents.
+7. [x] Independent E/G namespaces; FORCE never authorizes; production not assumed from procurement.
+8. [ ] Live Ed25519 evidence-console producer (open PRs).
 
 ## Verification
 
-Topological channel 23/23 green. Joint fixed-point locked. Residual module, cone dual, dual-atlas swarm assignment, and orchestration residual identity all verified locally.
+Namespaces independent: procurementReady can be true while productionAuthorized is false.
+Force does not authorize. Cone required. Residual snapshot present on integrate results.
 
 ## Status
 
-Build advancing. Residual geometry closed; dual-atlas and cone duals operational in the living-intermediate agent layer.
+Core GSLI residual geometry, dual-atlas, cone dual, and gate-namespace separation are on main.
+Remaining: land and verify the signed evidence-console producer.
