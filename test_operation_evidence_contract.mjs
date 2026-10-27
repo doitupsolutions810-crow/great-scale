@@ -25,6 +25,11 @@ const validEnvelope = () => ({
   },
   evidence_ref: "urn:example:evidence:123",
   authority_ref: "capability-123",
+  attestation: {
+    algorithm: "Ed25519",
+    key_id: "executor-key-01",
+    signature: "A".repeat(86) + "==",
+  },
 });
 
 function matchesType(value, expected) {
@@ -45,6 +50,10 @@ function validateAgainstSchema(value, rule = schema, path = "$") {
   if (rule.type && !matchesType(value, rule.type)) return [`${path}: expected type ${JSON.stringify(rule.type)}`];
   if (Object.hasOwn(rule, "const") && value !== rule.const) add(`must equal ${JSON.stringify(rule.const)}`);
   if (rule.enum && !rule.enum.includes(value)) add(`must be one of ${rule.enum.join(", ")}`);
+
+  if (rule === schema && value.stage === "receipt" && !Object.hasOwn(value, "attestation")) {
+    add("receipt stage requires attestation metadata");
+  }
 
   if (typeof value === "string") {
     if (rule.minLength !== undefined && value.length < rule.minLength) add("string is too short");
@@ -121,6 +130,28 @@ test("unknown top-level and nested properties fail closed", () => {
   const errors = validateAgainstSchema(candidate);
   assert.ok(errors.some((error) => error.includes("unknown property unreviewed")));
   assert.ok(errors.some((error) => error.includes("action: unknown property extra")));
+});
+
+test("receipt envelopes require explicit Ed25519 signature metadata", () => {
+  const missing = validEnvelope();
+  delete missing.attestation;
+  assert.ok(validateAgainstSchema(missing).some((error) => error.includes("receipt stage requires attestation")));
+
+  const badAlgorithm = validEnvelope();
+  badAlgorithm.attestation.algorithm = "none";
+  assert.ok(validateAgainstSchema(badAlgorithm).some((error) => error.includes("attestation.algorithm")));
+
+  const badSignature = validEnvelope();
+  badSignature.attestation.signature = "unsigned";
+  assert.ok(validateAgainstSchema(badSignature).some((error) => error.includes("attestation.signature")));
+});
+
+test("intent envelopes can remain pending without a receipt attestation", () => {
+  const intent = validEnvelope();
+  intent.stage = "intent";
+  intent.decision_state = "pending";
+  delete intent.attestation;
+  assert.deepEqual(validateAgainstSchema(intent), []);
 });
 
 test("method is part of the structured action identity, not a display label", () => {
