@@ -111,3 +111,14 @@ Latest PR head is `c2f9f8b11b2429f7c5e6654eb21fd34628d3074a`. Focused Actions ru
 ### Remaining boundary
 
 This mitigation prevents false-ready defaults and hardens the local E0–E6 producer. It does **not** connect that producer to the G0–G6 production consumer. The producer still signs canonical JSON UTF-8 bytes while the consumer verifies the raw digest bytes, and their schemas/gates are semantically different. No adapter is warranted. Production remains HOLD until the actual production gate evaluator, source identity, signing contract, live endpoint, and exact-head CI are independently verified.
+
+
+### Offline policy-harness rerun (separate from CLXCII source changes)
+
+The locally available, isolated prior policy harnesses were rerun in Node.js v22.16.0:
+- Mainline gate namespace harness: 11/11 tests passed.
+- PR #31 evidence authorization harness: 19/19 assertions passed.
+- PR #31 supply-chain evidence harness: 12/12 assertions passed.
+- PR #31 entrypoint/manifest source-contract harness: 10/10 assertions passed.
+
+These harnesses use compact/offline reproductions or a prior source snapshot. They do **not** import the latest PR #33 `evidence-status-document.mjs` and therefore do not validate the CLXCII producer changes or newly added repository tests. Hosted Actions for the latest exact head still fails with no visible steps/logs.
