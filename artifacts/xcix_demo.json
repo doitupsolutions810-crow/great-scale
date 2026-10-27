@@ -1,0 +1,16 @@
+{
+  "great_scale_rung": "XCIX",
+  "title": "Composite Alternatives, Mixture Evidence, and Robust Stopping",
+  "null_probability": 0.5,
+  "alternatives": [0.8, 0.6],
+  "weights": [0.5, 0.5],
+  "observations": [1, 1],
+  "likelihood_ratios": [2.56, 1.44],
+  "mixture_e_value": 2.0,
+  "alpha": 0.05,
+  "threshold": 20,
+  "decision": "CONTINUE_OR_INCONCLUSIVE",
+  "finding": "A predeclared mixture can represent uncertainty across several alternatives without post-hoc selection of whichever alternative looks strongest.",
+  "assumptions": ["Fixed Bernoulli null probability strictly between 0 and 1", "Independent observations", "Finite alternatives and weights fixed before looking at outcomes", "Weights are nonnegative and sum to one"],
+  "limitations": ["Not a general composite-null solution", "Not valid automatically for dependent data or arbitrary ML metrics", "Audit and implementation do not prove empirical model quality"]
+}
