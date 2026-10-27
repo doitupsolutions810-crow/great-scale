@@ -173,7 +173,7 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
   );
   assert.ok(edge);
   assert.equal(edge.verificationStatus, "proposed-not-verified");
-  assert.match(edge.contract, /not a live production measurement endpoint/);
+  assert.match(edge.contract, /not live production measurement endpoints/i);
   for (const requirement of [
     "live-measurement-source-identity",
     "target-build-and-target-artifact-digest-binding",
@@ -220,7 +220,7 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.deepEqual(contract, {
     repository: "great-scale",
     path: "contracts/g6-residual-measurement/v1.schema.json",
-    schemaBlobSha: "89ed8276ea7ba4d65fa9b416a960ad5acba296d2",
+    schemaBlobSha: "b4d59db4cda7a53d82bdfc9333ad504a864f9cf5",
     version: "v1",
     status: "schema-only-not-producer",
     mapping: {
