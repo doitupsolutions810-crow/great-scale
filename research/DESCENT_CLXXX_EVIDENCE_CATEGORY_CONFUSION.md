@@ -8,6 +8,8 @@ The producer in `control12-lattice-ops/evidence-console/lib/contract.mjs` declar
 
 The Control Plane PR #31 consumer instead expects `runtime: static` and the exact gate identifiers `G0–G6`, all READY. Therefore the current candidates disagree both on wire contract and on the semantics of what a READY status means.
 
+A direct source-field audit found a second, independent seam: the producer emits `sourceIdentity`, `sourceKeyId`, `sourceEvidenceDigest`, and `sourceSignature`, and its module implements Ed25519 verification. The inspected Control Plane PR #31 consumer source contains no references to these fields and no signature-verification call. Thus the producer's cryptographic provenance is not consumed or verified by this candidate. HTTPS reachability and a valid JSON schema cannot substitute for verifying the source signature against an independently pinned key.
+
 ## Why this is deeper than a version mismatch
 
 A signed, fresh, schema-valid producer response can prove that a particular console response was generated under a configured source key and conforms to the console's contract. It does not, by itself, prove that independent production gates passed. Cryptographic authenticity preserves the origin and integrity of a claim; it does not upgrade the claim's meaning.
