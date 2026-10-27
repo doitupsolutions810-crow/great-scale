@@ -197,7 +197,7 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
     "source-commit-equals-successful-run-head-sha",
     "canonical-json-sha256-and-ed25519-signature-verified",
     "model-parameter-and-input-digest-reproduced",
-    "numerical-convergence-and-rigorous-error-bounds-validated",
+    "numerical-convergence-and-certified-error-bounds-validated-from-independent-certificate",
     "topological-mapping-valid-true",
     "measurement-artifact-distinct-from-target-artifact",
     "measurement-build-id-distinct-from-target-build-id",
@@ -234,6 +234,9 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
       sourceCommitEqualsWorkflowHead: "source.commitSha must equal execution.headSha",
       measurementArtifactBinding: "artifact.digest identifies the Great Scale model/measurement artifact and model.inputDigest binds its inputs; verify independently and never substitute it for targetArtifact.digest.",
       trustBoundary: "verify Ed25519 against an independently configured public key; receipt cannot choose its trust anchor",
+      numericalCertificationRequired: "A separate numericalCertification object is mandatory; model errorBoundMethod labels Richardson estimates as empirical only and never as rigorous proof.",
+      numericalCertificationEvidenceVerified: "Independently fetch and validate numericalCertification.evidenceUrl; recompute proofDigest; pin verifierId and method; require sourceCommitSha=source.commitSha, modelInputDigest=model.inputDigest, and both certified error upper bounds <= measurement.quadratureTolerance.",
+      numericalCertificationClaimNotProof: "numericalCertification.verified=true is only a claim; independently verify proof evidence and trust policy before G6 promotion.",
     },
   });
 
@@ -247,6 +250,18 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.equal(schema.properties.measurement.properties.STopological.maximum, 0.25);
   assert.equal(schema.properties.measuredAt.format, "date-time");
   assert.equal(schema.properties.signatureAlgorithm.const, "Ed25519");
+  assert.ok(schema.required.includes("numericalCertification"));
+  const numericalCertification = schema.properties.numericalCertification;
+  assert.equal(numericalCertification.additionalProperties, false);
+  assert.deepEqual([...numericalCertification.required].sort(), [
+    "method", "verifierId", "sourceCommitSha", "modelInputDigest",
+    "curvatureErrorUpperBound", "metricAreaErrorUpperBound",
+    "evidenceUrl", "proofDigest", "verified",
+  ].sort());
+  assert.equal(numericalCertification.properties.verified.const, true);
+  assert.match(numericalCertification.description, /verified boolean and schema shape alone are not proof/i);
+  assert.equal(schema.properties.measurement.properties.errorBoundMethod.const,
+    "richardson-asymptotic-estimate-only");
   assert.equal(schema.properties.numericalCertification.additionalProperties, false);
   assert.equal(schema.properties.numericalCertification.properties.verified.const, true);
   assert.equal(schema.properties.numericalCertification.properties.proofDigest.pattern, "^[a-f0-9]{64}$");
