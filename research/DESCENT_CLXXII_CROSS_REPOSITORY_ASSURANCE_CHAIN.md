@@ -47,7 +47,11 @@ Remaining gates include source-generated freshness/expiry, signed or otherwise i
 
 Open PR #12: https://github.com/doitupsolutions810-crow/capability-authority/pull/12
 
-The PR integrates serialized SQLite ledger appends, stable event IDs and replay handling, fail-closed index loading, and safer projection updates. The JSON projection remains a separate store/commit boundary. Stale writers can still omit events, and a valid hash-chain prefix does not by itself prove that the tail is complete. A same-transaction SQLite projection or rebuildable outbox with a sequence watermark is the stronger path; an independent checkpoint is still needed to detect tail truncation.
+The branch integrates serialized SQLite ledger appends, stable event IDs and replay handling, fail-closed index loading, and atomic JSON projection replacement. A deeper source audit found that `EvidenceIndex` also uses a sidecar inter-process lock and rebuilds the JSON projection from the verified ledger inside ingest/query/stats paths. Under the same-filesystem assumption, with all projection writers honoring that lock, this mitigates the previously described stale-snapshot/lost-update race; the stale-writer claim should not be treated as an established remaining defect.
+
+The separate commit boundary still exists: the SQLite append can commit before the JSON projection write completes. A projection-write error can therefore be returned after the authoritative event is durable. Because the ledger is authoritative and the JSON index is rebuildable, a subsequent query/stat refresh or retry using the same non-empty stable `event_id` can repair the projection. A new PR #12 regression simulates this exact post-commit projection failure and verifies query repair plus idempotent retry; it is committed but not yet executed in the full repository suite. Retries without a stable event ID are not guaranteed idempotent.
+
+A valid hash-chain prefix still cannot prove that the ledger tail was not truncated. A monotonic sequence/watermark plus an independent checkpoint is still needed when adversarial or accidental tail truncation must be detected.
 
 The current hosted run 40414560305 reports both test and slim-probe failing before steps ran (runner_id=0, zero steps); it supplies no test conclusion. The PR remains draft and unmerged.
 
@@ -87,3 +91,8 @@ The CI-evidence classifier in `test_great_scale_clxxiii_ci_execution_evidence.py
 The latest Great Scale hosted run [40427882876](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40427882876) was retried (attempt 2) on head `3371e750d30b6d2d8907762926e78a5718588ec8`; it again ended with `runner_id=0` and zero steps. A retry therefore did not resolve runner availability. The source tree also contains an explicit regression for lambda-wrapped test references in a registry; the current auditor accepts only bare test-function names as registry entries.
 
 A retry request for the Great Scale run succeeded, but retries for the other two repositories were blocked by the available action interface. The existing control-plane and Capability Authority run states therefore remain unchanged. No full suite or production deployment is claimed.
+
+
+## Descent CLXXIV / Capability Authority recovery refinement
+
+The new source-freshness contract in the control plane is orthogonal to ledger completeness. The Capability Authority projection is now assessed as a rebuildable materialized view with cross-process serialization—not as an unprotected pair of stale snapshots. Acceptance still requires the ledger identity/replay contract, recovery after projection-write failure, proof that the queried projection was reconciled to the verified ledger, and an independent checkpoint if tamper-evident completeness is required. The newest Capability Authority candidate after adding the recovery regression is `dd8c4e38136d3e3e81891045be0ace216a6c5253`; hosted run [40429217283](https://github.com/doitupsolutions810-crow/capability-authority/actions/runs/40429217283) exposed zero steps/logs, so the new test remains unexecuted by hosted CI.
