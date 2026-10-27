@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Great Scale G6 Residual Measurement v1",
+  "description": "A source/build-bound numerical measurement receipt for G6. Schema validity does not prove signature authenticity, execution, live observation, or production authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "issuer",
+    "keyId",
+    "environment",
+    "buildId",
+    "generatedAt",
+    "expiresAt",
+    "source",
+    "execution",
+    "artifact",
+    "model",
+    "measurement",
+    "digest",
+    "signature"
+  ],
+  "properties": {
+    "schema": {
+      "const": "great-scale.g6-residual-measurement/v1"
+    },
+    "issuer": {
+      "const": "great-scale-g6-residual-measurer"
+    },
+    "keyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "environment": {
+      "const": "production"
+    },
+    "buildId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commitSha"
+      ],
+      "properties": {
+        "repository": {
+          "const": "doitupsolutions810-crow/great-scale"
+        },
+        "commitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "runAttempt",
+        "runUrl",
+        "headSha",
+        "conclusion",
+        "startedAt",
+        "completedAt"
+      ],
+      "properties": {
+        "runId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runAttempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://github\\.com/doitupsolutions810-crow/great-scale/actions/runs/[1-9][0-9]*$"
+        },
+        "headSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "conclusion": {
+          "const": "success"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "digest"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "parameters",
+        "inputDigest"
+      ],
+      "properties": {
+        "id": {
+          "const": "qi-wu-zhang-two-band"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "m",
+            "gridSize",
+            "maxRefinements"
+          ],
+          "properties": {
+            "m": {
+              "type": "number",
+              "not": {
+                "enum": [
+                  -2,
+                  0,
+                  2
+                ]
+              }
+            },
+            "gridSize": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 4096
+            },
+            "maxRefinements": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        },
+        "inputDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chernNumber",
+        "rawChernNumber",
+        "chernIntegerResidual",
+        "integratedCurvature",
+        "absoluteCurvatureBudget",
+        "positiveCurvatureBudget",
+        "negativeCurvatureBudget",
+        "curvatureCancellationBudget",
+        "metricAreaBudget",
+        "topologicalFloor",
+        "metricAreaExcess",
+        "topologicalSaturationRaw",
+        "topologicalSaturation",
+        "signedTopologicalPolarization",
+        "STopological",
+        "psiTopological",
+        "acceptedPsiTopological",
+        "curvatureOrientationEntropyResidual",
+        "curvatureChernResidual",
+        "curvatureCancellationIdentityResidual",
+        "curvatureOrientationVarianceResidual",
+        "rigorousCurvatureErrorBound",
+        "rigorousMetricAreaErrorBound",
+        "rigorousBoundFinite",
+        "gridAlignmentCurvatureDiscrepancy",
+        "gridAlignmentAreaDiscrepancy",
+        "quadratureTolerance",
+        "quadratureConverged",
+        "topologicalMappingValid",
+        "refinementCount",
+        "refinedGridSize"
+      ],
+      "properties": {
+        "chernNumber": {
+          "type": "integer"
+        },
+        "rawChernNumber": {
+          "type": "number"
+        },
+        "chernIntegerResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "integratedCurvature": {
+          "type": "number"
+        },
+        "absoluteCurvatureBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "positiveCurvatureBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "negativeCurvatureBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureCancellationBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metricAreaBudget": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "topologicalFloor": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metricAreaExcess": {
+          "type": "number"
+        },
+        "topologicalSaturationRaw": {
+          "type": "number"
+        },
+        "topologicalSaturation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "signedTopologicalPolarization": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "STopological": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.25
+        },
+        "psiTopological": {
+          "type": "number",
+          "minimum": 0
+        },
+        "acceptedPsiTopological": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureOrientationEntropyResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureChernResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureCancellationIdentityResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureOrientationVarianceResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rigorousCurvatureErrorBound": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rigorousMetricAreaErrorBound": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rigorousBoundFinite": {
+          "const": true
+        },
+        "gridAlignmentCurvatureDiscrepancy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gridAlignmentAreaDiscrepancy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "quadratureTolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "quadratureConverged": {
+          "const": true
+        },
+        "topologicalMappingValid": {
+          "const": true
+        },
+        "refinementCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "refinedGridSize": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 131072
+        }
+      }
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{86}==$"
+    }
+  }
+}
