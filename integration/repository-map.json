@@ -205,7 +205,10 @@
         "certificate-source-sha-and-model-input-digest-match",
         "certified-curvature-and-metric-area-error-upper-bounds-within-tolerance",
         "certificate-evidence-url-and-proof-digest-independently-validated",
-        "raw-model-output-alone-is-not-g6-eligible"
+        "raw-model-output-alone-is-not-g6-eligible",
+        "independent-numerical-certificate-verified",
+        "numerical-certificate-upper-bounds-and-proof-digest-verified",
+        "quadrature-rigorous-certificate-distinct-from-empirical-estimates"
       ]
     },
     {
