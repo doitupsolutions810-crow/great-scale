@@ -114,6 +114,9 @@ export function validateRepositoryMap(map) {
     sourceCommitEqualsWorkflowHead: "source.commitSha must equal execution.headSha",
     measurementArtifactBinding: "artifact.digest identifies the Great Scale model/measurement artifact and model.inputDigest binds its inputs; verify independently and never substitute it for targetArtifact.digest.",
     trustBoundary: "verify Ed25519 against an independently configured public key; receipt cannot choose its trust anchor",
+    numericalCertificationRequired: "A separate numericalCertification object is mandatory; model errorBoundMethod labels Richardson estimates as empirical only and never as rigorous proof.",
+    numericalCertificationEvidenceVerified: "Independently fetch and validate numericalCertification.evidenceUrl; recompute proofDigest; pin verifierId and method; require sourceCommitSha=source.commitSha, modelInputDigest=model.inputDigest, and both certified error upper bounds <= measurement.quadratureTolerance.",
+    numericalCertificationClaimNotProof: "numericalCertification.verified=true is only a claim; independently verify proof evidence and trust policy before G6 promotion.",
   };
   if (!g6Contract ||
       g6Contract.repository !== "great-scale" ||
