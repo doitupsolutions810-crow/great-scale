@@ -78,7 +78,7 @@ test("measurement contains explicit QGT, convergence, topology, and error-bound 
   assert.ok(properties.rigorousMetricAreaErrorBound.minimum >= 0);
   assert.ok(properties.gridAlignmentCurvatureDiscrepancy.minimum >= 0);
   assert.ok(properties.gridAlignmentAreaDiscrepancy.minimum >= 0);
-  assert.ok(properties.quadratureTolerance.exclusiveMinimum > 0);
+  assert.equal(properties.quadratureTolerance.exclusiveMinimum, 0, 'exclusiveMinimum 0 means tolerance must be strictly positive');
   assert.match(measurement.description, /STopological/);
   assert.match(measurement.description, /residual\.S/);
 });
