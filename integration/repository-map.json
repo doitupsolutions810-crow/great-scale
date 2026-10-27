@@ -210,5 +210,10 @@
         "authority-and-provenance-check"
       ]
     }
-  ]
+  ],
+  "operationEvidenceContract": {
+    "version": "v1",
+    "path": "docs/OPERATION_EVIDENCE_CONTRACT_V1.md",
+    "status": "proposed"
+  }
 }
