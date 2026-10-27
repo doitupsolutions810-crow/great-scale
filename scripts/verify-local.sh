@@ -6,28 +6,40 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 VERIFY_JS_STATUS=not_run
+VERIFY_FEASIBILITY_STATUS=not_run
 VERIFY_PY_STATUS=not_run
 VERIFY_EXIT_STATUS=running
 VERIFY_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unavailable)"
+VERIFY_CANDIDATE_SHA="${VERIFY_CANDIDATE_SHA:-${GITHUB_SHA:-unavailable}}"
+VERIFY_PR_HEAD_SHA="${VERIFY_PR_HEAD_SHA:-}"
+VERIFY_PR_BASE_SHA="${VERIFY_PR_BASE_SHA:-}"
 VERIFY_NODE="$(node --version 2>&1 || echo unavailable)"
 VERIFY_NPM="$(npm --version 2>&1 || echo unavailable)"
 VERIFY_PYTHON="$(python3 --version 2>&1 || echo unavailable)"
 VERIFY_RECEIPT="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/great-scale-verification-receipt.json"
-export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_CANDIDATE_SHA VERIFY_PR_HEAD_SHA VERIFY_PR_BASE_SHA VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
 
 write_receipt() {
   local exit_code=$?
   if [ "$exit_code" -eq 0 ]; then VERIFY_EXIT_STATUS=passed; else VERIFY_EXIT_STATUS=failed; fi
-  export VERIFY_JS_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
+  export VERIFY_JS_STATUS VERIFY_FEASIBILITY_STATUS VERIFY_PY_STATUS VERIFY_EXIT_STATUS VERIFY_COMMIT VERIFY_CANDIDATE_SHA VERIFY_PR_HEAD_SHA VERIFY_PR_BASE_SHA VERIFY_NODE VERIFY_NPM VERIFY_PYTHON VERIFY_RECEIPT
   python3 - <<'PY'
 import json, os, datetime
 record = {
   "schema": "great-scale.verification-receipt/v1",
   "commit": os.environ.get("VERIFY_COMMIT", "unavailable"),
+  "git_checkout_sha": os.environ.get("VERIFY_COMMIT", "unavailable"),
+  "candidate_sha": os.environ.get("VERIFY_CANDIDATE_SHA", "unavailable"),
+  "pull_request_head_sha": os.environ.get("VERIFY_PR_HEAD_SHA") or None,
+  "pull_request_base_sha": os.environ.get("VERIFY_PR_BASE_SHA") or None,
+  "github_event_name": os.environ.get("GITHUB_EVENT_NAME"),
+  "github_ref": os.environ.get("GITHUB_REF"),
+  "github_head_ref": os.environ.get("GITHUB_HEAD_REF"),
   "node": os.environ.get("VERIFY_NODE", "unavailable"),
   "npm": os.environ.get("VERIFY_NPM", "unavailable"),
   "python": os.environ.get("VERIFY_PYTHON", "unavailable"),
   "javascript_suite": os.environ.get("VERIFY_JS_STATUS", "not_run"),
+  "robust_feasibility_suite": os.environ.get("VERIFY_FEASIBILITY_STATUS", "not_run"),
   "python_descent_suite": os.environ.get("VERIFY_PY_STATUS", "not_run"),
   "overall": os.environ.get("VERIFY_EXIT_STATUS", "unknown"),
   "created_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -46,6 +58,7 @@ if summary:
         f.write("## Great Scale verification receipt\n\n")
         f.write(f"- Commit: `{record['commit']}`\n")
         f.write(f"- JavaScript suite: **{record['javascript_suite']}**\n")
+        f.write(f"- Robust-feasibility suite: **{record['robust_feasibility_suite']}**\n")
         f.write(f"- Python descent suite: **{record['python_descent_suite']}**\n")
         f.write(f"- Overall: **{record['overall']}**\n")
         f.write(f"- Receipt: `{os.environ['VERIFY_RECEIPT']}`\n")
@@ -76,10 +89,15 @@ if npm test; then VERIFY_JS_STATUS=passed; else VERIFY_JS_STATUS=failed; exit 1;
 export VERIFY_JS_STATUS
 echo "::endgroup::"
 
+echo "::group::Robust-feasibility regression suite"
+if python3 -m unittest -v test_robust_feasibility.py; then VERIFY_FEASIBILITY_STATUS=passed; else VERIFY_FEASIBILITY_STATUS=failed; exit 1; fi
+export VERIFY_FEASIBILITY_STATUS
+echo "::endgroup::"
+
 echo "::group::Python descent suite"
 if python3 test_descent.py; then VERIFY_PY_STATUS=passed; else VERIFY_PY_STATUS=failed; exit 1; fi
 export VERIFY_PY_STATUS
 echo "::endgroup::"
 
 echo "LOCAL_VERIFICATION=PASS"
-echo "NOTE=Receipt binds outcomes to the commit/runtime metadata; it does not by itself prove test correctness or hosted execution."
+echo "NOTE=Receipt binds outcomes to commit/runtime metadata; it does not by itself prove test correctness or hosted execution."
