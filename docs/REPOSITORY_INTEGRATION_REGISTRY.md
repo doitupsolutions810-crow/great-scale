@@ -23,7 +23,15 @@ The validator checks unique repository names, snapshot-count consistency, owner/
 
 ## Promotion requirement
 
-A verified interface must be backed by the exact commit SHA, an actual test/workflow run, an observed result, and an evidence URL with applicable authority/provenance checks. A well-formed JSON file is not a network integration test. A hosted runner failure without executed steps is not a pass.
+A verified interface must carry a complete, revision-bound execution proof:
+
+- Full 40-character `sourceCommitSha` and `targetCommitSha` identify both endpoint revisions actually exercised by the integration test.
+- `testRepository` names a repository in this public registry; `testCommitSha` is the exact test-harness revision.
+- `testRunHeadSha` equals `testCommitSha`; `testRunId` and `testRunAttempt` are positive integers for the observed attempt.
+- `testRunUrl` is the canonical URL for that registered repository and run ID, and `testRunConclusion` must be `success`.
+- `observedResult` must be `pass`, and `evidenceUrl` must be a durable HTTPS URL within that exact run.
+
+A repository-level `verified` claim uses the same run proof and pins its subject revision with `commitSha`. The validator checks the evidence envelope's consistency; it does **not** fetch the Actions API, verify the run's real head SHA, or independently inspect the test artifact. Those facts still have to be checked before a human or trusted promotion service updates the registry. A well-formed JSON file is not a network integration test. A hosted runner failure without executed steps is not a pass.
 
 ## Next step
 
