@@ -36,17 +36,17 @@ It must not be normalized to `S = 0` or allowed to satisfy a geometric inequalit
 On branch `fix/mainline-public-evidence-contract-verification`:
 
 - Added `lib/residual-input.mjs` with an explicit parser. Only an unset variable receives the documented default `0`; supplied empty, non-numeric, `NaN`, infinite, or overflow values are invalid.
-- Added `test/residual-input.test.mjs` covering defaulting, finite positive/negative values, empty strings, non-numeric input, `NaN`, infinities, and overflow.
-- Updated `integrate.mjs` and `status/procurement-bridge.mjs` to pass a fail-closed sentinel into the cone check when parsing fails, emit `HOLD_INVALID_RESIDUAL` or `HOLD_RESIDUAL_CONE`, and report the parse failure explicitly rather than presenting a fabricated residual snapshot.
+- Added `test/residual-input.test.mjs` covering defaulting, strict decimal notation, finite values within `[0, 0.25]`, empty strings, non-numeric input, `NaN`, infinities, overflow, underflow, and out-of-domain coordinates.
+- Updated `integrate.mjs` and `status/procurement-bridge.mjs` to pass a fail-closed sentinel into the cone check when parsing fails, emit `HOLD_INVALID_RESIDUAL`, `HOLD_RESIDUAL_DOMAIN`, or `HOLD_RESIDUAL_CONE`, and report the parse failure explicitly rather than presenting a fabricated residual snapshot.
 - Added the new test to the package test command and the focused evidence-contract workflow's path filters, syntax checks, and Node test command.
 
 This prevents invalid residual input from yielding a procurement-ready result through silent coercion. It does not implement a live QGT/topology feed and does not enable production authorization.
 
 ## Verification status
 
-- Source updates are committed on PR #33's branch; latest inspected head is `25be705adf58276c32794a508d6b386179071f41`.
+- Source updates are committed on PR #33's branch; latest inspected head is `654d38437fe06591f30b5fcc881fac699fa11588`.
 - The focused workflow is configured to syntax-check and run the new regression.
-- An isolated Node.js 22 runtime run of the parser module and its regression cases passed **6/6 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
+- An isolated Node.js 22 runtime run of the parser module and its regression cases passed **7/7 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
 - The hosted Actions runner previously failed before exposing any steps. Therefore the newly committed JavaScript test has not yet been proven to execute in hosted CI.
 - The local environment cannot clone GitHub (DNS/network unavailable), so a clean-checkout full-suite run was not possible in this pass.
 - This finding addresses input validity only; it does not close the E0–E6 versus G0–G6 producer/consumer protocol mismatch, production key pinning, live endpoint verification, or PR history divergence.
@@ -56,7 +56,7 @@ Decision: production remains **HOLD**. Source mitigation is committed; runtime i
 
 ## Great Scale policy-model integration
 
-Added `test_great_scale_clxxxix_finite_residual_boundary.py` and wired it into the `npm run all` aggregate in this branch. The isolated Python model run passed, covering default/finite values, malformed/non-finite inputs, overflow, and finite cone violation. This is an additional policy-level check, not a substitute for executing the Control Plane JavaScript integration.
+Added `test_great_scale_clxxxix_finite_residual_boundary.py` and wired it into the `npm run all` aggregate in this branch. The isolated Python model run passed, covering default/finite decimal values, malformed/non-finite inputs, overflow/underflow, and out-of-domain values. This is an additional policy-level check, not a substitute for executing the Control Plane JavaScript integration.
 
 
 ## Domain-boundary extension — CLXXXIX-B
