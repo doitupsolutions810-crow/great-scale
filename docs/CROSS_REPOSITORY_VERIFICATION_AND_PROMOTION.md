@@ -221,9 +221,9 @@ The cross-repository integration status remains `proposed-not-verified`. The G0-
 This is a live branch-graph finding, not a statement that either candidate is ready:
 
 - Living Intermediate Control Plane PR #33 head: `fe3c75e152c4fcabb5b1eb791072e1c85fb54c77`.
-- Living Intermediate Control Plane PR #34 head: `674555317992faecddccb0aa7f2fb0e7ae39b4e4`.
-- GitHub compare reports the two heads as **diverged**, with a common ancestor `f30cfbd2bac2aa54f2154c2d1ba8213193723b30`; PR #34 is 102 commits ahead and 64 behind PR #33 under that comparison.
-- PR #31 head `5ff2d60848164c095c6275994ce9aceb11d2ebf1` and PR #34 are also diverged (115 ahead / 65 behind from merge base `8510bff879dd4f21ae5d8f7265a49ff9a53fec57`).
+- Living Intermediate Control Plane PR #34 head at the initial comparison: `674555317992faecddccb0aa7f2fb0e7ae39b4e4`; the branch has since advanced to `2ca35cf63edb12d28576ffb510d22bee7ba2f3f2`.
+- GitHub compare reports the two heads as **diverged**, with a common ancestor `f30cfbd2bac2aa54f2154c2d1ba8213193723b30`; At the refreshed comparison on `2ca35cf63edb12d28576ffb510d22bee7ba2f3`, PR #34 is **104 commits ahead and 64 behind** PR #33 under that comparison.
+- PR #31 head `5ff2d60848164c095c6275994ce9aceb11d2ebf1` and current PR #34 head `2ca35cf63edb12d28576ffb510d22bee7ba2f3f2` are also diverged (**117 ahead / 65 behind** from merge base `8510bff879dd4f21ae5d8f7265a49ff9a53fec57`).
 - The candidates overlap on high-risk integration surfaces: `integrate.mjs`, `lib/evidence-console.mjs`, `lib/gate-namespaces.mjs`, `package.json`, and self/evidence tests.
 
 The versions have complementary but non-equivalent responsibilities. PR #33's `lib/evidence-console.mjs` carries the broader E0-E6 public-source contract verifier: pinned Ed25519 source identity/key ID, payload digest, freshness/schema validation, no-redirect fetch, and final endpoint URL binding. PR #34 adds the distinct G0-G6 production acceptance verifier and bounded attestation transport. Its current `lib/production-acceptance-fetch.mjs` refuses redirects, but its separate evidence-console probe still follows redirects and must not be treated as an interchangeable replacement for PR #33's stricter E0-E6 source probe. The two namespaces must stay separate.
