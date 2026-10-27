@@ -76,6 +76,23 @@ const cjs = require('./public/scale.cjs');
       'phase should repeat after one period at t=' + t);
   }
 
+  // Invalid numeric inputs must fail closed instead of silently emitting NaN state.
+  for (const bad of [NaN, Infinity, -Infinity]) {
+    assert.throws(() => esm.stateAt(bad), RangeError, 'ESM must reject non-finite time');
+    assert.throws(() => cjs.stateAt(bad), RangeError, 'CJS must reject non-finite time');
+    assert.throws(() => esm.stateAt(1, bad), RangeError, 'ESM must reject non-finite rate');
+    assert.throws(() => cjs.stateAt(1, bad), RangeError, 'CJS must reject non-finite rate');
+  }
+  assert.throws(() => esm.stateAt(Number.MAX_VALUE, 2), RangeError,
+    'ESM must reject a finite-input product that overflows');
+  assert.throws(() => cjs.stateAt(Number.MAX_VALUE, 2), RangeError,
+    'CJS must reject a finite-input product that overflows');
+  assert.equal(esm.stateAt(3, 0).phase, 0, 'zero rate is a valid stationary phase');
+  assert.equal(esm.stateAt(0.25, -0.85).phase, 0.7875,
+    'negative rate must still use canonical phase representation');
+  assert.deepEqual(esm.stateAt(0.25, -0.85), cjs.stateAt(0.25, -0.85),
+    'negative-rate state must match between module formats');
+
   const esmEngine = new esm.DescentEngine({ start: 1 });
   const cjsEngine = new cjs.DescentEngine({ start: 1 });
   assert.deepEqual(esmEngine.snapshot(), cjsEngine.snapshot(),
