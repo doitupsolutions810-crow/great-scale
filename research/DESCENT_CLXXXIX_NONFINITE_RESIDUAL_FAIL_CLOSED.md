@@ -52,3 +52,8 @@ This prevents invalid residual input from yielding a procurement-ready result th
 - This finding addresses input validity only; it does not close the E0–E6 versus G0–G6 producer/consumer protocol mismatch, production key pinning, live endpoint verification, or PR history divergence.
 
 Decision: production remains **HOLD**. Source mitigation is committed; runtime integration and exact-head hosted verification remain outstanding.
+
+
+## Great Scale policy-model integration
+
+Added `test_great_scale_clxxxix_finite_residual_boundary.py` and wired it into the `npm run all` aggregate in this branch. The isolated Python model run passed, covering default/finite values, malformed/non-finite inputs, overflow, and finite cone violation. This is an additional policy-level check, not a substitute for executing the Control Plane JavaScript integration.
