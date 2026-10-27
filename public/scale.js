@@ -87,7 +87,14 @@ export function descentStep(x, k = CONE) {
  * λ = φ^(-⁹) is radial scale and may dip below CONE at low heat — that is allowed.
  */
 export function stateAt(t, rate = RATE) {
-  const phase = (((t * rate) % 1) + 1) % 1;
+  if (!Number.isFinite(t) || !Number.isFinite(rate)) {
+    throw new RangeError('stateAt requires finite time and rate');
+  }
+  const scaledTime = t * rate;
+  if (!Number.isFinite(scaledTime)) {
+    throw new RangeError('stateAt time × rate must remain finite');
+  }
+  const phase = ((scaledTime % 1) + 1) % 1;
   const h = 0.5 - 0.5 * Math.cos(2 * Math.PI * phase);
   const S = heat(h);
   const n = 8 - 4 * S;
