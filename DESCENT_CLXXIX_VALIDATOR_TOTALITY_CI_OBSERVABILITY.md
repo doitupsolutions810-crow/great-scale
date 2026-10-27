@@ -144,3 +144,10 @@ Retried the focused workflow once after the initial zero-step failure. GitHub ac
 ### CLXXXVIII — overlapping PR history reconciliation
 
 Control Plane PR #31 is reported `mergeable: false`; PR #33 is reported `mergeable: true`. Their branches diverge (comparison reports 38 ahead / 65 behind) and both touch `lib/evidence-console.mjs`, `test/evidence-console.test.mjs`, `package.json`, and `status/procurement-bridge.mjs`. Do not merge them independently or blindly rebase. Select one integration base, reconcile the overlapping implementation and tests, then test the exact combined SHA. GitHub's mergeability flag is not a test result. See [CLXXXVIII in the CI investigation](research/DESCENT_CLXXXVII_ISOLATED_CI_PRE_RUNNER_FAILURE.md). Production remains HOLD.
+
+
+### CLXXXIX — malformed residual values could pass the cone boundary
+
+Both Control Plane entrypoints were found coercing `GREAT_SCALE_S` with `Number(value || 0) || 0`. This maps supplied `NaN`/empty values to zero and allows `Infinity` through; the cone inequality alone treats positive infinity as compliant. PR #33 now adds a strict finite-value parser, explicit `HOLD_INVALID_RESIDUAL` decisions, diagnostic output, regression tests, and focused-workflow coverage. See [CLXXXIX — non-finite residual input](research/DESCENT_CLXXXIX_NONFINITE_RESIDUAL_FAIL_CLOSED.md).
+
+The code and test wiring are committed, but a clean local checkout was unavailable (GitHub DNS/network resolution failed) and hosted Actions has not yet exposed execution steps. Therefore the regression is added but not yet runtime-verified against the repository. This closes neither the producer/consumer signing-protocol mismatch nor production identity/key/live-endpoint requirements. Production remains HOLD.
