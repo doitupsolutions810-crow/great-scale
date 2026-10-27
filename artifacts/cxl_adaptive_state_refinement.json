@@ -1,0 +1,13 @@
+{
+  "rung": "CXL",
+  "title": "Adaptive State Refinement",
+  "counterexample": {
+    "assignment_count": 4,
+    "count_states": 3,
+    "refined_states": 4,
+    "count_only_sufficient": false,
+    "assignment_AB": {"counts": [1, 1], "lower_sum": 0.8, "upper_sum": 1.0},
+    "assignment_BA": {"counts": [1, 1], "lower_sum": 0.6, "upper_sum": 0.8}
+  },
+  "repository_tests_executed": false
+}
