@@ -72,9 +72,28 @@ def tests_not_invoked_by_direct_runner(path: Path):
 
             def visit_If(self, node):
                 self.visit(node.test)
-                if isinstance(node.test, ast.Constant) and isinstance(node.test.value, bool):
-                    selected = node.body if node.test.value else node.orelse
+                if isinstance(node.test, ast.Constant):
+                    selected = node.body if bool(node.test.value) else node.orelse
                     for child in selected:
+                        self.visit(child)
+                else:
+                    for child in node.body + node.orelse:
+                        self.visit(child)
+
+            def visit_While(self, node):
+                self.visit(node.test)
+                if isinstance(node.test, ast.Constant):
+                    selected = node.body if bool(node.test.value) else node.orelse
+                    for child in selected:
+                        self.visit(child)
+                else:
+                    for child in node.body + node.orelse:
+                        self.visit(child)
+
+            def visit_For(self, node):
+                self.visit(node.iter)
+                if isinstance(node.iter, (ast.List, ast.Tuple, ast.Set)) and not node.iter.elts:
+                    for child in node.orelse:
                         self.visit(child)
                 else:
                     for child in node.body + node.orelse:
@@ -282,6 +301,34 @@ def test_audit_rejects_unawaited_async_test_invocation():
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
 
 
+def test_audit_rejects_loop_dispatch_inside_false_while():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_nested_dead_while.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for test in [test_regression]:\n"
+            "        while False:\n"
+            "            test()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_loop_dispatch_inside_empty_nested_loop():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_empty_nested_loop.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for test in [test_regression]:\n"
+            "        for unused in []:\n"
+            "            test()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 def test_audit_accepts_functions_dispatched_from_a_main_guard_registry():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_registry.py"
@@ -336,6 +383,8 @@ if __name__ == "__main__":
         test_audit_rejects_loop_dispatch_inside_an_uninvoked_helper,
         test_audit_rejects_test_call_in_false_while_loop,
         test_audit_rejects_unawaited_async_test_invocation,
+        test_audit_rejects_loop_dispatch_inside_false_while,
+        test_audit_rejects_loop_dispatch_inside_empty_nested_loop,
     ]
     for test in tests:
         test()
