@@ -25,7 +25,7 @@ This is a syntactic reachability guard, not a general Python control-flow proof.
 
 ## Reconstructed local validation
 
-A copied-source harness for the patched algorithm produced the expected results on **8/8 cases**:
+A copied-source harness for the patched algorithm produced the expected results on **10/10 cases**:
 
 | Case | Expected auditor result | Observed |
 |---|---|---|
@@ -34,13 +34,15 @@ A copied-source harness for the patched algorithm produced the expected results 
 | Call only in while False | missing | pass |
 | Registry dispatch only in a false branch | missing | pass |
 | Registry call only inside an uncalled helper | missing | pass |
+| Registry call only inside while False | missing | pass |
+| Registry call only inside an empty nested loop | missing | pass |
 | Direct registry dispatch in loop | accepted | pass |
 | Bare invocation of async def | missing | pass |
 | Bare reference without call | missing | pass |
 
 This was a reconstructed local harness, not execution of the committed repository file or the full npm run all suite.
 
-Hosted CI run 40425726921 targeted exact head e30885ef4c228d9a85648cdd05794b570e3f8233 but failed with no step summaries. It is an execution-environment blocker, not evidence that tests passed or that source tests failed. No full suite, deployment, or production behavior has been verified on this head.
+Hosted CI run 40425726921 on head e30885ef4c228d9a85648cdd05794b570e3f8233 and follow-up run 40425906056 on head 298a3c3fca25f594c396523a5b113cd1b5427e68 both failed before any job steps ran (runner_id=0; zero step summaries). These are execution-environment blockers, not evidence that tests passed or that source tests failed. No full suite, deployment, or production behavior has been verified on these heads.
 
 ## Great Scale mapping
 
