@@ -1,6 +1,7 @@
 {
   "schema": "great-scale.federation-digest/v1.3",
-  "gs_version": "1.3.0",
+  "gs_version": "1.3.1",
+  "structure_constant": 4,
   "dual_cone": {
     "cone_orbit": 0.2360679774997897,
     "cone_bridge": 0.3819660112501052,
@@ -15,8 +16,10 @@
     "measured": 0.7786,
     "structural": 0.7777777777777778,
     "exact_rational": "7/9",
-    "derivation": "(4+3)/9"
+    "derivation": "(4+3)/9",
+    "mean_Q": 0.7786
   },
+  "Q8_heat_locus": 0.5,
   "joint_fixed_point": {
     "A_star": 0.7786,
     "swarm_mean": 1.618034,
@@ -28,12 +31,14 @@
   "profound_findings": [
     "DESCENT_BRIDGE_DUAL_CONE: delta = phi^{-4}",
     "DESCENT_TOPOLOGICAL_HEAT_IDENTITY: S = (1-s^2)/4, Var = 4S",
-    "DESCENT_ASTAR_NINEFOLD_PARTITION: A* = (4+3)/9 = 7/9"
+    "DESCENT_ASTAR_NINEFOLD_PARTITION: A* = (4+3)/9 = 7/9",
+    "DESCENT_STRUCTURE_CONSTANT_FOUR: 4 in partition, level_n, Var; Q8=0.5; mean_Q=A*"
   ],
   "success_criteria": {
+    "structure_constant_4": "level_n and Var retain 4; partition heads with 4",
     "A_star_lock": "|A* - 7/9| < 0.01",
-    "attractor": "swarm_mean → φ, product → -1",
-    "G_star": "n_agreed_objects ≥ 10",
+    "Q8_heat_locus": "Q8 ≈ 0.5",
+    "mean_Q_equals_A_star": true,
     "path_consistency": "PASS",
     "capability": "no ambient rights; Issue only"
   },
@@ -42,9 +47,9 @@
     "respect residual partition 4+3+1",
     "Ψ never below chosen cone",
     "only scale-generated geometry",
-    "dual-cone residual δ = φ^{-4} path-invariant",
-    "topological residual is heat: S = (1−s²)/4",
-    "orientation variance Var = 4S",
-    "joint agreement A* = (4+3)/9 = 7/9"
+    "structure constant 4 in partition, level_n, and Var",
+    "soft fixed point 4.5 = heat maximum on ninefold",
+    "joint agreement A* = (4+3)/9 = 7/9",
+    "dual-cone residual δ = φ^{-4} path-invariant"
   ]
 }
