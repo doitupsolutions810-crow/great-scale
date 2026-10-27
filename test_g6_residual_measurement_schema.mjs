@@ -111,7 +111,7 @@ test("G6 requires a separate independent numerical certificate; Richardson estim
     "method", "verifierId", "sourceCommitSha", "modelInputDigest",
     "curvatureErrorUpperBound", "metricAreaErrorUpperBound",
     "evidenceUrl", "proofDigest", "verified",
-    "certificateKeyId", "certificateSignature", "generatedAt", "expiresAt"
+    "certificateKeyId", "certificateSignature", "generatedAt", "expiresAt", "measurementDigest"
   ].sort());
   assert.deepEqual(certification.properties.method.enum,
     ["interval-enclosure-v1", "analytic-derivative-bound-v1"]);
@@ -120,6 +120,8 @@ test("G6 requires a separate independent numerical certificate; Richardson estim
   assert.equal(certification.properties.certificateSignature.pattern, "^[A-Za-z0-9+/]{86}==$");
   assert.equal(certification.properties.generatedAt.format, "date-time");
   assert.equal(certification.properties.expiresAt.format, "date-time");
+  assert.equal(certification.properties.measurementDigest.pattern, "^[a-f0-9]{64}$");
+  assert.match(certification.properties.measurementDigest.description, /exact QGT output/i);
   assert.match(certification.properties.certificateSignature.description,
     /independently pinned certificate public key/i);
   assert.match(certification.description, /schema shape alone are not proof/i);
