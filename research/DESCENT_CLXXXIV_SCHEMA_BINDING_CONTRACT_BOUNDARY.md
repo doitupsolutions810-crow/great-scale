@@ -284,3 +284,27 @@ Exact Control Plane PR head: `131884fa523e10604d6ff78186c937dddd06463a`. Source 
 5. Obtain a successful exact-head CI run and inspect actionable logs; then perform authorized live verification before any merge/deployment decision.
 
 **Release remains HOLD / NO-GO.** The system is safer because the shortcut is closed, but the final evidence connection is still not implemented.
+
+## Descent CXCIV — the public path still trusted the caller's acceptance Boolean
+
+A re-audit of the CXCIII hard hold found a critical incomplete mitigation: the code set `procurementEvidenceOk = false` for the local-fallback predicate, but `publicOk` was still computed independently as `publicContractOk && evidenceConsole.procurementEvidenceVerified === true`. Therefore a caller-supplied Boolean could still satisfy the public authorization branch. This is a concrete logical bypass in the staged source, not merely a theoretical concern.
+
+### Corrective changes staged
+
+- Commit `2fded176` now defines `procurementEvidenceOk = false` before both public/local authorization paths and derives `publicOk = publicContractOk && procurementEvidenceOk`. Until a real verifier is implemented, neither path can authorize procurement.
+- Commit `7e73b6ba` corrects the integration result labels: a healthy source contract with missing production-acceptance proof is now `HOLD_PRODUCTION_ACCEPTANCE_EVIDENCE`; other unproven evidence authorization is `HOLD_EVIDENCE_AUTHORIZATION`. This removes the previous misleading `READY_LOCAL_HOLD_PUBLIC_EVIDENCE` label, which suggested that merely fixing public-console reachability or opting into local evidence could resolve the hold.
+- Existing self-test assertions explicitly require caller-supplied `procurementEvidenceVerified: true` to be rejected on both public and local paths. Source re-fetch confirms those assertions and the hard-hold expression are present.
+
+### Existing evidence format reviewed
+
+The repository's `lib/evidence-status-document.mjs` explicitly documents that its `great-scale.evidence-status/v5.4.0` artifact carries residual data and E0–E6 contract checks and **does not claim G0–G6 production authorization**. Reusing it as the missing production-acceptance artifact would recreate the same semantic error. The `status/supply-chain.mjs` flow is a scan/posture summary, permits missing tooling to soft-skip by default, and does not provide a separately signed, pinned, fresh G0–G6 acceptance attestation. Neither is sufficient to close the missing connection without a new authoritative contract and verifier.
+
+### Current CI / release status
+
+Latest inspected Control Plane head: `2fded176b18c5e4f5b8bbda4e4ba208f037559a4`. CI run `40445244675` failed; its main verification job failed and container job was skipped. The available job-step endpoint returned no steps, and logs remain unavailable (`BlobNotFound` in prior attempts), so root cause is still unknown. No successful test run, live artifact verification, merge, deployment, or procurement activation is claimed.
+
+### Next necessary implementation boundary
+
+The next valid implementation is not to change the hardcoded hold to `true`. It is to create a distinct production-acceptance attestation schema whose producer evaluates the actual G0–G6 criteria, signs a canonical payload with a dedicated key, and publishes a stable artifact. The consumer must pin the expected issuer/key identity independently, validate exact fields and complete unique G0–G6 gate coverage, verify signature/digest/freshness/environment/build identity, and pass a verifier-produced result into the gate. Tests must prove that a valid signed artifact passes only when every required criterion passes, while missing/forged/stale/tampered/wrong-key/wrong-environment/incomplete artifacts fail on both public and local paths. Only then can the fail-closed constant be replaced with the verifier result.
+
+**HOLD / NO-GO remains mandatory.**
