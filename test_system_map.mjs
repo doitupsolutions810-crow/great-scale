@@ -9,6 +9,8 @@ function edgeProof(overrides = {}) {
   const testCommitSha = "c".repeat(40);
   const testRunUrl = "https://github.com/doitupsolutions810-crow/great-scale/actions/runs/123456";
   return {
+    sourceRepository: "great-scale",
+    targetRepository: "living-intermediate-control-plane",
     sourceCommitSha: "a".repeat(40),
     targetCommitSha: "b".repeat(40),
     testRepository: "great-scale",
@@ -28,6 +30,7 @@ function repositoryProof(overrides = {}) {
   const testCommitSha = "c".repeat(40);
   const testRunUrl = "https://github.com/doitupsolutions810-crow/great-scale/actions/runs/123456";
   return {
+    subjectRepository: "UnifiedToolStackApplication-utsp-platform",
     commitSha: "a".repeat(40),
     testRepository: "great-scale",
     testCommitSha,
@@ -115,6 +118,18 @@ test("an interface cannot omit either endpoint revision", () => {
   delete proof.targetCommitSha;
   candidate.interfaces[0].verification = proof;
   assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("targetCommitSha must be a full 40-character SHA")));
+});
+
+test("verification proof cannot be replayed onto a different repository edge", () => {
+  const wrongRepository = structuredClone(baseline);
+  wrongRepository.interfaces[0].verificationStatus = "verified";
+  wrongRepository.interfaces[0].verification = edgeProof({ sourceRepository: "CycleKernal" });
+  assert.ok(validateRepositoryMap(wrongRepository).some((message) => message.includes("sourceRepository must equal edge.from")));
+
+  const wrongSubject = structuredClone(baseline);
+  wrongSubject.repositories[0].integrationStatus = "verified";
+  wrongSubject.repositories[0].verification = repositoryProof({ subjectRepository: "CycleKernal" });
+  assert.ok(validateRepositoryMap(wrongSubject).some((message) => message.includes("subjectRepository must equal")));
 });
 
 test("test run and evidence URLs are bound to a registered repository and exact run", () => {
