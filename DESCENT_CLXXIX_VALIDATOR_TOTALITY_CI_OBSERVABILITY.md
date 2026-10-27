@@ -178,3 +178,14 @@ CLXC isolated verification update: after adding the cone-predicate characterizat
 
 
 CLXXXIX mergeability recheck: PR #33 remains at head `021946b2efaf0bf892e97aede069a26b70164e7b`; a fresh metadata read now reports `mergeable: true` after an earlier `false` result. PR #31 remains `mergeable: false`. This flag only reports GitHub's merge-conflict assessment; it does not validate the overlapping trust implementation or make the test-runner failures green.
+
+
+### CLXCI — PR #31/#33 protocol collision and residual provenance gap
+
+A fresh source/patch comparison found an incompatibility inside PR #33 itself: `lib/gate-namespaces.mjs` defines E0–E6 as procurement/evidence-contract checks and G0–G6 as production acceptance, while `lib/evidence-status-document.mjs` describes its emitted entries as E0–E6 and explicitly disclaims production authorization. Yet `lib/evidence-console.mjs` expects the public payload to carry G0–G6 and `runtime: static`. PR #31 instead uses E0–E6, `runtime: read-only-dynamic`, and a shared supply-chain authorization path with Cosign report attestation. Both branches modify the same decision/evidence files. This is a semantic trust-contract collision, not just a Git conflict; merging unchanged or renaming E IDs to G IDs would be unsafe.
+
+The residual parser now guards malformed inputs and `S∈[0,0.25]`, but `GREAT_SCALE_S` remains an environment-supplied value. Numeric validity and domain membership do not prove a live topology derivation or authenticated provenance. Keep that distinction explicit.
+
+Created [CLXCI protocol collision and residual provenance analysis](research/DESCENT_CLXCI_PROTOCOL_COLLISION_AND_RESIDUAL_PROVENANCE.md). In this continuation, an isolated Node.js 22 harness recreated the fetched residual parser and predicate; syntax checks passed and all **8/8** parser/domain/degenerate-predicate tests passed. This is not a clean checkout or full suite. Latest hosted Actions remains failed with no visible steps/logs; the commit's combined status also shows Vercel build-rate-limit failure and Snyk success. Do not treat either as a test pass.
+
+Required next: choose the authoritative deployed producer contract; preserve E0–E6 versus G0–G6 semantics; consolidate PR #31's supply-chain controls with PR #33's strict consumer/parser in one branch; run full tests on exact SHA; verify live endpoint/schema/signature and topology provenance. PRs remain drafts and production remains HOLD.
