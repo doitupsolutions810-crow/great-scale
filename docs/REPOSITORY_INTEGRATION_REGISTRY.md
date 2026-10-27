@@ -25,7 +25,8 @@ The validator checks unique repository names, snapshot-count consistency, owner/
 
 A verified interface must carry a complete, revision-bound execution proof:
 
-- Full 40-character `sourceCommitSha` and `targetCommitSha` identify both endpoint revisions actually exercised by the integration test.
+- `sourceRepository` and `targetRepository` must exactly match the edge's `from` and `to`; their full 40-character `sourceCommitSha` and `targetCommitSha` identify the endpoint revisions exercised by the integration test.
+- A repository-level claim must set `subjectRepository` to the repository name and bind its full 40-character `commitSha`.
 - `testRepository` names a repository in this public registry; `testCommitSha` is the exact test-harness revision.
 - `testRunHeadSha` equals `testCommitSha`; `testRunId` and `testRunAttempt` are positive integers for the observed attempt.
 - `testRunUrl` is the canonical URL for that registered repository and run ID, and `testRunConclusion` must be `success`.
