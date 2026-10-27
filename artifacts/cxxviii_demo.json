@@ -1,0 +1,49 @@
+{
+  "system": "Great Scale CXXVIII",
+  "title": "The Margin-Coverage Frontier",
+  "synthetic": true,
+  "seed": 20261010,
+  "repetitions": 5000,
+  "population_size": 240,
+  "observed_count": 120,
+  "auxiliary_count": 12,
+  "true_mean": 0.04375,
+  "results": [
+    {
+      "margin": 0,
+      "empirical_containment_rate": 0.7376,
+      "mean_interval_width": 0.193525
+    },
+    {
+      "margin": 0.025,
+      "empirical_containment_rate": 0.7602,
+      "mean_interval_width": 0.2026475
+    },
+    {
+      "margin": 0.05,
+      "empirical_containment_rate": 0.9454,
+      "mean_interval_width": 0.21177
+    },
+    {
+      "margin": 0.1,
+      "empirical_containment_rate": 1,
+      "mean_interval_width": 0.230015
+    },
+    {
+      "margin": 0.2,
+      "empirical_containment_rate": 1,
+      "mean_interval_width": 0.266505
+    },
+    {
+      "margin": 0.5,
+      "empirical_containment_rate": 1,
+      "mean_interval_width": 0.375975
+    },
+    {
+      "margin": 1,
+      "empirical_containment_rate": 1,
+      "mean_interval_width": 0.5
+    }
+  ],
+  "caveat": "Synthetic empirical containment is not a universal coverage guarantee."
+}
