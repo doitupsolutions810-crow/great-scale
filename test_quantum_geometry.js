@@ -63,5 +63,141 @@ test('bridge scalar is invariant at extreme common scales and avoids determinant
  assert.ok(huge.metricEigenvalues.every(Number.isFinite)); close(huge.metricEigenvalues[0]/1e200,1); close(huge.metricEigenvalues[1]/1e200,1);
  assert.ok(huge.metricAnisotropy > 0 && Number.isFinite(huge.metricAnisotropy));
 });
+
+test('near-degenerate metrics use compensated determinant and expose conditioning', () => {
+ for (const epsilon of [1e-8, 1e-12, 1e-16]) {
+  const r=quantumGeometryBridge({g11:1,g12:1-epsilon,g22:1,curvature:0});
+  const expectedDet=(1-(1-epsilon))*(1+(1-epsilon));
+  close(r.detG,expectedDet,Math.max(1e-30,Math.abs(expectedDet)*1e-12));
+  close(r.metricEigenvalues[0],r.detG/r.metricEigenvalues[1],Math.max(1e-30,Math.abs(expectedDet)*1e-12));
+  assert.ok(r.metricConditionNumber >= 1);
+  assert.ok(['well-conditioned','ill-conditioned','numerically-unresolved'].includes(r.metricConditionStatus));
+ }
+ const ill=quantumGeometryBridge({g11:1,g12:1-1e-8,g22:1,curvature:0});
+ const unresolved=quantumGeometryBridge({g11:1,g12:1-1e-16,g22:1,curvature:0});
+ assert.strictEqual(ill.metricConditionStatus,'ill-conditioned');
+ assert.strictEqual(unresolved.metricConditionStatus,'numerically-unresolved');
+});
+test('metric conditioning diagnostics are invariant under common positive scaling', () => {
+ const a=quantumGeometryBridge({g11:1,g12:1-1e-8,g22:1,curvature:0});
+ const b=quantumGeometryBridge({g11:1e100,g12:(1-1e-8)*1e100,g22:1e100,curvature:0});
+ close(a.metricConditionNumber,b.metricConditionNumber,Math.abs(a.metricConditionNumber)*1e-8);
+ assert.strictEqual(a.metricConditionStatus,b.metricConditionStatus);
+});
+
+test('raw determinant outputs explicitly classify overflow and underflow', () => {
+ const tiny=quantumGeometryBridge({g11:1e-200,g12:0,g22:1e-200,curvature:0});
+ assert.strictEqual(tiny.detG,null);
+ assert.strictEqual(tiny.detQ,null);
+ assert.strictEqual(tiny.detGStatus,'underflow');
+ assert.strictEqual(tiny.detQStatus,'underflow');
+ assert.ok(tiny.metricEigenvalues.every(Number.isFinite));
+ const huge=quantumGeometryBridge({g11:1e308,g12:0,g22:1e308,curvature:0});
+ assert.strictEqual(huge.detG,null);
+ assert.strictEqual(huge.detQ,null);
+ assert.strictEqual(huge.detGStatus,'overflow');
+ assert.strictEqual(huge.detQStatus,'overflow');
+ assert.ok(huge.metricEigenvalues.every(Number.isFinite));
+ const largest=quantumGeometryBridge({g11:Number.MAX_VALUE,g12:0,g22:Number.MAX_VALUE,curvature:0});
+ assert.strictEqual(largest.detG,null);
+ assert.strictEqual(largest.detGStatus,'overflow');
+ assert.ok(largest.metricEigenvalues.every(Number.isFinite));
+ close(largest.metricEigenvalues[0]/Number.MAX_VALUE,1,1e-15);
+ const minimum=quantumGeometryBridge({g11:Number.MIN_VALUE,g12:0,g22:Number.MIN_VALUE,curvature:0});
+ assert.strictEqual(minimum.detG,null);
+ assert.strictEqual(minimum.detGStatus,'underflow');
+ assert.ok(minimum.metricEigenvalues.every(Number.isFinite));
+ assert.strictEqual(quantumGeometryBridge({g11:1,g12:0,g22:1,curvature:0}).detGStatus,'finite');
+});
+
+test('subnormal positive eigenvalue is preserved and marked unresolved', () => {
+ const r=quantumGeometryBridge({g11:Number.MIN_VALUE,g12:0,g22:1,curvature:0});
+ assert.strictEqual(r.detG,Number.MIN_VALUE);
+ assert.strictEqual(r.detGStatus,'finite');
+ assert.strictEqual(r.metricEigenvalues[0],Number.MIN_VALUE);
+ assert.strictEqual(r.metricConditionStatus,'numerically-unresolved');
+ assert.ok(!Number.isNaN(r.metricConditionNumber));
+});
+
+test('near-degenerate determinant agrees with analytic binary64-input identity', () => {
+ for (const epsilon of [2**-20,2**-26,2**-40,2**-52,2**-53]) {
+  const b=1-epsilon;
+  const r=quantumGeometryBridge({g11:1,g12:b,g22:1,curvature:0});
+  const expected=(1-b)*(1+b);
+  assert.ok(expected>0, 'reference determinant must remain positive');
+  assert.ok(Math.abs(r.detG-expected) <= Math.max(Number.MIN_VALUE,Math.abs(expected)*1e-12),
+    'determinant mismatch at epsilon='+epsilon+': '+r.detG+' vs '+expected);
+  assert.ok(Math.abs(r.metricEigenvalues[0] - expected/r.metricEigenvalues[1]) <= Math.max(Number.MIN_VALUE,Math.abs(expected)*1e-12),
+    'small eigenvalue mismatch at epsilon='+epsilon);
+  assert.strictEqual(r.detGStatus,'finite');
+ }
+});
+
+test('rejects non-finite values in every numeric input field', () => {
+ const base={g11:1,g12:0,g22:1,curvature:0};
+ for (const field of Object.keys(base)) {
+  for (const value of [Number.NaN,Number.POSITIVE_INFINITY,Number.NEGATIVE_INFINITY]) {
+   assert.throws(()=>quantumGeometryBridge({...base,[field]:value}),/must be finite numbers/);
+  }
+ }
+});
+
+test('deterministic randomized common-scale metamorphic campaign', () => {
+ let state=0x6d2b79f5;
+ function next() {
+  state=(Math.imul(state ^ (state >>> 15),1 | state)+0x9e3779b9)|0;
+  const t=Math.imul(state ^ (state >>> 7),61 | state);
+  return ((t ^ (t >>> 14)) >>> 0)/4294967296;
+ }
+ for(let i=0;i<1000;i++) {
+  const x=2*next()-1,y=2*next()-1,eps=1e-4+next()*1e-2;
+  const a=x*x+eps,b=x*y,d=y*y+eps;
+  const detBase=a*d-b*b,chi=next()*0.999,curvature=2*chi*Math.sqrt(detBase);
+  const scale=10**(-100+next()*200);
+  const base=quantumGeometryBridge({g11:a,g12:b,g22:d,curvature});
+  const scaled=quantumGeometryBridge({g11:scale*a,g12:scale*b,g22:scale*d,curvature:scale*curvature});
+  close(scaled.curvatureFraction,base.curvatureFraction,2e-8);
+  close(scaled.SQuantum,base.SQuantum,2e-8);
+  close(scaled.metricAnisotropy,base.metricAnisotropy,2e-7);
+  assert.strictEqual(scaled.metricConditionStatus,base.metricConditionStatus);
+  assert.strictEqual(scaled.detGStatus,'finite');
+  assert.strictEqual(scaled.detQStatus,'finite');
+  assert.ok(scaled.metricEigenvalues.every(Number.isFinite));
+ }
+});
+
+function exactBinary64(value) {
+ const view=new DataView(new ArrayBuffer(8));
+ view.setFloat64(0,value,false);
+ const bits=view.getBigUint64(0,false);
+ const exponentBits=Number((bits >> 52n) & 0x7ffn);
+ const fraction=bits & ((1n << 52n)-1n);
+ if(exponentBits===0) return {significand:fraction,exponent:-1074};
+ return {significand:(1n << 52n)|fraction,exponent:exponentBits-1023-52};
+}
+function exactDeterminantReference(a,b,d) {
+ const pa=exactBinary64(a),pb=exactBinary64(b),pd=exactBinary64(d);
+ const ea=pa.exponent+pd.exponent, eb=2*pb.exponent, e=Math.min(ea,eb);
+ const left=(pa.significand*pd.significand) << BigInt(ea-e);
+ const right=(pb.significand*pb.significand) << BigInt(eb-e);
+ const numerator=left-right;
+ return Number(numerator)*Math.pow(2,e);
+}
+
+test('compensated determinant agrees with an exact-BigInt binary64-input reference', () => {
+ for(const epsilon of [2**-20,2**-26,2**-40,2**-52,2**-53]) {
+  const b=1-epsilon;
+  const expected=exactDeterminantReference(1,b,1);
+  const actual=quantumGeometryBridge({g11:1,g12:b,g22:1,curvature:0}).detG;
+  assert.ok(expected>0 && Number.isFinite(expected));
+  assert.ok(Math.abs(actual-expected)<=Math.max(Number.MIN_VALUE,Math.abs(expected)*2*Number.EPSILON),
+   'exact-reference determinant mismatch at '+epsilon+': '+actual+' vs '+expected);
+ }
+ const input={g11:3.125,g12:2.5,g22:2.000000000000001};
+ const expected=exactDeterminantReference(input.g11,input.g12,input.g22);
+ const actual=quantumGeometryBridge({...input,curvature:0}).detG;
+ assert.ok(Math.abs(actual-expected)<=Math.max(Number.MIN_VALUE,Math.abs(expected)*2*Number.EPSILON));
+});
+
 console.log('\nquantum geometry bridge tests: '+passed+' passed, '+failed+' failed');
 process.exit(failed?1:0);
