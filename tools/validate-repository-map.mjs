@@ -16,6 +16,7 @@ export function validateRepositoryMap(map) {
   }
   if (map.schemaVersion !== 1) add("schemaVersion must equal 1");
   if (map.scope !== "public-only") add("public registry scope must be public-only");
+  if (!map.operationEvidenceContract || map.operationEvidenceContract.version !== "v1" || map.operationEvidenceContract.path !== "docs/OPERATION_EVIDENCE_CONTRACT_V1.md" || map.operationEvidenceContract.status !== "proposed") add("operationEvidenceContract must bind the proposed v1 contract document");
   if (typeof map.owner !== "string" || !map.owner.trim()) add("owner must be a non-empty string");
   if (typeof map.inventoryAsOf !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(map.inventoryAsOf)) add("inventoryAsOf must be YYYY-MM-DD");
   if (!Number.isInteger(map.expectedRepositoryCount) || map.expectedRepositoryCount < 1) add("expectedRepositoryCount must be a positive integer");
