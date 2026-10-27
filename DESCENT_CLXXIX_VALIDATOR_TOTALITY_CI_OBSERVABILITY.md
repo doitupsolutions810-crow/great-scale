@@ -160,3 +160,6 @@ CLXXXIX refinement: residual parsing and cone classification are now centralized
 
 
 CLXXXIX exact-head CI follow-up: Control Plane PR #33 head `25be705adf58276c32794a508d6b386179071f41` produced Evidence Contract Tests run `40442710744` and Plane CI run `40442710850`; both failed with no visible steps or job logs. This still does not show test failure or success. The isolated six-case parser regression passed locally, while clean-checkout/full-suite and hosted execution remain unverified.
+
+
+CLXXXIX Great Scale integration: added `test_great_scale_clxxxix_finite_residual_boundary.py` to the `npm run all` manifest. Its isolated Python run passed and asserts malformed/non-finite inputs map to `HOLD_INVALID_RESIDUAL` and finite cone violations map to `HOLD_RESIDUAL_CONE`. This is policy-model verification; exact Control Plane JavaScript CI remains blocked before steps are exposed.
