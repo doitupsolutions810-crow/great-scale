@@ -1,0 +1,104 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const schema = JSON.parse(readFileSync(
+  new URL("./contracts/g6-residual-measurement/v1.schema.json", import.meta.url),
+  "utf8",
+));
+
+test("G6 measurement schema is versioned, closed, and explicitly non-authorizing by itself", () => {
+  assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
+  assert.equal(schema.title, "Great Scale G6 Residual Measurement v1");
+  assert.equal(schema.properties.schema.const, "great-scale.g6-residual-measurement/v1");
+  assert.equal(schema.properties.issuer.const, "great-scale-g6-residual-measurer");
+  assert.equal(schema.properties.environment.const, "production");
+  assert.equal(schema.additionalProperties, false);
+  assert.match(schema.description, /does not prove signature authenticity/i);
+  assert.match(schema.description, /production authorization/i);
+  assert.deepEqual([...schema.required].sort(), Object.keys(schema.properties).sort());
+});
+
+test("source revision and workflow evidence have strict identities and formats", () => {
+  const source = schema.properties.source;
+  assert.equal(source.additionalProperties, false);
+  assert.deepEqual([...source.required].sort(), ["commitSha", "repository"]);
+  assert.equal(source.properties.repository.const, "doitupsolutions810-crow/great-scale");
+  assert.equal(source.properties.commitSha.pattern, "^[a-f0-9]{40}$");
+
+  const execution = schema.properties.execution;
+  assert.equal(execution.additionalProperties, false);
+  assert.deepEqual([...execution.required].sort(), [
+    "runId", "runAttempt", "runUrl", "headSha", "conclusion", "startedAt", "completedAt"
+  ].sort());
+  assert.equal(execution.properties.runId.minimum, 1);
+  assert.equal(execution.properties.runAttempt.minimum, 1);
+  assert.equal(execution.properties.conclusion.const, "success");
+  assert.equal(execution.properties.headSha.pattern, "^[a-f0-9]{40}$");
+  assert.match(execution.properties.runUrl.pattern, /actions\/runs/);
+  assert.equal(execution.properties.startedAt.format, "date-time");
+  assert.equal(execution.properties.completedAt.format, "date-time");
+});
+
+test("artifact and model provenance are versioned and bounded", () => {
+  const artifact = schema.properties.artifact;
+  assert.equal(artifact.additionalProperties, false);
+  assert.deepEqual([...artifact.required].sort(), ["name", "digest"]);
+  assert.equal(artifact.properties.digest.pattern, "^sha256:[a-f0-9]{64}$");
+
+  const model = schema.properties.model;
+  assert.equal(model.additionalProperties, false);
+  assert.equal(model.properties.id.const, "qi-wu-zhang-two-band");
+  assert.equal(model.properties.inputDigest.pattern, "^[a-f0-9]{64}$");
+  const parameters = model.properties.parameters;
+  assert.equal(parameters.additionalProperties, false);
+  assert.deepEqual([...parameters.required].sort(), ["m", "gridSize", "maxRefinements"].sort());
+  assert.equal(parameters.properties.gridSize.minimum, 4);
+  assert.equal(parameters.properties.gridSize.maximum, 4096);
+  assert.equal(parameters.properties.maxRefinements.minimum, 1);
+  assert.equal(parameters.properties.maxRefinements.maximum, 5);
+});
+
+test("measurement contains explicit QGT, convergence, topology, and error-bound diagnostics", () => {
+  const measurement = schema.properties.measurement;
+  assert.equal(measurement.additionalProperties, false);
+  assert.deepEqual([...measurement.required].sort(), Object.keys(measurement.properties).sort());
+
+  const properties = measurement.properties;
+  assert.equal(properties.STopological.minimum, 0);
+  assert.equal(properties.STopological.maximum, 0.25);
+  assert.equal(properties.topologicalSaturation.minimum, 0);
+  assert.equal(properties.topologicalSaturation.maximum, 1);
+  assert.equal(properties.signedTopologicalPolarization.minimum, -1);
+  assert.equal(properties.signedTopologicalPolarization.maximum, 1);
+  assert.equal(properties.quadratureConverged.const, true);
+  assert.equal(properties.topologicalMappingValid.const, true);
+  assert.equal(properties.rigorousBoundFinite.const, true);
+  assert.ok(properties.rigorousCurvatureErrorBound.minimum >= 0);
+  assert.ok(properties.rigorousMetricAreaErrorBound.minimum >= 0);
+  assert.ok(properties.gridAlignmentCurvatureDiscrepancy.minimum >= 0);
+  assert.ok(properties.gridAlignmentAreaDiscrepancy.minimum >= 0);
+  assert.ok(properties.quadratureTolerance.exclusiveMinimum > 0);
+  assert.match(measurement.description, /STopological/);
+  assert.match(measurement.description, /residual\.S/);
+});
+
+test("measurement timestamp, canonicalization, digest, and Ed25519 signature are explicit", () => {
+  assert.ok(schema.required.includes("measuredAt"));
+  assert.equal(schema.properties.measuredAt.format, "date-time");
+  assert.match(schema.properties.measuredAt.description, /residual\.measuredAt/);
+  assert.equal(schema.properties.canonicalization.const, "great-scale.canonical-json/v1");
+  assert.match(schema.properties.canonicalization.description, /sorted object keys/i);
+  assert.equal(schema.properties.signatureAlgorithm.const, "Ed25519");
+  assert.match(schema.properties.signatureAlgorithm.description, /deployment-pinned public key/i);
+  assert.equal(schema.properties.digest.pattern, "^[a-f0-9]{64}$");
+  assert.match(schema.properties.digest.description, /SHA-256/);
+  assert.equal(schema.properties.signature.pattern, "^[A-Za-z0-9+/]{86}==$");
+  assert.match(schema.properties.signature.description, /Ed25519 signature/i);
+});
+
+test("the schema declares the downstream mapping but does not pretend to verify cross-field truth", () => {
+  assert.match(schema.properties.measurement.description, /must be mapped to residual\.S/);
+  assert.match(schema.description, /cross-field binding/i);
+  assert.match(schema.description, /live observation/i);
+});
