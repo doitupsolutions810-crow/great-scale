@@ -163,3 +163,6 @@ CLXXXIX exact-head CI follow-up: Control Plane PR #33 head `25be705adf58276c3279
 
 
 CLXXXIX Great Scale integration: added `test_great_scale_clxxxix_finite_residual_boundary.py` to the `npm run all` manifest. Its isolated Python run passed and asserts malformed/non-finite inputs map to `HOLD_INVALID_RESIDUAL` and finite cone violations map to `HOLD_RESIDUAL_CONE`. This is policy-model verification; exact Control Plane JavaScript CI remains blocked before steps are exposed.
+
+
+CLXXXIX-B domain extension: the topology mapping `S=(1-tau^2)/4), with `tau` clamped to `[0,1]`, yields `S∈[0,0.25]`. A finite-only check was insufficient because the cone predicate accepts any nonnegative `S`; large finite out-of-domain values could pass. The parser now enforces decimal notation, rejects overflow/underflow, and holds values outside `[0,0.25]` as `HOLD_RESIDUAL_DOMAIN`. Isolated Node.js harness: **7/7 tests passed**. This is not full-repository verification; hosted Actions remains zero-step/unverified. See [CLXXXIX finding and domain extension](research/DESCENT_CLXXXIX_NONFINITE_RESIDUAL_FAIL_CLOSED.md). Production remains HOLD.
