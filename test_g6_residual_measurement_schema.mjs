@@ -50,6 +50,9 @@ test("artifact and model provenance are versioned and bounded", () => {
   assert.equal(model.additionalProperties, false);
   assert.equal(model.properties.id.const, "qi-wu-zhang-two-band");
   assert.equal(model.properties.inputDigest.pattern, "^[a-f0-9]{64}$");
+  assert.ok(model.required.includes("modelG6CertificationEligible"));
+  assert.equal(model.properties.modelG6CertificationEligible.const, false);
+  assert.match(model.description, /never eligible to certify its own G6 result/i);
   const parameters = model.properties.parameters;
   assert.equal(parameters.additionalProperties, false);
   assert.deepEqual([...parameters.required].sort(), ["m", "gridSize", "maxRefinements"].sort());
