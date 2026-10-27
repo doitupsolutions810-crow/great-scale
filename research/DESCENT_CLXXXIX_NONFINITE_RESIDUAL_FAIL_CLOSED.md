@@ -44,7 +44,7 @@ This prevents invalid residual input from yielding a procurement-ready result th
 
 ## Verification status
 
-- Source updates are committed on PR #33's branch; latest inspected head is `654d38437fe06591f30b5fcc881fac699fa11588`.
+- Source updates are committed on PR #33's branch; latest inspected head is `021946b2efaf0bf892e97aede069a26b70164e7b`; GitHub currently reports `mergeable: false`, so integration needs conflict review.
 - The focused workflow is configured to syntax-check and run the new regression.
 - An isolated Node.js 22 runtime run of the parser module and its regression cases passed **7/7 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
 - The hosted Actions runner previously failed before exposing any steps. Therefore the newly committed JavaScript test has not yet been proven to execute in hosted CI.
