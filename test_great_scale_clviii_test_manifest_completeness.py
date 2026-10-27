@@ -46,10 +46,16 @@ def tests_not_invoked_by_direct_runner(path: Path):
         return set()
 
     def referenced_tests(node):
-        return {
-            child.id for child in ast.walk(node)
-            if isinstance(child, ast.Name) and child.id in synchronous_defined
-        }
+        # Accept only bare test-function references in literal registries. Do not
+        # treat a test name captured by lambda/comp/call expressions as dispatch.
+        if isinstance(node, ast.Name):
+            return {node.id} if node.id in synchronous_defined else set()
+        if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+            result = set()
+            for item in node.elts:
+                result.update(referenced_tests(item))
+            return result
+        return set()
 
     def literal_truth(node):
         """Return (known, truth) for a deliberately small side-effect-free subset."""
@@ -431,6 +437,20 @@ def test_audit_rejects_call_in_uninvoked_lambda():
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
 
 
+def test_audit_rejects_lambda_wrapped_test_in_registry():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_lambda_registry.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    tests = [lambda: test_regression()]\n"
+            "    for test in tests:\n"
+            "        test()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 def test_audit_rejects_call_under_unsupported_try_branch():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_try_branch.py"
@@ -506,6 +526,7 @@ if __name__ == "__main__":
         test_audit_rejects_negated_true_condition,
         test_audit_rejects_direct_call_under_empty_loop,
         test_audit_rejects_call_in_uninvoked_lambda,
+        test_audit_rejects_lambda_wrapped_test_in_registry,
         test_audit_rejects_call_under_unsupported_try_branch,
     ]
     for test in tests:
