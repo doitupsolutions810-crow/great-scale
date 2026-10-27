@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Great Scale G6 Residual Measurement v1",
-  "description": "A source/build-bound numerical measurement receipt for G6. Great Scale producer/model build identity and target Control Plane build/artifact identity are separate fields and must not be conflated. Schema validity alone does not prove signature authenticity, cross-field binding, execution, live observation, or production authorization.",
+  "description": "A source/build-bound numerical measurement receipt for G6. Schema validity does not prove signature authenticity, cross-field binding, execution, live observation, numerical-certificate validity, or production authorization.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -24,7 +24,8 @@
     "measurementBuildId",
     "targetBuildId",
     "target",
-    "targetArtifact"
+    "targetArtifact",
+    "numericalCertification"
   ],
   "properties": {
     "schema": {
@@ -212,16 +213,17 @@
         "curvatureChernResidual",
         "curvatureCancellationIdentityResidual",
         "curvatureOrientationVarianceResidual",
-        "rigorousCurvatureErrorBound",
-        "rigorousMetricAreaErrorBound",
-        "rigorousBoundFinite",
         "gridAlignmentCurvatureDiscrepancy",
         "gridAlignmentAreaDiscrepancy",
         "quadratureTolerance",
         "quadratureConverged",
         "topologicalMappingValid",
         "refinementCount",
-        "refinedGridSize"
+        "refinedGridSize",
+        "curvatureErrorEstimateWithSafetyFactor",
+        "metricAreaErrorEstimateWithSafetyFactor",
+        "errorEstimatesFinite",
+        "errorBoundMethod"
       ],
       "properties": {
         "chernNumber": {
@@ -306,17 +308,6 @@
           "type": "number",
           "minimum": 0
         },
-        "rigorousCurvatureErrorBound": {
-          "type": "number",
-          "minimum": 0
-        },
-        "rigorousMetricAreaErrorBound": {
-          "type": "number",
-          "minimum": 0
-        },
-        "rigorousBoundFinite": {
-          "const": true
-        },
         "gridAlignmentCurvatureDiscrepancy": {
           "type": "number",
           "minimum": 0
@@ -344,9 +335,27 @@
           "type": "integer",
           "minimum": 8,
           "maximum": 131072
+        },
+        "curvatureErrorEstimateWithSafetyFactor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Twice the Richardson D/3 estimate; empirical only and not a certified upper bound."
+        },
+        "metricAreaErrorEstimateWithSafetyFactor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Twice the Richardson D/3 estimate; empirical only and not a certified upper bound."
+        },
+        "errorEstimatesFinite": {
+          "const": true,
+          "description": "The empirical Richardson estimates are finite; this does not certify their error-bound status."
+        },
+        "errorBoundMethod": {
+          "const": "richardson-asymptotic-estimate-only",
+          "description": "Explicitly labels the model-side Richardson estimate as empirical rather than rigorous."
         }
       },
-      "description": "Numerical/model diagnostics. STopological is the canonical topology-derived residual coordinate and maps to downstream residual.S. The verifier must reject disagreement between that value and the final residual scalar."
+      "description": "QWZ model diagnostics, including empirical Richardson error estimates. The estimate fields do not establish a rigorous quadrature bound; a separate trusted numericalCertification object is required for G6 promotion."
     },
     "digest": {
       "type": "string",
@@ -423,6 +432,63 @@
         }
       },
       "description": "Target release artifact. This digest is separate from artifact.digest, which identifies the Great Scale model/measurement artifact."
+    },
+    "numericalCertification": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "An independent certificate record for rigorous quadrature error bounds. The trusted producer must fetch/verify this evidence under its deployment-pinned policy; the verified boolean and schema shape alone are not proof.",
+      "required": [
+        "method",
+        "verifierId",
+        "sourceCommitSha",
+        "modelInputDigest",
+        "curvatureErrorUpperBound",
+        "metricAreaErrorUpperBound",
+        "evidenceUrl",
+        "proofDigest",
+        "verified"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "interval-enclosure-v1",
+            "analytic-derivative-bound-v1"
+          ]
+        },
+        "verifierId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sourceCommitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "modelInputDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "curvatureErrorUpperBound": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metricAreaErrorUpperBound": {
+          "type": "number",
+          "minimum": 0
+        },
+        "evidenceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "proofDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "verified": {
+          "const": true
+        }
+      }
     }
   }
 }
