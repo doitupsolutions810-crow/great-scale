@@ -176,7 +176,7 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
   assert.match(edge.contract, /not a live production measurement endpoint/);
   for (const requirement of [
     "live-measurement-source-identity",
-    "same-build-and-immutable-artifact-digest",
+    "target-build-and-target-artifact-digest-binding",
     "source-issued-measured-at-freshness",
     "finite-residual-value-and-cone-policy",
     "topology-derived-residual-domain-0-to-0.25",
@@ -187,16 +187,17 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
     "versioned-g6-residual-measurement-schema-v1",
     "measurement-st-topological-maps-to-consumer-residual-S",
     "measurement-timestamp-maps-to-consumer-residual-measured-at",
-    "issuer-and-build-id-map-to-residual-provenance",
+    "issuer-and-target-build-id-map-to-residual-provenance",
     "source-commit-equals-successful-run-head-sha",
     "canonical-json-sha256-and-ed25519-signature-verified",
     "model-parameter-and-input-digest-reproduced",
     "numerical-convergence-and-rigorous-error-bounds-validated",
     "topological-mapping-valid-true",
-    "artifact-role-and-digest-binding-independently-verified",
-    "shared-composite-release-build-id-or-explicit-versioned-source-target-build-binding",
-    "g6-measurement-build-id-equals-final-g0-g6-build-id",
-    "great-scale-model-artifact-digest-distinct-from-control-plane-artifact-digest",
+    "measurement-artifact-distinct-from-target-artifact",
+    "measurement-build-id-distinct-from-target-build-id",
+    "target-build-id-matches-g0-g6-attestation-build-id",
+    "target-artifact-digest-matches-g0-g6-attestation-artifact-digest",
+    "target-commit-matches-g0-g6-attestation-source-commit",
     "both-source-model-commit-and-consumer-release-commit-pinned",
   ]) {
     assert.ok(edge.requiredEvidence.includes(requirement), `missing G6 promotion evidence: ${requirement}`);
@@ -209,16 +210,19 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.deepEqual(contract, {
     repository: "great-scale",
     path: "contracts/g6-residual-measurement/v1.schema.json",
-    schemaBlobSha: "5322c32362ff42b5e251672d0b5ac9c61ae106a5",
+    schemaBlobSha: "002c4abb141833e1361fa96d36474dece1a77ad1",
     version: "v1",
     status: "schema-only-not-producer",
     mapping: {
       measurementSTopologicalToResidualS: "measurement.STopological -> residual.S",
       measuredAtToResidualMeasuredAt: "measuredAt -> residual.measuredAt",
       issuerToResidualSourceId: "issuer -> residual.sourceId",
-      buildIdToResidualBuildId: "buildId must equal residual.buildId and the G0-G6 attestation buildId; it must be a shared composite release ID binding the Great Scale model run/artifact and Control Plane target build. If independent per-repository build IDs are used, v1 is insufficient and requires a versioned sourceBuildId/acceptanceBuildId contract.",
+      measurementBuildIdDistinctFromTargetBuildId: "measurementBuildId identifies the Great Scale measurement build; targetBuildId identifies the Control Plane acceptance build. These are independent identities and must not be assumed equal.",
+      targetBuildIdToResidualBuildId: "targetBuildId must equal final G0-G6 attestation.buildId and becomes residual.buildId.",
+      targetSourceRevisionToAttestationSource: "target.repository/commitSha must equal final G0-G6 attestation.source.repository/commitSha.",
+      targetArtifactDigestToAcceptanceArtifact: "targetArtifact.digest must equal final G0-G6 attestation.artifact.digest.",
       sourceCommitEqualsWorkflowHead: "source.commitSha must equal execution.headSha",
-      artifactBinding: "artifact.digest identifies the Great Scale model artifact and model.inputDigest binds its inputs; verify both independently and never substitute either for the Control Plane acceptance artifact digest.",
+      measurementArtifactBinding: "artifact.digest identifies the Great Scale model/measurement artifact and model.inputDigest binds its inputs; verify independently and never substitute it for targetArtifact.digest.",
       trustBoundary: "verify Ed25519 against an independently configured public key; receipt cannot choose its trust anchor",
     },
   });
@@ -233,9 +237,14 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.equal(schema.properties.measurement.properties.STopological.maximum, 0.25);
   assert.equal(schema.properties.measuredAt.format, "date-time");
   assert.equal(schema.properties.signatureAlgorithm.const, "Ed25519");
-  assert.match(schema.properties.buildId.description, /shared composite release identifier/i);
-  assert.match(schema.properties.buildId.description, /sourceBuildId and acceptanceBuildId/);
-  assert.match(schema.properties.artifact.properties.digest.description, /distinct from the Control Plane production acceptance artifact digest/i);
+  assert.ok(schema.required.includes("measurementBuildId"));
+  assert.ok(schema.required.includes("targetBuildId"));
+  assert.ok(!schema.required.includes("buildId"));
+  assert.equal(schema.properties.target.properties.repository.const, "doitupsolutions810-crow/living-intermediate-control-plane");
+  assert.equal(schema.properties.targetArtifact.properties.digest.pattern, "^sha256:[a-f0-9]{64}$");
+  assert.match(schema.properties.measurementBuildId.description, /must not be assumed equal/i);
+  assert.match(schema.properties.targetBuildId.description, /must equal the final G0-G6 production acceptance attestation buildId/i);
+  assert.match(schema.properties.artifact.properties.digest.description, /distinct from targetArtifact.digest/i);
 });
 
 test("G6 measurement schema contract cannot silently change or claim to be a producer", () => {
@@ -252,6 +261,6 @@ test("G6 measurement schema contract cannot silently change or claim to be a pro
   assert.ok(validateRepositoryMap(changedMapping).some(message => message.includes("g6ResidualMeasurementContract")));
 
   const ambiguousBuildId = structuredClone(baseline);
-  ambiguousBuildId.g6ResidualMeasurementContract.mapping.buildIdToResidualBuildId = "buildId -> residual.buildId";
+  ambiguousBuildId.g6ResidualMeasurementContract.mapping.targetBuildIdToResidualBuildId = "targetBuildId -> residual.buildId without target artifact binding";
   assert.ok(validateRepositoryMap(ambiguousBuildId).some(message => message.includes("g6ResidualMeasurementContract")));
 });
