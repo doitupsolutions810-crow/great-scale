@@ -43,7 +43,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^[A-Za-z0-9._:-]+$"
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Shared composite release identifier binding this Great Scale model receipt to the downstream Control Plane production acceptance build. It must equal the final G0-G6 attestation buildId. If independently generated source/target build IDs cannot share this value, v1 is insufficient; introduce versioned sourceBuildId and acceptanceBuildId fields instead."
     },
     "generatedAt": {
       "type": "string",
@@ -66,7 +67,8 @@
         },
         "commitSha": {
           "type": "string",
-          "pattern": "^[a-f0-9]{40}$"
+          "pattern": "^[a-f0-9]{40}$",
+          "description": "Exact Great Scale model source revision exercised by the named workflow run; must equal execution.headSha and is distinct from the Control Plane target source revision."
         }
       }
     },
@@ -128,7 +130,8 @@
         },
         "digest": {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "SHA-256 digest of the immutable Great Scale model artifact used to compute this measurement. It is distinct from the Control Plane production acceptance artifact digest."
         }
       }
     },
