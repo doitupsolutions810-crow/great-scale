@@ -257,3 +257,30 @@ Exact-head CI runs for earlier heads failed the main verification job and skippe
 ### Post-mitigation CI recheck (2026-10-27)
 
 Control Plane PR #34 exact head is now `72c7826446223c861bffc39af5afc68cd4f137c7`. The source files were re-fetched and confirm the contract/acceptance split and contract-only regression assertions are present. CI run `40444546090` completed with the main verification job failed and downstream container checks skipped. The job log again returns `BlobNotFound`; no failing step can be identified from the available evidence. Thus this is not a verified passing change. The source producer still does not expose a separately verified production-acceptance evidence artifact in the reviewed status/schema contract, and the consumer probe does not emit `procurementEvidenceVerified`. Procurement therefore remains intentionally held.
+
+## Descent CXCIII — close the fallback bypass and reject caller-asserted proof
+
+A further authorization review found that the prior CXCII mitigation still had two weaknesses: the local availability fallback branch could authorize procurement without production-acceptance evidence, and the placeholder `procurementEvidenceVerified: true` property could be supplied by a caller without a dedicated artifact verifier. A boolean assertion is not cryptographic evidence.
+
+### Mitigation staged on Control Plane PR #34
+
+- Commit `a73d0e27` first made local fallback depend on the separate acceptance-evidence predicate.
+- Commit `1470497b` added regression tests against local fallback bypass.
+- Deeper review showed the boolean itself was not an adequate proof boundary. Commit `d7eaf358` therefore places the procurement evidence predicate in an explicit fail-closed release-hold state until an authoritative production-acceptance verifier is implemented and wired. Neither public contract verification nor local fallback can pass this predicate today.
+- Commit `131884fa` changes regression assertions so a caller-supplied `procurementEvidenceVerified: true` is explicitly rejected on both public and local paths.
+
+This is a deliberate safety interlock, not completion of the acceptance evidence integration. It prevents premature procurement authorization but also means no procurement evidence path can become READY until the missing verifier and artifact are actually implemented.
+
+### Current verification status
+
+Exact Control Plane PR head: `131884fa523e10604d6ff78186c937dddd06463a`. Source re-fetch confirms the hard fail-closed predicate and both forged-boolean regression assertions exist. CI run `40444907092` failed; an attempt to rerun failed jobs reported success from the API, but the subsequent status still showed the run completed with failure. The failure log remains unavailable through the log endpoint (`BlobNotFound`), so the cause is unknown. No test suite pass, live endpoint verification, merge, deployment, or procurement activation is claimed.
+
+### Success criteria to exit HOLD
+
+1. Define the authoritative production-acceptance artifact and its provenance/identity contract.
+2. Implement a verifier that cryptographically verifies that artifact against independently pinned trust material and validates freshness, environment, required gate set, and digest/signature binding.
+3. Make the procurement gate consume a verifier-produced result from that implementation, not caller-supplied Boolean metadata.
+4. Add positive and negative integration tests for valid, missing, forged, stale, tampered, wrong-key, wrong-environment, and incomplete-gate evidence on both public and fallback paths.
+5. Obtain a successful exact-head CI run and inspect actionable logs; then perform authorized live verification before any merge/deployment decision.
+
+**Release remains HOLD / NO-GO.** The system is safer because the shortcut is closed, but the final evidence connection is still not implemented.
