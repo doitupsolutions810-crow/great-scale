@@ -1,4 +1,5 @@
 import test from "node:test";
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { validateRepositoryMap } from "./tools/validate-repository-map.mjs";
@@ -186,4 +187,50 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
   ]) {
     assert.ok(edge.requiredEvidence.includes(requirement), `missing G6 promotion evidence: ${requirement}`);
   }
+});
+
+
+test("registry pins the schema-only G6 measurement receipt and exact consumer mapping", () => {
+  const contract = baseline.g6ResidualMeasurementContract;
+  assert.deepEqual(contract, {
+    repository: "great-scale",
+    path: "contracts/g6-residual-measurement/v1.schema.json",
+    schemaBlobSha: "a0956c825e9a8974f5855054d2c80eb4433391f9",
+    version: "v1",
+    status: "schema-only-not-producer",
+    mapping: {
+      measurementSTopologicalToResidualS: "measurement.STopological -> residual.S",
+      measuredAtToResidualMeasuredAt: "measuredAt -> residual.measuredAt",
+      issuerToResidualSourceId: "issuer -> residual.sourceId",
+      buildIdToResidualBuildId: "buildId -> residual.buildId",
+      sourceCommitEqualsWorkflowHead: "source.commitSha must equal execution.headSha",
+      artifactBinding: "artifact.digest and model.inputDigest must be verified against the intended source/build/artifact scope",
+      trustBoundary: "verify Ed25519 against an independently configured public key; receipt cannot choose its trust anchor",
+    },
+  });
+
+  const rawSchema = readFileSync(new URL("./contracts/g6-residual-measurement/v1.schema.json", import.meta.url), "utf8");
+  const gitBlobHeader = Buffer.from(`blob ${Buffer.byteLength(rawSchema, "utf8")}\0`, "utf8");
+  const actualBlobSha = createHash("sha1").update(gitBlobHeader).update(rawSchema, "utf8").digest("hex");
+  assert.equal(actualBlobSha, contract.schemaBlobSha, "registry pins the exact schema blob, not just a path");
+
+  const schema = JSON.parse(rawSchema);
+  assert.equal(schema.properties.measurement.properties.STopological.minimum, 0);
+  assert.equal(schema.properties.measurement.properties.STopological.maximum, 0.25);
+  assert.equal(schema.properties.measuredAt.format, "date-time");
+  assert.equal(schema.properties.signatureAlgorithm.const, "Ed25519");
+});
+
+test("G6 measurement schema contract cannot silently change or claim to be a producer", () => {
+  const changedSha = structuredClone(baseline);
+  changedSha.g6ResidualMeasurementContract.schemaBlobSha = "f".repeat(40);
+  assert.ok(validateRepositoryMap(changedSha).some(message => message.includes("g6ResidualMeasurementContract")));
+
+  const forgedProducer = structuredClone(baseline);
+  forgedProducer.g6ResidualMeasurementContract.status = "verified";
+  assert.ok(validateRepositoryMap(forgedProducer).some(message => message.includes("g6ResidualMeasurementContract")));
+
+  const changedMapping = structuredClone(baseline);
+  changedMapping.g6ResidualMeasurementContract.mapping.measurementSTopologicalToResidualS = "measurement.raw -> residual.S";
+  assert.ok(validateRepositoryMap(changedMapping).some(message => message.includes("g6ResidualMeasurementContract")));
 });
