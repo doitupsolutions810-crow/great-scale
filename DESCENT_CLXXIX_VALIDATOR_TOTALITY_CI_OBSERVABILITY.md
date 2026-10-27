@@ -84,3 +84,27 @@ Updated rule: `A_public = V ∧ T ∧ C ∧ F ∧ K ∧ D ∧ S ∧ G ∧ I ∧ 
 ### CLXXX latest exact-head retry
 
 The new procurement-to-production boundary regression is committed at control-plane head `3004707d31b4928c58a6fa3ca8b02981aa9b810a`. Its workflow run `40440181670` was retried (attempt 2) and again failed without exposed steps or logs; the container job was skipped after the first job failed. The combined commit status also shows Snyk success but Vercel failure due a build-rate-limit URL. Neither status proves the Node test suite executed. The producer/consumer protocol mismatch is now documented and a regression test is present, but that test remains unexecuted in the available evidence. Keep the pull requests in draft and production HOLD.
+
+
+## CLXXXII — capability-plane evidence is an integrity trail, not yet a production attestation
+
+Cross-repository descent into `doitupsolutions810-crow/capability-authority` located production-relevant controls, but not a ready-made G0–G6 signed status producer:
+
+- `rings/production_profile.py` defines a production preflight around SPIRE workload identity, rejecting `dev:*` measurements, and forbidding caller override.
+- `rings/supply_chain.py` currently defaults to `sha256:dev-placeholder-broker` and `sha256:dev-placeholder-executor`; these are development placeholders, not production pins.
+- `evidence/warehouse.py` computes a SHA-256 hash chain over canonical JSON events and can verify chain continuity. It does not authenticate the producer: no Ed25519 source signature or pinned producer identity is added by this module.
+- `evidence/index.py` catches any warehouse append exception and continues indexing the event. This is acceptable for best-effort indexing, but it cannot be treated as a mandatory production evidence path.
+- The current receipt path signs capability/receipt payloads with a locally loaded/generated broker key; this is not yet demonstrated to be the same independently pinned identity/key used by the evidence-console consumer.
+
+This narrows the remaining integration gap: a traceable evidence store and signed execution receipts exist, but those primitives do not themselves establish a production-ready G0–G6 attestation. Hash-chain integrity answers “was this record altered relative to the chain?”; a source signature plus pinned identity answers “which trusted producer vouched for this record?”; production gates answer “were the required controls actually satisfied?” These are three distinct predicates.
+
+### Required integration sequence
+
+1. Remove development-placeholder supply-chain pins from the production acceptance path; require immutable, verified image digests.
+2. Run production preflight using live SPIRE Workload API identity, non-development measurement, and caller override disabled.
+3. Derive G0–G6 statuses from concrete checks/receipts, not caller-provided booleans or a relabelled E0–E6 document.
+4. Bind each accepted evidence record to the producer identity and key ID; verify the signed payload under an independently pinned public key.
+5. Make warehouse append/verification failure fatal for the production evidence path (the best-effort index may remain non-authoritative).
+6. Publish a versioned G0–G6 status endpoint only after all above checks pass, then run end-to-end positive, tamper, stale, wrong-key, wrong-identity, missing-gate, and procurement-domain rejection tests.
+
+This is a proposed integration checklist derived from the inspected implementations, not a claim that these mappings are already implemented. No production G0–G6 producer or deployed trust binding was found in the inspected source. Production remains HOLD.
