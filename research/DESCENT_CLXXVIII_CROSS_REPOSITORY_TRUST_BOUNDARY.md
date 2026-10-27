@@ -84,3 +84,22 @@ Therefore `S` is **not proven**. Procurement remains HOLD and production remains
 6. Enable procurement only after every required predicate passes on the same release candidate.
 
 No merge, deployment, key creation, or procurement activation is authorized by this report.
+
+
+## Follow-up verification — 2026-10-27T01:22Z
+
+The runtime-manifest inconsistency is now mitigated on both inspected Control Plane candidate branches:
+
+- PR #31 branch `fix/force-procurement-evidence-auth` records the earlier root engine floor change to `>=20`.
+- PR #29 branch `fix/procurement-evidence-authorization` now independently declares root Node `>=20`, matching `platform/package.json`, and includes `test/runtime-contract.test.mjs` in the root canonical `npm test` command. That test asserts both engine compatibility and reachability of the platform suite.
+- The local isolated runtime-manifest harness passed 2/2 assertions. It does not replace full-suite execution.
+
+Latest exact-head hosted evidence remains unavailable:
+- Control Plane PR #29 head `0dc761bc1ccc38f1d8304236311dcfe2a32d6ba0`: [40431955723](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40431955723), zero exposed steps and BlobNotFound logs.
+- Great Scale PR #128 head `6574c4c0fa631ab5ceb9cc640e2d11f298cef88a`: [40432088896](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40432088896), zero exposed steps and BlobNotFound logs.
+- Lattice Ops PR #31 head `7358374f173982caaf475fe11a297477e9dcc570`: [40432035494](https://github.com/doitupsolutions810-crow/control12-lattice-ops/actions/runs/40432035494), startup failure with no job record.
+- Capability Authority PR #12 head `dd8c4e38136d3e3e81891045be0ace216a6c5253`: [40429217283](https://github.com/doitupsolutions810-crow/capability-authority/actions/runs/40429217283), no exposed steps/logs.
+
+Source-level isolated checks performed in this descent: producer contract logic 12/12; signed-evidence Great Scale model 8/8; freshness model 6/6; JavaScript freshness rules 7/7; runtime manifest 2/2. These are bounded local checks and do not make the hosted or live-producer predicates true.
+
+The new signed producer remains undeployed; no production key was generated. Overlapping Control Plane PRs #29 and #31 still require diff-based consolidation before merge. Release acceptance is still **not proven**; procurement remains HOLD and production NO-GO.
