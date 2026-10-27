@@ -44,7 +44,7 @@ This prevents invalid residual input from yielding a procurement-ready result th
 
 ## Verification status
 
-- Source updates are committed on PR #33's branch; the latest head must be re-fetched before release decisions.
+- Source updates are committed on PR #33's branch; latest inspected head is `25be705adf58276c32794a508d6b386179071f41`.
 - The focused workflow is configured to syntax-check and run the new regression.
 - An isolated Node.js 22 runtime run of the parser module and its regression cases passed **6/6 tests**. A separate reproduction confirmed the old coercion maps `NaN`/non-numeric values to zero and allows `Infinity` to satisfy the cone inequality.
 - The hosted Actions runner previously failed before exposing any steps. Therefore the newly committed JavaScript test has not yet been proven to execute in hosted CI.
