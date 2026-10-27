@@ -46,10 +46,13 @@ test("an interface cannot be marked verified without receipt-grade evidence", ()
 });
 
 
-test("registry binds the shared operation evidence contract version", () => {
+test("registry binds the shared operation evidence contract and its schema", () => {
   const candidate = structuredClone(baseline);
   candidate.operationEvidenceContract.version = "v99";
   assert.ok(validateRepositoryMap(candidate).some((message) => message.includes("operationEvidenceContract")));
+  const missingSchema = structuredClone(baseline);
+  delete missingSchema.operationEvidenceContract.schemaPath;
+  assert.ok(validateRepositoryMap(missingSchema).some((message) => message.includes("operationEvidenceContract")));
   const missing = structuredClone(baseline);
   delete missing.operationEvidenceContract;
   assert.ok(validateRepositoryMap(missing).some((message) => message.includes("operationEvidenceContract")));
