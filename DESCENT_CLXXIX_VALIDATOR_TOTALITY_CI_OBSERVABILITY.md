@@ -157,3 +157,6 @@ CLXXXIX verification update: the isolated Node.js 22 parser regression passed 6/
 
 
 CLXXXIX refinement: residual parsing and cone classification are now centralized in `lib/residual-input.mjs`; both entrypoints consume the same `gateValue` and explicit hold classification. The isolated six-case Node.js regression passed 6/6 tests, including invalid-input holds and finite-but-cone-violating holds. This remains isolated verification, not a clean checkout or full-suite result.
+
+
+CLXXXIX exact-head CI follow-up: Control Plane PR #33 head `25be705adf58276c32794a508d6b386179071f41` produced Evidence Contract Tests run `40442710744` and Plane CI run `40442710850`; both failed with no visible steps or job logs. This still does not show test failure or success. The isolated six-case parser regression passed locally, while clean-checkout/full-suite and hosted execution remain unverified.
