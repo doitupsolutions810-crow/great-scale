@@ -110,11 +110,18 @@ test("G6 requires a separate independent numerical certificate; Richardson estim
   assert.deepEqual([...certification.required].sort(), [
     "method", "verifierId", "sourceCommitSha", "modelInputDigest",
     "curvatureErrorUpperBound", "metricAreaErrorUpperBound",
-    "evidenceUrl", "proofDigest", "verified"
+    "evidenceUrl", "proofDigest", "verified",
+    "certificateKeyId", "certificateSignature", "generatedAt", "expiresAt"
   ].sort());
   assert.deepEqual(certification.properties.method.enum,
     ["interval-enclosure-v1", "analytic-derivative-bound-v1"]);
   assert.equal(certification.properties.verified.const, true);
+  assert.equal(certification.properties.certificateKeyId.pattern, "^[A-Za-z0-9._:-]+$");
+  assert.equal(certification.properties.certificateSignature.pattern, "^[A-Za-z0-9+/]{86}==$");
+  assert.equal(certification.properties.generatedAt.format, "date-time");
+  assert.equal(certification.properties.expiresAt.format, "date-time");
+  assert.match(certification.properties.certificateSignature.description,
+    /independently pinned certificate public key/i);
   assert.match(certification.description, /schema shape alone are not proof/i);
   assert.equal(schema.properties.measurement.properties.errorBoundMethod.const,
     "richardson-asymptotic-estimate-only");
