@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "owner": "doitupsolutions810-crow",
+  "inventoryAsOf": "2026-10-27",
+  "scope": "public-only",
+  "status": "public-sanitized-inventory-snapshot",
+  "inventorySource": "Public repository metadata and explicitly inspected public README files",
+  "scopeNote": "Private repository names and metadata are intentionally excluded from this public registry.",
+  "expectedRepositoryCount": 14,
+  "repositories": [
+    {
+      "name": "UnifiedToolStackApplication-utsp-platform",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Repository metadata only; implementation role not verified.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "artifact-hosted-demo",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Repository metadata only in this pass; purpose not verified from source.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "seed-platform-v10x-docs",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "documentation",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes documentation for the SEED Platform v10.x production artifact system.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "CycleKernal",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "simulation-and-observability",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes a simulation engine, monitoring backend, persistent storage, dashboards, and metrics.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "express-openapi-validator",
+      "visibility": "public",
+      "defaultBranch": "master",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Repository metadata only; local changes and upstream relationship require audit.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "KiloMan",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Repository metadata only; implementation role not verified.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "living-intermediate-control-plane",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "control-plane-and-evidence",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes lattice control, Avrone interface, federation, attestation, and evidence-console flows.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "cleanroom-agent-system",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Implementation files were not independently inspected in this pass.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "sacp-platform",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Repository metadata reports an empty repository; no implementation is inferred.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "LLM-RE-KnowledgeBase-Agent",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "knowledge-and-provenance",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes a file-based knowledge base with provenance markers and a knowledge graph.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "control12-workspace",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "agent-workspace",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes a chatbot and coding workspace with gated agent actions and attestation receipts.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "capability-authority",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "capability-security",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes short-lived signed rights, dual approval, idempotency, reconciliation, and verifiable receipts.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "crystal-iris-ruby-zippy",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "needs-source-audit",
+      "roleEvidence": "inventory-only",
+      "note": "Repository metadata only; implementation role not verified.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    },
+    {
+      "name": "great-scale",
+      "visibility": "public",
+      "defaultBranch": "main",
+      "role": "mathematical-modeling-and-verification",
+      "roleEvidence": "readme-inspected",
+      "note": "README describes mathematical invariants and an additive QGT bridge; physical interpretation is not inferred.",
+      "owner": "doitupsolutions810-crow",
+      "integrationStatus": "not-end-to-end-verified"
+    }
+  ],
+  "interfaces": [
+    {
+      "from": "great-scale",
+      "to": "living-intermediate-control-plane",
+      "contract": "Versioned model/evidence payload bound to an exact source revision.",
+      "verificationStatus": "proposed-not-verified",
+      "requiredEvidence": [
+        "exact-commit-sha",
+        "executed-test-or-workflow-run",
+        "observed-result",
+        "authority-and-provenance-check"
+      ]
+    },
+    {
+      "from": "living-intermediate-control-plane",
+      "to": "capability-authority",
+      "contract": "Validated intent and an independently evaluated capability decision.",
+      "verificationStatus": "proposed-not-verified",
+      "requiredEvidence": [
+        "exact-commit-sha",
+        "executed-test-or-workflow-run",
+        "observed-result",
+        "authority-and-provenance-check"
+      ]
+    },
+    {
+      "from": "capability-authority",
+      "to": "CycleKernal",
+      "contract": "Resource/method-bound capability and stable operation identity.",
+      "verificationStatus": "proposed-not-verified",
+      "requiredEvidence": [
+        "exact-commit-sha",
+        "executed-test-or-workflow-run",
+        "observed-result",
+        "authority-and-provenance-check"
+      ]
+    },
+    {
+      "from": "CycleKernal",
+      "to": "capability-authority",
+      "contract": "Observed execution receipt, status, and lineage.",
+      "verificationStatus": "proposed-not-verified",
+      "requiredEvidence": [
+        "exact-commit-sha",
+        "executed-test-or-workflow-run",
+        "observed-result",
+        "authority-and-provenance-check"
+      ]
+    },
+    {
+      "from": "capability-authority",
+      "to": "living-intermediate-control-plane",
+      "contract": "Receipt provenance and authority state returned to the admission layer.",
+      "verificationStatus": "proposed-not-verified",
+      "requiredEvidence": [
+        "exact-commit-sha",
+        "executed-test-or-workflow-run",
+        "observed-result",
+        "authority-and-provenance-check"
+      ]
+    }
+  ]
+}
