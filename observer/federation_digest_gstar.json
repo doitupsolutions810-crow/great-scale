@@ -1,18 +1,15 @@
 {
-  "schema": "great-scale.federation-digest/v1.4",
-  "gs_version": "1.4.0",
-  "structure_constant": 4,
+  "schema": "great-scale.federation-digest/v1.5",
+  "gs_version": "1.5.0",
+  "NINEFOLD_COUPLING": 0.1,
   "Forward_tau": 0.1111111111111111,
   "compose_fixed_point": 0.1111111111111111,
+  "structure_constant": 4,
   "dual_cone": {
     "cone_orbit": 0.2360679774997897,
     "cone_bridge": 0.3819660112501052,
     "delta": 0.14589803375031551,
     "identity": "φ^{-4}"
-  },
-  "topological_heat": {
-    "identity": "S = (1-s^2)/4 when h=(1+s)/2",
-    "orientation_variance": "Var(sign F) = 4S"
   },
   "A_star": {
     "measured": 0.7786,
@@ -22,26 +19,20 @@
     "mean_Q": 0.7786
   },
   "Q8_heat_locus": 0.5,
-  "joint_fixed_point": {
-    "A_star": 0.7786,
-    "swarm_mean": 1.618034,
-    "swarm_product": -1.0,
-    "swarm_cone": 0.236068,
-    "is_attractor": true,
-    "n_agreed_objects": 10
-  },
   "profound_findings": [
     "DESCENT_BRIDGE_DUAL_CONE: delta = phi^{-4}",
     "DESCENT_TOPOLOGICAL_HEAT_IDENTITY: S = (1-s^2)/4, Var = 4S",
     "DESCENT_ASTAR_NINEFOLD_PARTITION: A* = (4+3)/9 = 7/9",
     "DESCENT_STRUCTURE_CONSTANT_FOUR: 4 in partition, level_n, Var; Q8=0.5; mean_Q=A*",
-    "DESCENT_FORWARD_TRANSFER_ALGEBRA: τ=1/9 = residual_compose fixed point = domain-transfer weight"
+    "DESCENT_FORWARD_TRANSFER_ALGEBRA: τ=1/9 = residual_compose fixed point = domain-transfer weight",
+    "DESCENT_NINEFOLD_COUPLING_ALPHA: α=1/10 forces (1-α)/α=9 and FP=τ=1/9"
   ],
   "success_criteria": {
-    "compose_stable_at_tau": "residual_compose(x,x) → 1/9",
+    "alpha_locked": "RESIDUAL_ALPHA = 1/10",
+    "compose_FP_equals_tau": "residual_compose(x,x) → 1/9",
+    "coupling_identity": "(1-α)/α = 9",
     "A_star_lock": "|A* - 7/9| < 0.01",
     "structure_constant_4": true,
-    "domain_map": "Psi >= cone for all domains",
     "path_consistency": "PASS",
     "capability": "no ambient rights; Issue only"
   },
@@ -51,17 +42,23 @@
     "Ψ never below chosen cone",
     "structure constant 4",
     "A* = 7/9",
-    "Forward τ = 1/9 = stable residual_compose fixed point",
-    "domain map applies to all domains",
-    "dual-cone δ = φ^{-4}",
-    "α>0 prevents rank-1 collapse"
+    "Forward τ = 1/9",
+    "RESIDUAL_ALPHA = 1/10 = ninefold coupling (1-α)/α = 9",
+    "stable residual_compose FP = τ",
+    "domain map for all domains",
+    "dual-cone δ = φ^{-4}"
   ],
   "domains": [
     "agent_swarm",
     "control_lattice",
     "capability_plane",
     "LLM_harness",
-    "external_ops",
-    "cone_floor"
+    "github",
+    "vercel",
+    "google_drive",
+    "wix",
+    "asana",
+    "cone_floor",
+    "external_ops"
   ]
 }
