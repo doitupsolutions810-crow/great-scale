@@ -1,75 +1,58 @@
-# DESCENT XCV — Rigorous A-Posteriori Error Bound for the QGT Engine
+# DESCENT XCV — Auditing the QGT Error-Bound Claim
 
-## The problem this descent closes
+**Status (2026-10-27): the earlier “rigorous bound” conclusion in this note is superseded.** The quadrature formulas below motivate numerical error analysis, but the observed Richardson difference by itself does not certify an upper bound on the unknown error. The current model intentionally emits empirical estimates and marks itself ineligible to self-certify production G6.
 
-topological-qgt.cjs previously exposed `quadratureConverged`, a flag built
-from successive-grid differences and grid-origin residuals. Two comments in
-the source confessed what the flag was not: "a numerical heuristic, not a
-rigorous error bound," and the Richardson-order check was "visible but not
-a veto." Acceptance therefore rested on a diagnostic the engine itself
-disclaimed.
+## The problem this descent examined
 
-## The mathematics
+The QWZ/topological-QGT engine uses successive-grid differences, grid-origin residuals, and an observed Richardson order to assess numerical consistency. Those checks are valuable diagnostics. They are not automatically rigorous error certificates.
 
-The Fukui–Hatsugai–Suzuki plaquette phase, sampled on a uniform grid of
-spacing h over the Brillouin zone, is a midpoint Riemann sum for a C^2
-integrand wherever the band gap is open. Standard one-dimensional
-quadrature theory bounds the absolute error of a midpoint sum by
+## The mathematical distinction
 
-    |E| <= (b - a) * max|f''| * h^2 / 8
+For a midpoint quadrature rule on an interval of width (b-a), a classical bound has the form
 
-extended to two dimensions over the zone [0, 2pi] x [0, 2pi]:
+`|E| <= (b - a) * max|f''| * h^2 / 24`
 
-    |E_curvature| <= 4*pi^2 * max|Hessian of plaquette phase| * h^2 / 8
-    |E_area|      <= 4*pi^2 * max|Hessian of metric density| * h^2 / 8
+when the regularity and derivative-bound assumptions for that rule are established. In two dimensions, analogous estimates require a justified bound over the relevant derivatives of the integrand/metric density and a correct multidimensional remainder argument.
 
-The unknown max Hessian is not computed analytically. It is estimated a
-posteriori from the observed Richardson difference D between the h-grid and
-the h/2-grid: under the asymptotic regime the difference scales as C*h^2,
-so D/3 estimates the h/2 error and 2*D/3 estimates the h error. Scaling by
-a safety factor of 2 produces the exported bounds
+An observed difference (D) between grid resolutions can support a Richardson estimate under an asymptotic convergence model. Under a second-order assumption, (D/3) is commonly used as an estimate of the finer-grid error. But **the assumption that the observed sequence is already in the asymptotic regime is not itself a bound on the unobserved remainder**. Multiplying that estimate by a safety factor does not turn it into a theorem-certified upper bound.
 
-    rigorousCurvatureErrorBound   = 2 * curvatureQuadratureError / 3
-    rigorousMetricAreaErrorBound  = 2 * metricAreaQuadratureError / 3
+Therefore the previous inference—
 
-These are rigorous conditional on gap-openness, which the RangeError guards
-at m in {-2, 0, 2} already enforce before any integration runs.
+`rigorousErrorBound := 2 * RichardsonEstimate`
 
-## The gate change
+—was too strong unless backed by an independent proof of the relevant remainder/derivative bound and its applicability to the exact model inputs.
 
-`topologicalMappingValid` now requires:
+## Current implementation contract
 
-1. rigorousBoundFinite
-2. rigorousCurvatureErrorBound <= quadratureTolerance
-3. rigorousMetricAreaErrorBound <= quadratureTolerance
-4. all six prior residuals (Chern integer, Chern residual, cancellation
-   identity, entropy residual, metric excess)
+The current `research/topological-qgt.cjs` deliberately exports:
 
-The heuristic `quadratureConverged` flag is retained in the output as
-telemetry but is no longer sufficient for acceptance. A mapping whose
-heuristic flag is true but whose rigorous bound exceeds tolerance is now
-rejected — `acceptedPsiTopological` returns null.
+- `curvatureErrorEstimateWithSafetyFactor`
+- `metricAreaErrorEstimateWithSafetyFactor`
+- `errorEstimatesFinite`
+- `errorBoundMethod = "richardson-asymptotic-estimate-only"`
+- `modelG6CertificationEligible = false`
 
-## Verification
+The values are estimates, not certified bounds. `topologicalMappingValid` means that the configured numerical-consistency checks on the observed calculation passed; it is not sufficient proof for production gate G6.
 
-- Reference mass m = 1.0, gridSize 80, maxRefinements 3:
-  Chern number = 1, rigorous curvature bound ~ 1.2e-4, rigorous area bound
-  ~ 3.4e-4, both below the gap-aware tolerance. topologicalMappingValid = true.
-- Reference mass m = -1.0: Chern number = -1, identical bound structure with
-  sign-flipped polarization. topologicalMappingValid = true.
-- Mass approaching a boundary (m = 0.05): gapAwareToleranceScale drops to
-  0.2, the rigorous bounds inflate accordingly, and acceptance fails — the
-  gate correctly refuses to certify near a gap closing, where the C^2
-  hypothesis itself is breaking.
+The machine-readable receipt, `contracts/g6-residual-measurement/v1.schema.json`, reflects this distinction. It requires the model-side estimates and a separate `numericalCertification` object with a declared method (`interval-enclosure-v1` or `analytic-derivative-bound-v1`), independent verifier identity, source commit, model-input digest, curvature and metric-area upper bounds, proof digest, and evidence URL. The presence of `verified: true` is still only a claim in signed JSON: a trusted producer must independently validate the certificate artifact and its verifier/trust policy.
 
-## Great Scale placement
+## Required evidence before claiming rigorous certification
 
-Micro: the engine's own disclaimed heuristic is replaced by a bound derived
-from the same data the heuristic used.
-Meso: acceptance becomes a theorem-conditional statement rather than an
-empirical observation.
-Macro: the audit log can no longer be softer than the state it certifies.
-Meta: this is the same repair as the sign-flipped potential U from Descent L
-— cancel the contact term, keep the ranking. Here the contact term is the
-unbounded heuristic; the ranking is the Chern integer and the curvature
-partition.
+A valid numerical certificate must establish, for the exact pinned model input and source revision, that the reported upper bounds are mathematically justified. At minimum, the independent verification path must:
+
+1. Bind the certificate to the exact Great Scale commit and canonical model-input digest.
+2. Validate the selected method and inspect its proof/artifact, not merely trust a `verified` boolean.
+3. Establish finite curvature and metric-area error upper bounds from the applicable interval enclosure or analytic derivative bound.
+4. Confirm that both certified upper bounds satisfy the configured tolerance and that topological mapping, convergence, grid-origin, Chern, cancellation, entropy, and domain checks also pass.
+5. Bind the receipt to the exact successful workflow run/attempt, immutable Great Scale model artifact, `measuredAt`, expiry, target Control Plane source revision, target build ID, and target artifact digest.
+6. Verify the receipt digest and Ed25519 signature under an independently pinned key.
+
+A scalar within `[0, 0.25]`, a finite Richardson estimate, a successful schema check, or a signed assertion of success is not a substitute for this chain.
+
+## Historical numerical examples
+
+Earlier experiments reported, for selected QWZ parameters and grid sizes, values around (10^{-4}) for the Richardson curvature/area estimates. Those are empirical results for those runs. They must not be described as certified upper bounds unless the independent numerical certificate above is actually produced and verified for the exact source and inputs.
+
+## G6 promotion conclusion
+
+The model may report a mathematically consistent candidate scalar. It cannot certify its own error bound. Until a real producer emits a signed, exact-input G6 receipt and an independent trusted consumer verifies the numerical certificate, source/run/artifact pins, freshness, and target-release binding, the Great Scale-to-Control-Plane G6 edge remains `proposed-not-verified` and production remains **HOLD / NO-GO**.
