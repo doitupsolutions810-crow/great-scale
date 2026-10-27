@@ -237,3 +237,25 @@ The versions have complementary but non-equivalent responsibilities. PR #33's `l
 5. Keep procurement/production authority at HOLD/NO-GO until the live G0-G6 producer and independently provisioned trust roots are verified.
 
 **Current evidence status:** GitHub Actions attempts on these candidates are failing before executable steps (`runner_id=0` / empty step lists or startup failure). Therefore the branch analysis is verified from GitHub metadata and source readback, but no integrated test pass has been established. No merge or production authorization is implied by this note.
+
+
+## Descent CCII — G6 residual-source boundary (2026-10-27)
+
+The cross-repository G6 seam is **not an endpoint connection yet**:
+
+- Great Scale's `public/residual.cjs` exports deterministic mathematical functions such as `fromTopologicalSaturation(tau)` and `residualCount(S)`. It is not a network service and does not emit a timestamped, build-bound measurement attestation.
+- The checked-in `vercel.json` builds only `public/**` using `@vercel/static` and routes requests to static files. The current tree has **no `api/`, `functions/`, or server endpoint** that emits a live residual measurement.
+- LICP PR #34 requires a signed production acceptance artifact containing residual fields `schema`, `sourceId`, `buildId`, `measuredAt`, and finite `S`. Its verifier pins `residualSourceId`, same-build identity and freshness. That is a different contract from Great Scale's raw `great-scale.residual/v1` calculation snapshot.
+- LICP's status snapshot and `GREAT_SCALE_S` environment value are diagnostic inputs; a default `S=0` or a caller-provided value is **not an observed measurement** and cannot satisfy G6. Existing G0-G6 verifier logic correctly ignores these untrusted values for authorization.
+
+The public and private repository maps now say this explicitly on the `great-scale → living-intermediate-control-plane` interface and require evidence for a live measurement identity, source/build/artifact binding, timestamp freshness, finite residual and cone check, rejection of default/caller values, and an independently pinned G0-G6 signer. The edge remains `proposed-not-verified`.
+
+### Required design to close G6 safely
+
+1. Choose the actual trusted measurement source and document what it measures; don't treat the mathematical helper itself as a sensor.
+2. Emit a versioned measurement record binding the source identity, exact source revision, deployed build ID, immutable artifact digest, measurement time, and finite residual value.
+3. Collect it in the authoritative G0-G6 producer from that trusted source. The producer must independently validate freshness, revision/build/artifact alignment, finite-domain/cone constraints and provenance before it signs the whole G0-G6 attestation.
+4. Pin the producer key and residual source identity in deployment-controlled configuration, independent of the incoming record; never let the record choose its own key.
+5. Add positive/negative end-to-end tests for valid live samples, stale samples, wrong source/build/revision, artifact mismatch, non-finite/out-of-domain values, missing telemetry, replay, and signature/key mismatch. Only a real test run with inspectable steps and a live response can promote this edge.
+
+No static endpoint has been invented and no scalar has been upgraded to production evidence. This is the outstanding runtime connection, separate from the CI startup blocker and the branch-divergence blocker.
