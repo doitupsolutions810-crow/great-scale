@@ -53,7 +53,8 @@ test("G6 schema requires source/build/run/artifact/model/digest/signature bindin
 
 test("G6 schema preserves numerical model diagnostics without treating Richardson estimates as proof", () => {
   const required = schema.properties.measurement.required;
-  assert.deepEqual(required, measurementFields);
+  assert.deepEqual([...required].sort(), [...measurementFields].sort(),
+    "JSON Schema required is a set; array order is not semantically significant");
   const result = qiWuZhangGlobalGeometry(-1, 40);
   for (const key of measurementFields) {
     assert.ok(Object.hasOwn(result, key), "model result is missing G6 field: " + key);
