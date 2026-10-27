@@ -208,7 +208,12 @@
         "raw-model-output-alone-is-not-g6-eligible",
         "independent-numerical-certificate-verified",
         "numerical-certificate-upper-bounds-and-proof-digest-verified",
-        "quadrature-rigorous-certificate-distinct-from-empirical-estimates"
+        "quadrature-rigorous-certificate-distinct-from-empirical-estimates",
+        "approved-independent-numerical-certificate-method",
+        "certificate-source-commit-and-model-input-digest-match",
+        "certificate-proof-artifact-digest-verified",
+        "empirical-richardson-estimates-not-treated-as-rigorous",
+        "numerical-certifier-identity-pinned-independent-of-receipt"
       ]
     },
     {
