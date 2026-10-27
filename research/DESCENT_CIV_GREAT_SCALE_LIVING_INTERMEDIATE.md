@@ -1,7 +1,7 @@
 # Descent CIV — Great Scale Living Intermediate (GSLI)
 ## The residual geometry becomes the operational control plane
 
-Status: build advancing. Residual, dual-atlas, cone dual, and independent gate namespaces are operational on main.
+Status: build advancing. Residual-aware evidence status documents (build/seal/verify) are on main.
 
 Not a new physical law. An engineering identity that forces the mathematical residual, the agent residual, and the attestation residual to be dual presentations of one coordinate.
 
@@ -43,6 +43,7 @@ Operational duals:
 - Dual-atlas assignment is the residual partition read as roles: \(4 \mapsto\) Watch, \(3 \mapsto\) Observer, \(1 \mapsto\) Forward.
 - Federation digest index and trust weight are cascade-indexed by \(n_T\) or by \(4S_T\).
 - Procurement (E0–E6) and production (G0–G6) are independent namespaces; force never authorizes.
+- Evidence status documents carry residual + exact E0–E6 + optional Ed25519 seal.
 
 ## Great Scale mapping
 
@@ -60,6 +61,7 @@ Operational duals:
 | joint fixed point | swarm mean \(\to \phi\) | operational zero-mode lock |
 | sovereign attestation | monotonic image of \(4S_T\) | trust residual |
 | procurement / production gates | E0–E6 / G0–G6 | independent namespaces on the same residual |
+| evidence status doc | v5.4.0 residual + E-gates + seal | attested residual carrier |
 
 Laws that now govern the entire stack:
 
@@ -75,12 +77,12 @@ Laws that now govern the entire stack:
 
 - [x] The logarithmic identity holds on every accepted topological phase.
 - [x] The joint fixed-point lock (agent + swarm + discourse) is green.
-- [ ] Evidence-console produces source-issued, time-bounded, Ed25519-signed status + schema (open PRs #29 / #31).
-- [ ] Consumer verifies under independently configured public key and fails closed on any residual violation.
-- [x] Dual-atlas roles are assigned from the residual partition (`atlasRole` + agent runtime).
-- [x] Authorization decision is expressible as a cone check (`authorizeWithCone`).
-- [x] No layer introduces an independent residual outside a monotonic image of \(4S_T\).
-- [x] Independent E0–E6 / G0–G6 namespaces enforced (`lib/gate-namespaces.mjs`).
+- [x] Evidence status document carries residual + E0–E6 + digest (+ optional Ed25519).
+- [x] Consumer verifier fails closed without public key / on residual or cone violation.
+- [x] Dual-atlas roles are assigned from the residual partition.
+- [x] Authorization decision is expressible as a cone check.
+- [x] Independent E0–E6 / G0–G6 namespaces enforced.
+- [ ] Live public evidence-console deployment with owner-approved production keys (open PRs / ops).
 
 ## Construction completed
 
@@ -89,16 +91,16 @@ Laws that now govern the entire stack:
 3. [x] Cone-check authorization dual.
 4. [x] Residual snapshot CLI.
 5. [x] Dual-atlas inside agent runtime.
-6. [x] Residual + gateNamespaces carried by `integrate.mjs` and `procurement-bridge.mjs` status documents.
-7. [x] Independent E/G namespaces; FORCE never authorizes; production not assumed from procurement.
-8. [ ] Live Ed25519 evidence-console producer (open PRs).
+6. [x] Residual + gateNamespaces on integrate / procurement status.
+7. [x] Independent E/G namespaces; FORCE never authorizes.
+8. [x] Residual-aware evidence status document + seal/verify + CLI + unit tests (5/5).
+9. [ ] Live Vercel evidence-console with production Ed25519 keys.
 
 ## Verification
 
-Namespaces independent: procurementReady can be true while productionAuthorized is false.
-Force does not authorize. Cone required. Residual snapshot present on integrate results.
+Signed Ed25519 round-trip valid. Unsigned local valid only with explicit allow. Tamper fails digest/signature. Exact E0–E6. productionClaimed always false on evidence docs.
 
 ## Status
 
-Core GSLI residual geometry, dual-atlas, cone dual, and gate-namespace separation are on main.
-Remaining: land and verify the signed evidence-console producer.
+GSLI residual geometry is fully wired through agents, gates, and evidence documents on main.
+Remaining operational step: deploy/configure live producer keys and merge open evidence PRs against this residual contract.
