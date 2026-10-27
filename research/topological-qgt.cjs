@@ -199,7 +199,7 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const errorBoundMethod = 'richardson-asymptotic-estimate-only';
   // Numerical mapping validity is diagnostic. G6 eligibility requires a separate
   // independently verified interval/analytic error-bound certificate.
-  const g6CertificationEligible = false;
+  const modelG6CertificationEligible = false;
 
   const topologicalFloor = Math.abs(chernNumber);
   const metricAreaExcess = currentMidpoint.metricAreaBudget - topologicalFloor;
@@ -263,7 +263,7 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     topologicalMappingValid,
     // Empirical estimates only; not rigorous error bounds.
     curvatureErrorEstimateWithSafetyFactor, metricAreaErrorEstimateWithSafetyFactor,
-    errorEstimatesFinite, errorBoundMethod, g6CertificationEligible,
+    errorEstimatesFinite, errorBoundMethod, modelG6CertificationEligible,
     // Prior diagnostics retained as non-gating telemetry.
     baseMetricAreaBudget: initial.metricAreaBudget,
     refinedIntegratedCurvature: currentMidpoint.integratedCurvature,
