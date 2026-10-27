@@ -56,3 +56,10 @@ This patch improves (M), and a static manifest check provides limited evidence f
 ## Decision
 
 The runtime declaration mismatch is mitigated in source and verified by re-fetching the exact commit. Full test execution and live trust verification remain unproven. Keep PR #31 draft and procurement disabled until all acceptance gates pass.
+
+
+## Follow-up — root runtime contract executable on PR #29 (2026-10-27)
+
+The same runtime mismatch was found still present on Control Plane PR #29 branch `fix/procurement-evidence-authorization`, whose root manifest was still `>=18`. It is now aligned to `>=20` in commit `cf7088adddfdb14064e08abf6815e7853f8e675f`. A new committed `test/runtime-contract.test.mjs` is included in the root `npm test` script and asserts both the root/platform engine-floor relationship and that the canonical root test command includes the platform suite. The most recent root package update is commit `0dc761bc1ccc38f1d8304236311dcfe2a32d6ba0`.
+
+The isolated runtime-manifest harness passed 2/2 assertions. The exact candidate's latest hosted run [40431955723](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40431955723) still exposes no steps/logs. The manifest defect is mitigated, but it is not established as the cause of CI startup failures; full test execution remains unknown.
