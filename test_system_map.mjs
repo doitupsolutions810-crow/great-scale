@@ -209,7 +209,7 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.deepEqual(contract, {
     repository: "great-scale",
     path: "contracts/g6-residual-measurement/v1.schema.json",
-    schemaBlobSha: "a0956c825e9a8974f5855054d2c80eb4433391f9",
+    schemaBlobSha: "5322c32362ff42b5e251672d0b5ac9c61ae106a5",
     version: "v1",
     status: "schema-only-not-producer",
     mapping: {
@@ -233,6 +233,9 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
   assert.equal(schema.properties.measurement.properties.STopological.maximum, 0.25);
   assert.equal(schema.properties.measuredAt.format, "date-time");
   assert.equal(schema.properties.signatureAlgorithm.const, "Ed25519");
+  assert.match(schema.properties.buildId.description, /shared composite release identifier/i);
+  assert.match(schema.properties.buildId.description, /sourceBuildId and acceptanceBuildId/);
+  assert.match(schema.properties.artifact.properties.digest.description, /distinct from the Control Plane production acceptance artifact digest/i);
 });
 
 test("G6 measurement schema contract cannot silently change or claim to be a producer", () => {
