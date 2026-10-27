@@ -8,6 +8,86 @@ const allowedIntegrationStatus = new Set(["not-end-to-end-verified", "not-inspec
 const allowedInterfaceStatus = new Set(["proposed-not-verified", "blocked", "verified"]);
 const shaPattern = /^[a-f0-9]{40}$/i;
 
+function validSha(value) {
+  return typeof value === "string" && shaPattern.test(value);
+}
+
+function validateExecutionProof(proof, {
+  map,
+  prefix,
+  subjectRepository = null,
+  edge = null,
+}) {
+  const errors = [];
+  const add = (message) => errors.push(`${prefix} ${message}`);
+
+  if (!proof || typeof proof !== "object" || Array.isArray(proof)) {
+    add("cannot be marked verified without a complete exact-run proof object");
+    return errors;
+  }
+
+  if (subjectRepository) {
+    if (!validSha(proof.commitSha)) add("verification.commitSha must be a full 40-character SHA");
+  } else if (edge) {
+    if (!validSha(proof.sourceCommitSha)) add("verification.sourceCommitSha must be a full 40-character SHA");
+    if (!validSha(proof.targetCommitSha)) add("verification.targetCommitSha must be a full 40-character SHA");
+  }
+
+  const testRepository = proof.testRepository;
+  if (typeof testRepository !== "string" || !map.repositories.some(repo => repo.name === testRepository)) {
+    add("verification.testRepository must name a repository in the public registry");
+  }
+  if (!validSha(proof.testCommitSha)) add("verification.testCommitSha must be a full 40-character SHA");
+  if (!validSha(proof.testRunHeadSha)) add("verification.testRunHeadSha must be a full 40-character SHA");
+  if (validSha(proof.testCommitSha) && validSha(proof.testRunHeadSha) &&
+      proof.testCommitSha.toLowerCase() !== proof.testRunHeadSha.toLowerCase()) {
+    add("verification.testRunHeadSha must equal testCommitSha");
+  }
+  if (!Number.isSafeInteger(proof.testRunId) || proof.testRunId < 1) {
+    add("verification.testRunId must be a positive safe integer");
+  }
+  if (!Number.isSafeInteger(proof.testRunAttempt) || proof.testRunAttempt < 1) {
+    add("verification.testRunAttempt must be a positive safe integer");
+  }
+  if (proof.testRunConclusion !== "success") add("verification.testRunConclusion must equal success");
+  if (proof.observedResult !== "pass") add("verification.observedResult must equal pass");
+
+  let expectedRunUrl = "";
+  if (typeof map.owner === "string" && typeof testRepository === "string" &&
+      map.repositories.some(repo => repo.name === testRepository) &&
+      Number.isSafeInteger(proof.testRunId) && proof.testRunId > 0) {
+    expectedRunUrl = `https://github.com/${map.owner}/${testRepository}/actions/runs/${proof.testRunId}`;
+  }
+  if (!expectedRunUrl || proof.testRunUrl !== expectedRunUrl) {
+    add("verification.testRunUrl must bind the registered test repository and run ID");
+  }
+
+  let runUrl;
+  let evidenceUrl;
+  try {
+    runUrl = new URL(proof.testRunUrl);
+    if (runUrl.protocol !== "https:" || runUrl.hostname !== "github.com" ||
+        runUrl.username || runUrl.password || runUrl.search || runUrl.hash) {
+      add("verification.testRunUrl must be a canonical HTTPS GitHub Actions run URL");
+    }
+  } catch {
+    add("verification.testRunUrl must be a canonical HTTPS GitHub Actions run URL");
+  }
+
+  try {
+    evidenceUrl = new URL(proof.evidenceUrl);
+    if (!runUrl || evidenceUrl.protocol !== "https:" || evidenceUrl.hostname !== "github.com" ||
+        evidenceUrl.username || evidenceUrl.password || evidenceUrl.search || evidenceUrl.hash ||
+        !(evidenceUrl.pathname === runUrl.pathname || evidenceUrl.pathname.startsWith(runUrl.pathname + "/"))) {
+      add("verification.evidenceUrl must be a durable URL within the exact test run");
+    }
+  } catch {
+    add("verification.evidenceUrl must be a durable URL within the exact test run");
+  }
+
+  return errors;
+}
+
 export function validateRepositoryMap(map) {
   const errors = [];
   const add = (message) => errors.push(message);
@@ -50,10 +130,9 @@ export function validateRepositoryMap(map) {
     if (!allowedIntegrationStatus.has(repo.integrationStatus)) add(`${prefix}.integrationStatus is not recognized`);
     if (typeof repo.note !== "string" || !repo.note.trim()) add(`${prefix}.note must state the evidence or uncertainty`);
     if (repo.integrationStatus === "verified") {
-      const proof = repo.verification;
-      if (!proof || !shaPattern.test(proof.commitSha ?? "") || !proof.testRunUrl || !proof.observedResult) {
-        add(`${prefix} cannot be marked verified without a full commit SHA, test-run URL, and observed result`);
-      }
+      errors.push(...validateExecutionProof(repo.verification, {
+        map, prefix, subjectRepository: repo.name
+      }));
     }
   }
   if (!Array.isArray(map.interfaces)) {
@@ -77,10 +156,7 @@ export function validateRepositoryMap(map) {
     if (edgeKeys.has(key)) add(`duplicate interface: ${key}`);
     edgeKeys.add(key);
     if (edge.verificationStatus === "verified") {
-      const proof = edge.verification;
-      if (!proof || !shaPattern.test(proof.commitSha ?? "") || !proof.testRunUrl || !proof.observedResult || !proof.evidenceUrl) {
-        add(`${prefix} cannot be marked verified without commit SHA, test-run URL, observed result, and evidence URL`);
-      }
+      errors.push(...validateExecutionProof(edge.verification, { map, prefix, edge }));
     }
   }
   return errors;
