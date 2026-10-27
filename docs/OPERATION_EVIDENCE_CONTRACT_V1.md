@@ -43,6 +43,12 @@ Every cross-service operation should preserve these logical fields. Language-spe
 
 Each service computes its own `request_digest` over the request it is responsible for. Digests from different service boundaries are not expected to match if their payloads differ. The upstream digest is carried separately in `parent_request_digest` for correlation.
 
+### Machine-readable contract
+
+The JSON Schema is maintained at `contracts/operation-evidence/v1.schema.json`. It rejects unknown fields, binds producer repository and full commit SHA, requires explicit parent linkage fields, preserves the structured `(type, resource, method)` action, and enumerates lifecycle states without collapsing `indeterminate` into `completed`.
+
+For `stage: receipt`, the envelope must carry `attestation` metadata naming the Ed25519 algorithm, key ID, and signature. Consumers must still verify that signature against an independently provisioned trust anchor and validate freshness, authorization, and exact revision binding. Schema validation alone is not authenticity verification.
+
 ## 3. Lifecycle and retry rules
 
 1. **Validate identity.** Require a non-empty bounded operation ID; reject re-use with a different request digest.
