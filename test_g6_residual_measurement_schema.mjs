@@ -91,14 +91,34 @@ test("measurement contains explicit QGT, convergence, topology, and error-bound 
   assert.equal(properties.signedTopologicalPolarization.maximum, 1);
   assert.equal(properties.quadratureConverged.const, true);
   assert.equal(properties.topologicalMappingValid.const, true);
-  assert.equal(properties.rigorousBoundFinite.const, true);
-  assert.ok(properties.rigorousCurvatureErrorBound.minimum >= 0);
-  assert.ok(properties.rigorousMetricAreaErrorBound.minimum >= 0);
+  assert.equal(properties.errorEstimatesFinite.const, true);
+  assert.equal(properties.errorBoundMethod.const, "richardson-asymptotic-estimate-only");
+  assert.ok(properties.curvatureErrorEstimateWithSafetyFactor.minimum >= 0);
+  assert.ok(properties.metricAreaErrorEstimateWithSafetyFactor.minimum >= 0);
+  assert.match(measurement.description, /do not establish a rigorous quadrature bound/i);
   assert.ok(properties.gridAlignmentCurvatureDiscrepancy.minimum >= 0);
   assert.ok(properties.gridAlignmentAreaDiscrepancy.minimum >= 0);
   assert.equal(properties.quadratureTolerance.exclusiveMinimum, 0, 'exclusiveMinimum 0 means tolerance must be strictly positive');
   assert.match(measurement.description, /STopological/);
   assert.match(measurement.description, /residual\.S/);
+});
+
+test("G6 requires a separate independent numerical certificate; Richardson estimates cannot certify themselves", () => {
+  const certification = schema.properties.numericalCertification;
+  assert.ok(schema.required.includes("numericalCertification"));
+  assert.equal(certification.additionalProperties, false);
+  assert.deepEqual([...certification.required].sort(), [
+    "method", "verifierId", "sourceCommitSha", "modelInputDigest",
+    "curvatureErrorUpperBound", "metricAreaErrorUpperBound",
+    "evidenceUrl", "proofDigest", "verified"
+  ].sort());
+  assert.deepEqual(certification.properties.method.enum,
+    ["interval-enclosure-v1", "analytic-derivative-bound-v1"]);
+  assert.equal(certification.properties.verified.const, true);
+  assert.match(certification.description, /schema shape alone are not proof/i);
+  assert.equal(schema.properties.measurement.properties.errorBoundMethod.const,
+    "richardson-asymptotic-estimate-only");
+  assert.match(schema.description, /numerical-certificate-validity/i);
 });
 
 test("measurement timestamp, canonicalization, digest, and Ed25519 signature are explicit", () => {
