@@ -84,3 +84,30 @@ Added a regression to PR #33's `test/evidence-console.test.mjs` that constructs 
 ### CLXCI-B isolated cryptographic reproduction
 
 A local Node.js 22 cryptographic reproduction signed a 436-byte canonical JSON payload and then attempted to verify that Ed25519 signature over the 32-byte SHA-256 digest. Verification correctly returned `false`; a signature created over the raw digest verified as `true`. This directly confirms the signed-message mismatch. It is a focused crypto reproduction, not execution of the repository test file or full suite.
+
+
+## CLXCII — a producer can manufacture READY procurement checks from a tautological cone predicate
+
+A further source-level audit found that `buildEvidenceStatusDocument()` defaulted all seven E0–E6 checks to `READY` whenever `residual.coneOk` was true. But `coneCompliant(S)` is only `CONE + S >= CONE - epsilon`, so for every valid `S∈[0,0.25]` this predicate is true and provides no procurement-specific evidence. A missing check result could therefore be rendered as seven READY checks. This was a stronger local finding than the prior producer/consumer mismatch.
+
+### Mitigation committed to PR #33
+
+- Missing `contractChecks` now defaults every E0–E6 item to `HOLD`; cone compliance alone cannot create READY procurement evidence.
+- Producer input validates `S∈[0,0.25]`, finite `tau∈[0,1]`, and a positive TTL no greater than five minutes.
+- Evidence authority is fixed to `local`; metadata cannot override protected contract fields, gate arrays, namespace, or production-claim fields.
+- Producer verification checks E-gate status values, residual domain, and consistency of `logCoord=4S`, `n=8−4S`, `psi=CONE+S`, and the cone constant.
+- Added regressions for default-HOLD behavior, invalid S/tau/TTL, metadata field injection, invalid E-gate statuses, signed out-of-domain residuals, and signed but inconsistent derived coordinates.
+
+Commits on Control Plane PR #33:
+- `baa7927717b37e4fb25ce314b39ee53a042c88bb` — default-HOLD and strict input/TTL guards.
+- `03c0ff2877c6310c8ead6b96dca6269d7f1c80ff` — protected metadata/authority fields.
+- `9b11ca61a66d632a3a0fd677cc2cf658b4dbe8e1` — verification of residual domain/coordinate consistency.
+- `80888f067d05a2d81f4763f95503d22fbbf984c0` and `c2f9f8b11b2429f7c5e6654eb21fd34628d3074a` — regression coverage.
+
+### Verification status
+
+Latest PR head is `c2f9f8b11b2429f7c5e6654eb21fd34628d3074a`. Focused Actions run `40444539329` and Plane CI run `40444539310` both report failure. The focused job again has no visible steps or logs, so no repository test pass is claimed. The workflow does include `test/evidence-console.test.mjs`, which now contains the new regressions. The earlier 8/8 isolated residual harness is not evidence for these new changes.
+
+### Remaining boundary
+
+This mitigation prevents false-ready defaults and hardens the local E0–E6 producer. It does **not** connect that producer to the G0–G6 production consumer. The producer still signs canonical JSON UTF-8 bytes while the consumer verifies the raw digest bytes, and their schemas/gates are semantically different. No adapter is warranted. Production remains HOLD until the actual production gate evaluator, source identity, signing contract, live endpoint, and exact-head CI are independently verified.
