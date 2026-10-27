@@ -108,3 +108,20 @@ This narrows the remaining integration gap: a traceable evidence store and signe
 6. Publish a versioned G0–G6 status endpoint only after all above checks pass, then run end-to-end positive, tamper, stale, wrong-key, wrong-identity, missing-gate, and procurement-domain rejection tests.
 
 This is a proposed integration checklist derived from the inspected implementations, not a claim that these mappings are already implemented. No production G0–G6 producer or deployed trust binding was found in the inspected source. Production remains HOLD.
+
+
+## CLXXXVI — producer/consumer protocol mismatch is a trust boundary
+
+Added [Descent CLXXXVI](https://github.com/doitupsolutions810-crow/great-scale/blob/research/descent-cxli-evidence-projection-reconciliation/research/DESCENT_CLXXXVI_PRODUCER_CONSUMER_PROTOCOL_MISMATCH.md) after re-reading the actual control-plane producer, consumer, namespace evaluator, and regression test.
+
+The producer emits signed E0–E6 procurement evidence using canonical-JSON payload bytes and explicitly reports `productionClaimed: false`. The consumer requires a different status shape, G0–G6 readiness, independently pinned identity/key ID, and an Ed25519 signature over the 32-byte canonical status digest. The mismatch is in the authority domain and signed-message protocol, not just field names. A relabeling adapter would not prove production authority.
+
+The regression test that rejects procurement evidence as G0–G6 authority is present at control-plane PR #33 head `3004707d31b4928c58a6fa3ca8b02981aa9b810a`; it remains source-verified, not runtime-verified. The corresponding exact-head workflow run `40440181670` failed without exposing executed steps/logs. Vercel's build-rate-limit failure and Snyk success do not establish test execution.
+
+Formal release predicate:
+
+`A_prod = I ∧ M ∧ G ∧ F ∧ C ∧ X ∧ L`
+
+where (I) is independent producer identity, (M) is protocol/signature agreement, (G) is authoritative G0–G6 evidence, (F) is freshness, (C) is exact contract binding, (X) is observable exact-revision test execution, and (L) is live endpoint/key verification. Procurement-document validity alone does not imply any of these production predicates.
+
+Decision remains **HOLD**. The note is a documented finding and integration sequence, not a production producer implementation; PR #33 and PR #128 remain draft.
