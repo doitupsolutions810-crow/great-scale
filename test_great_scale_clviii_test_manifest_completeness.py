@@ -45,6 +45,39 @@ def tests_not_invoked_by_direct_runner(path: Path):
             }
         return set()
 
+    def loop_target_called_in_reachable_block(statements, target_names):
+        """Detect loop-variable dispatch without counting dead branches or nested functions."""
+        class ReachableCallVisitor(ast.NodeVisitor):
+            def __init__(self):
+                self.found = False
+
+            def visit_Call(self, node):
+                if isinstance(node.func, ast.Name) and node.func.id in target_names:
+                    self.found = True
+                self.generic_visit(node)
+
+            def visit_FunctionDef(self, node):
+                return
+
+            visit_AsyncFunctionDef = visit_FunctionDef
+            visit_Lambda = visit_FunctionDef
+            visit_ClassDef = visit_FunctionDef
+
+            def visit_If(self, node):
+                self.visit(node.test)
+                if isinstance(node.test, ast.Constant) and isinstance(node.test.value, bool):
+                    selected = node.body if node.test.value else node.orelse
+                    for child in selected:
+                        self.visit(child)
+                else:
+                    for child in node.body + node.orelse:
+                        self.visit(child)
+
+        visitor = ReachableCallVisitor()
+        for statement in statements:
+            visitor.visit(statement)
+        return visitor.found
+
     def inspect_block(statements, registry):
         invoked = set()
         known_registries = dict(registry)
@@ -73,11 +106,7 @@ def tests_not_invoked_by_direct_runner(path: Path):
 
             if isinstance(statement, ast.For):
                 loop_targets = assigned_names(statement.target)
-                loop_calls = {
-                    child.func.id for child in ast.walk(statement)
-                    if isinstance(child, ast.Call) and isinstance(child.func, ast.Name)
-                }
-                if loop_targets & loop_calls:
+                if loop_target_called_in_reachable_block(statement.body, loop_targets):
                     if isinstance(statement.iter, ast.Name):
                         invoked.update(known_registries.get(statement.iter.id, set()))
                     elif isinstance(statement.iter, (ast.List, ast.Tuple, ast.Set)):
@@ -179,9 +208,37 @@ def test_audit_rejects_a_test_call_in_a_false_branch():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_dead_branch.py"
         path.write_text(
-            "def test_regression():\\n    assert True\\n\\n"
-            'if __name__ == "__main__":\\n'
-            "    if False:\\n        test_regression()\\n",
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    if False:\n        test_regression()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_loop_dispatch_in_a_false_branch():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_dead_loop_branch.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for test in [test_regression]:\n"
+            "        if False:\n"
+            "            test()\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
+def test_audit_rejects_loop_dispatch_inside_an_uninvoked_helper():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_nested_helper.py"
+        path.write_text(
+            "def test_regression():\n    assert True\n\n"
+            'if __name__ == "__main__":\n'
+            "    for test in [test_regression]:\n"
+            "        def helper():\n"
+            "            test()\n",
             encoding="utf-8",
         )
         assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
@@ -237,6 +294,8 @@ if __name__ == "__main__":
         test_audit_rejects_an_unexecuted_test_registry,
         test_audit_rejects_a_bare_reference_to_test_function,
         test_audit_rejects_a_test_call_in_a_false_branch,
+        test_audit_rejects_loop_dispatch_in_a_false_branch,
+        test_audit_rejects_loop_dispatch_inside_an_uninvoked_helper,
     ]
     for test in tests:
         test()
