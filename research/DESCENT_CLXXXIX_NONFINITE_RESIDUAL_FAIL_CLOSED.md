@@ -73,3 +73,24 @@ The parser now:
 The expanded isolated Node.js regression suite passed **7/7 tests**, including domain boundaries, malformed strings, overflow/underflow, and out-of-domain finite inputs. These were run against a temporary isolated harness reproducing the committed helper and its residual predicate; this is not a clean checkout of the full repository. Hosted GitHub Actions still fails before exposing steps, so full integration and hosted execution remain unverified.
 
 The new domain bound is derived from the repository's own `fromTopologicalSaturation` formula; if the intended external QGT feed uses a different coordinate convention, that contract must be documented and versioned before widening the accepted domain. Production remains **HOLD**.
+
+
+## CLXC — the cone predicate is algebraically non-discriminating
+
+Source inspection of `lib/great-scale-residual.mjs` yields:
+
+```
+CONE = φ⁻²
+psi(S) = CONE + S
+coneCompliant(S) := psi(S) >= CONE - 1e-12
+```
+
+Substitution reduces the check to `S >= -1e-12`. Consequently, it returns true for `Infinity` and arbitrarily large positive finite values; it cannot independently prove finiteness, domain validity, topology consistency, or producer authority. Under the topology-derived domain `S∈[0,0.25]`, it is true for every accepted value and adds no discriminating power. The actual safety boundary is the strict parser/domain validation, not this cone predicate.
+
+Mitigation:
+- Added an explicit warning to the predicate's source comment: it is only a lower-bound predicate, not a finiteness/domain validator or independent geometric proof.
+- Added a characterization regression showing the predicate accepts `Infinity` and `1e100`, while the input boundary rejects those values.
+- Retained the strict decimal parser, overflow/underflow rejection, and topology-derived domain hold.
+- Did not invent a replacement geometric inequality. A stronger cone test requires the authoritative mathematical contract and expected valid/invalid examples from the model owner.
+
+The isolated Node.js suite must be rerun after this additional characterization test. Hosted Actions still fails before exposing execution steps. Production remains **HOLD**.
