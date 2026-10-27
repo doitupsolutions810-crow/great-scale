@@ -78,3 +78,12 @@ The complete chain is:
 \]
 
 Each arrow is an independently testable contract boundary. The profound result is that system correctness is not one boolean: it is a conjunction of authority, completeness, authenticity, freshness, execution, and revision identity. The system must keep its state as unknown until every required predicate has evidence.
+
+
+## Follow-up verification update — 2026-10-27
+
+The CI-evidence classifier in `test_great_scale_clxxiii_ci_execution_evidence.py` was executed from the fetched source in an isolated Python harness: **4/4 cases passed**, including the critical rule that a zero-runner/zero-step failure is UNKNOWN rather than FAIL or PASS. This is a local isolated run, not the full repository aggregate.
+
+The latest Great Scale hosted run [40427882876](https://github.com/doitupsolutions810-crow/great-scale/actions/runs/40427882876) was retried (attempt 2) on head `3371e750d30b6d2d8907762926e78a5718588ec8`; it again ended with `runner_id=0` and zero steps. A retry therefore did not resolve runner availability. The source tree also contains an explicit regression for lambda-wrapped test references in a registry; the current auditor accepts only bare test-function names as registry entries.
+
+A retry request for the Great Scale run succeeded, but retries for the other two repositories were blocked by the available action interface. The existing control-plane and Capability Authority run states therefore remain unchanged. No full suite or production deployment is claimed.
