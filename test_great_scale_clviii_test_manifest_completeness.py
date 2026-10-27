@@ -49,12 +49,13 @@ def tests_not_invoked_by_direct_runner(path: Path):
         invoked = set()
         known_registries = dict(registry)
         for statement in statements:
-            invoked.update(
-                child.func.id for child in ast.walk(statement)
-                if isinstance(child, ast.Call)
-                and isinstance(child.func, ast.Name)
-                and child.func.id in defined
-            )
+            if not isinstance(statement, (ast.If, ast.For, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                invoked.update(
+                    child.func.id for child in ast.walk(statement)
+                    if isinstance(child, ast.Call)
+                    and isinstance(child.func, ast.Name)
+                    and child.func.id in defined
+                )
 
             if isinstance(statement, ast.Assign):
                 value = statement.value
@@ -84,8 +85,12 @@ def tests_not_invoked_by_direct_runner(path: Path):
                 invoked.update(inspect_block(statement.body, known_registries))
                 invoked.update(inspect_block(statement.orelse, known_registries))
             elif isinstance(statement, ast.If):
-                invoked.update(inspect_block(statement.body, known_registries))
-                invoked.update(inspect_block(statement.orelse, known_registries))
+                if isinstance(statement.test, ast.Constant) and isinstance(statement.test.value, bool):
+                    branch = statement.body if statement.test.value else statement.orelse
+                    invoked.update(inspect_block(branch, known_registries))
+                else:
+                    invoked.update(inspect_block(statement.body, known_registries))
+                    invoked.update(inspect_block(statement.orelse, known_registries))
         return invoked
 
     invoked = set()
@@ -231,6 +236,7 @@ if __name__ == "__main__":
         test_audit_accepts_functions_dispatched_from_a_main_guard_registry,
         test_audit_rejects_an_unexecuted_test_registry,
         test_audit_rejects_a_bare_reference_to_test_function,
+        test_audit_rejects_a_test_call_in_a_false_branch,
     ]
     for test in tests:
         test()
