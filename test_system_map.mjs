@@ -194,6 +194,10 @@ test("Great Scale to control-plane edge requires a live build-bound G6 residual 
     "numerical-convergence-and-rigorous-error-bounds-validated",
     "topological-mapping-valid-true",
     "artifact-role-and-digest-binding-independently-verified",
+    "shared-composite-release-build-id-or-explicit-versioned-source-target-build-binding",
+    "g6-measurement-build-id-equals-final-g0-g6-build-id",
+    "great-scale-model-artifact-digest-distinct-from-control-plane-artifact-digest",
+    "both-source-model-commit-and-consumer-release-commit-pinned",
   ]) {
     assert.ok(edge.requiredEvidence.includes(requirement), `missing G6 promotion evidence: ${requirement}`);
   }
@@ -212,9 +216,9 @@ test("registry pins the schema-only G6 measurement receipt and exact consumer ma
       measurementSTopologicalToResidualS: "measurement.STopological -> residual.S",
       measuredAtToResidualMeasuredAt: "measuredAt -> residual.measuredAt",
       issuerToResidualSourceId: "issuer -> residual.sourceId",
-      buildIdToResidualBuildId: "buildId -> residual.buildId",
+      buildIdToResidualBuildId: "buildId must equal residual.buildId and the G0-G6 attestation buildId; it must be a shared composite release ID binding the Great Scale model run/artifact and Control Plane target build. If independent per-repository build IDs are used, v1 is insufficient and requires a versioned sourceBuildId/acceptanceBuildId contract.",
       sourceCommitEqualsWorkflowHead: "source.commitSha must equal execution.headSha",
-      artifactBinding: "artifact.digest and model.inputDigest must be verified against the intended source/build/artifact scope",
+      artifactBinding: "artifact.digest identifies the Great Scale model artifact and model.inputDigest binds its inputs; verify both independently and never substitute either for the Control Plane acceptance artifact digest.",
       trustBoundary: "verify Ed25519 against an independently configured public key; receipt cannot choose its trust anchor",
     },
   });
@@ -243,4 +247,8 @@ test("G6 measurement schema contract cannot silently change or claim to be a pro
   const changedMapping = structuredClone(baseline);
   changedMapping.g6ResidualMeasurementContract.mapping.measurementSTopologicalToResidualS = "measurement.raw -> residual.S";
   assert.ok(validateRepositoryMap(changedMapping).some(message => message.includes("g6ResidualMeasurementContract")));
+
+  const ambiguousBuildId = structuredClone(baseline);
+  ambiguousBuildId.g6ResidualMeasurementContract.mapping.buildIdToResidualBuildId = "buildId -> residual.buildId";
+  assert.ok(validateRepositoryMap(ambiguousBuildId).some(message => message.includes("g6ResidualMeasurementContract")));
 });
