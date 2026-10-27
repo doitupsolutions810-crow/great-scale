@@ -27,8 +27,13 @@ function validateExecutionProof(proof, {
   }
 
   if (subjectRepository) {
+    if (proof.subjectRepository !== subjectRepository) {
+      add(`verification.subjectRepository must equal ${subjectRepository}`);
+    }
     if (!validSha(proof.commitSha)) add("verification.commitSha must be a full 40-character SHA");
   } else if (edge) {
+    if (proof.sourceRepository !== edge.from) add(`verification.sourceRepository must equal edge.from (${edge.from})`);
+    if (proof.targetRepository !== edge.to) add(`verification.targetRepository must equal edge.to (${edge.to})`);
     if (!validSha(proof.sourceCommitSha)) add("verification.sourceCommitSha must be a full 40-character SHA");
     if (!validSha(proof.targetCommitSha)) add("verification.targetCommitSha must be a full 40-character SHA");
   }
