@@ -170,6 +170,18 @@ def test_audit_accepts_test_functions_called_by_main_guard():
         assert tests_not_invoked_by_direct_runner(path) == []
 
 
+def test_audit_rejects_a_test_call_in_a_false_branch():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "test_dead_branch.py"
+        path.write_text(
+            "def test_regression():\\n    assert True\\n\\n"
+            'if __name__ == "__main__":\\n'
+            "    if False:\\n        test_regression()\\n",
+            encoding="utf-8",
+        )
+        assert tests_not_invoked_by_direct_runner(path) == ["test_regression"]
+
+
 def test_audit_accepts_functions_dispatched_from_a_main_guard_registry():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "test_registry.py"
