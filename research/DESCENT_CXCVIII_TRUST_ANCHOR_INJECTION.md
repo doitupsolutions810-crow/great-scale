@@ -38,3 +38,11 @@ Relevant commits:
 Release still requires all of the following: exact-head tests and CI pass; authoritative producer emits real G0–G6 acceptance and a signed residual measurement; deployment pins the acceptance public key, key ID, build ID, and residual source ID; positive and negative live end-to-end tests verify the same build; and the PR receives review before merge.
 
 **HOLD / NO-GO.** No merge, production key mutation, endpoint configuration, or activation was performed. Missing evidence continues to fail closed.
+
+### Follow-up verification after report creation
+
+- Latest checked candidate head: `cd7b6b05d4ddc56eb3fbfd044e467e50055d1449`.
+- CI run [40448564268](https://github.com/doitupsolutions810-crow/living-intermediate-control-plane/actions/runs/40448564268) completed with failure; the container/security job was skipped.
+- The main job's log endpoint again returned `BlobNotFound`, and its step list was empty. The failing command therefore remains unknown.
+- The 14-assertion focused test suite and caller-trust-anchor regression are present in the repository source, but they are not proven to have passed.
+
