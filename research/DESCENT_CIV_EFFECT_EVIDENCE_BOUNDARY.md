@@ -103,3 +103,123 @@ Therefore, the inference (A_c=0 Rightarrow W=0) is invalid. If retry repeats the
 The fix is not merely to change HTTP 500 to HTTP 200. Use a stable operation ID with a database uniqueness constraint or equivalent atomic deduplication, separate primary-write outcome from cache/metrics health, and expose a way to query/reconcile the original operation. Cache failure after a committed primary write should not silently transform a committed write into a retryable no-effect claim.
 
 This is a source-code failure-path analysis, not proof that the deployed service has experienced duplicates. Deployment and runtime fault injection have not been performed.
+
+
+## Descent CXLI — authoritative ledger versus searchable projection
+
+A second independent failure boundary appears in Capability Authority's evidence pipeline. On default-branch `evidence/index.py` at blob SHA `ada6279eb02fa1286ced2f8c021e5983269cef73`, index initialization catches JSON parse errors and resets `_docs` to an empty list. In `ingest`, exceptions from the hash-chained warehouse append are swallowed; the event is still added to the JSON projection. The corresponding default-branch warehouse at blob SHA `509c1c9ee46f2ca5842b216224c3f5b08a4a74a0` reads the chain tip and appends without acquiring a write lock before the tip read.
+
+The fixes for serialized append, fail-closed index loading, warehouse error propagation, and atomic JSON replacement are proposed in [Capability Authority PR #12](https://github.com/doitupsolutions810-crow/capability-authority/pull/12). The PR is open and unmerged; its controls are not yet the default-branch behavior.
+
+The proposed branch still has a cross-store gap: SQLite commits before the JSON projection is atomically replaced. If SQLite commits and the projection write fails, the ledger and projection diverge. A retry can append the same logical event again unless a stable event ID is enforced by the authoritative store. Atomic replacement prevents partial JSON files; it does not make SQLite plus JSON one transaction.
+
+Let:
+- (L): authoritative ledger contains the event;
+- (J): searchable projection durably reflects the event;
+- (Q): caller receives a success response;
+- (K): the authoritative store enforces idempotency for the stable event ID.
+
+The necessary completion condition is:
+
+\[
+\operatorname{Complete}=L\land J\land Q
+\]
+
+The safe retry condition after a possible ledger commit is:
+
+\[
+\operatorname{RetrySafe}=\neg L\lor K
+\]
+
+When (L=1) and (J=0), the correct state is `RECONCILE_PROJECTION`, not `FAILED_NO_EFFECT` and not `COMPLETE`. The projection should be rebuildable from the authoritative ledger, and replay should be idempotent by event identity.
+
+The executable model checks all (2^4=16) states. It verifies that completion requires ledger, projection, and acknowledgement, and that retry after a ledger commit requires enforced deduplication. This is a contract test, not a real SQLite/filesystem crash test. Production remediation still needs a stable event ID, unique constraint/migration, replay/rebuild logic, and injected failures after ledger commit but before projection replacement.
+
+
+## Descent CXLII — stale projection writers can erase each other's events
+
+A further concurrency gap remains in Capability Authority's proposed PR #12. The JSON index uses an instance-local `threading.RLock` and each `EvidenceIndex` instance loads `_docs` into memory at initialization. `_write_atomic` protects readers from seeing a partially written file, but it does not coordinate two processes or two independently initialized index instances.
+
+Counterexample:
+1. Process A and process B both load projection state (J_0=[]).
+2. A commits event (a) to SQLite and atomically writes (J_A=[a]).
+3. B commits event (b) to SQLite and atomically writes its stale-derived (J_B=[b]).
+4. The final projection is ([b]), while the authoritative ledger contains both (a) and (b).
+
+The final file is valid JSON and each rename is atomic; nevertheless, event (a) has disappeared from the projection. Thus atomic replacement is not a lost-update solution, and a process-local lock does not establish a cross-process invariant.
+
+Formally, if (L) is the ledger event set and (J) is the projection event set, the required completeness invariant is:
+
+\[
+J\subseteq L\quad\land\quad L_{\text{projectable}}\subseteq J
+\]
+
+A stale writer can violate the second inclusion even if the first inclusion remains true.
+
+The test extension models this two-writer interleaving and asserts the counterexample: both ledger events exist but the last stale projection omits one. This is a source-grounded concurrency model, not a multiprocess run against the actual SQLite/JSON implementation.
+
+Preferred fixes, in order of simplicity:
+1. Make the searchable projection a SQLite table updated in the same transaction as the ledger.
+2. Or rebuild the projection from the authoritative ledger under a cross-process coordination/reconciliation protocol.
+3. Or use an append-only projection with stable unique event IDs and a reader that tolerates/reconciles duplicate delivery.
+
+A process-local RLock plus atomic file replacement is insufficient. Add an actual multiprocess test that forces the stale-read/write interleaving and then verifies projection completeness against the ledger.
+
+
+## Descent CXLIII — integrity does not prove completeness
+
+The deeper epistemic limit is that a valid hash chain proves consistency of the records it contains, not that every expected event is present, and not that a separate projection contains every ledger event. Capability Authority's `verify_chain()` walks rows that exist and checks each `prev_digest` and digest. A valid chain of length (n-1) can still be missing an event that should have existed; a valid complete ledger can also coexist with an incomplete JSON projection.
+
+Let (V(L)) mean the stored ledger's chain verifies, and (C(L,J)) mean the projection is complete for the ledger. In general:
+
+\[
+V(L)\not\Rightarrow C(L,J)
+\]
+
+The stale-writer example gives (L=\{A,B\}), (J=\{B\}), with a valid chain for (L), yet (L\nsubseteq J). Even stronger, a self-consistent chain alone cannot establish that (L) itself includes every event that should have been recorded. Completeness needs an independent expected-event source, sequence/watermark, transactional outbox, or reconciliation against an authoritative producer/operation registry.
+
+The model test now constructs and verifies a two-event hash chain while deliberately omitting one event from the projection. It asserts that chain integrity succeeds while projection completeness fails. This demonstrates the logical separation; it is not a production database integration test.
+
+**Operational implication:** report integrity, completeness, and provenance as separate evidence fields. A single `verified: true` must not imply completeness unless the system also verifies a trusted sequence boundary or reconciles against an independent source of expected events.
+
+
+### Stronger corollary: a valid hash-chain prefix cannot detect tail truncation
+
+Because `verify_chain()` starts from the fixed zero digest and verifies only rows returned by the database, deleting one or more trailing rows leaves a valid prefix. The verifier has no trusted expected row count, externally anchored tip, or producer sequence watermark to distinguish “the full ledger” from “a valid but truncated history.” The digest is also unkeyed, so the chain alone does not authenticate who produced an event.
+
+Formally, for a valid chain (L_n), its prefix (L_k) for (k<n) can also verify:
+
+\[
+V(L_n)=\text{true}\quad\land\quad V(L_k)=\text{true}
+\]
+
+while (L_k) is incomplete relative to the expected history. Detecting this requires an independently trusted checkpoint/tip, monotonic producer sequence, signed checkpoint, or reconciliation against an external event source. Hash chaining detects internal tampering of retained rows; it does not, by itself, detect suffix deletion or establish authenticity.
+
+
+## Descent CXLIV — stable event identity makes retries replayable
+
+Capability Authority's proposed PR #12 now adds a stable `event_id` identity to the SQLite evidence warehouse. Within `BEGIN IMMEDIATE`, append first looks up the ID; if it already exists with the same logical payload, it returns the original digest and predecessor digest instead of appending another row. Reusing an ID for a different logical payload is rejected. A partial unique index enforces at most one row per non-null event ID, and migration refuses to silently proceed if historical duplicate IDs already exist.
+
+The projection path consumes the replay signal: if the event is already projected, it returns the existing record instead of duplicating it; if the ledger committed but a fresh projection lacks the event, retry can repopulate that entry from the original ledger receipt. The implementation ignores `_indexed_at` when comparing logical retry payloads because that field is generated anew during each ingest attempt.
+
+The new contract is:
+
+\[
+\forall e,\quad \operatorname{count}_{L}(e.id)\leq 1
+\]
+
+and, for an identical retry, the receipt is stable:
+
+\[
+\operatorname{receipt}(e,id) = \operatorname{receipt}(e,id)_{\text{retry}}
+\]
+
+Reusing the same ID with a different logical payload must fail, not silently mutate the original event. Events without a stable `event_id` remain outside this deduplication guarantee; callers must generate and preserve the ID across retries.
+
+### Verification boundary
+
+Added repository tests cover same-ID replay, conflicting payload rejection, 32 concurrent attempts for one ID, valid chain length, projection duplicate suppression, and repair of a missing projection entry. The exact committed test files were copied into an isolated local harness and executed: **9 tests passed, exit code 0**. This is a local copied-source harness, not the full repository test suite or hosted CI. The latest hosted `lab` workflow on Capability Authority head `9162c738b5ec0f0a31d9efe164395e5ddb4daeba` failed, but GitHub exposed no job steps/logs, so the cause remains unknown.
+
+### Remaining descent
+
+Stable event identity closes the duplicate-ledger-append gap only for callers that supply the same ID. It does not solve the separate cross-process JSON stale-writer problem identified in CXLII, prove that the ledger has not been truncated, or authenticate the producer. The next durable architecture is a SQLite projection updated in the same transaction as the ledger, plus an independently anchored chain checkpoint and principal-bound operation IDs. Until then, integrity, completeness, authenticity, projection consistency, and caller acknowledgement must remain separate status fields.

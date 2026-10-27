@@ -1,0 +1,124 @@
+# Descent CLXCI — overlapping evidence branches encode incompatible trust contracts
+
+Date: 2026-10-27
+
+## Executive finding
+
+A fresh fetch of Control Plane PRs #31 and #33 confirms the overlap warning is a protocol collision, not merely a merge conflict. Both branches modify `integrate.mjs`, `status/procurement-bridge.mjs`, `lib/evidence-console.mjs`, `package.json`, and shared tests, but they encode different producer/consumer assumptions.
+
+### Contract matrix
+
+| Dimension | PR #31 branch | PR #33 branch | Safe conclusion |
+|---|---|---|---|
+| Evidence gate IDs | E0–E6 | G0–G6 | Not interchangeable; E gates describe evidence/procurement contract checks, G gates describe production acceptance |
+| Runtime declaration | `read-only-dynamic` | `static` | Must match the actual deployed producer; cannot be selected by a merge preference |
+| Public status authority | v5.4.0 contract plus source-signature helper | v5.4.0 contract plus pinned-key Ed25519 verification in consumer | Verify one canonical signing protocol end to end, including exact bytes/digest and key identity |
+| Procurement authorization | Shared `authorizeProcurement` plus supply-chain report and Cosign attestation | `evaluateGateNamespaces`, explicit `supplyChainOk: false` | PR #33 is safer than bypassing production supply-chain checks, but does not incorporate PR #31's shared procurement supply-chain evidence path |
+| Alternate entry point | Uses shared supply-chain runtime and authorization policy | Uses live evidence probe and namespace evaluator | Both need the same residual, evidence, and supply-chain decisions without duplicating or weakening gates |
+| CI evidence | Isolated policy harnesses documented; hosted Actions still opaque | Isolated gate/parser harnesses documented; hosted Actions still opaque | Neither branch has an observable exact-head full-suite pass |
+
+## Cross-check against actual PR #33 source
+
+The current `lib/gate-namespaces.mjs` explicitly declares:
+- E0–E6: evidence-console contract checks for procurement/public evidence.
+- G0–G6: production readiness/acceptance gates.
+- `ProcurementReady ≠ ProductionAuthorized`.
+
+However, PR #33's `lib/evidence-console.mjs` currently expects the public status payload's seven IDs to be G0–G6 and expects `runtime: static`. Its `lib/evidence-status-document.mjs` describes the emitted entries as E0–E6 and explicitly says it does not claim G0–G6 production authorization. That is a concrete producer/consumer incompatibility inside the same candidate branch, in addition to the cross-PR collision.
+
+This cannot be fixed by relabelling E0–E6 entries as G0–G6. That would convert procurement contract checks into apparent production acceptance without the underlying production evidence. The safe outcomes are:
+1. Keep the current producer explicitly non-production and ensure it cannot satisfy a consumer that demands G0–G6; or
+2. Implement a genuine production G0–G6 producer whose checks and identity are independently authoritative, then version and test the exact status/schema/signature contract.
+
+The deployed producer and intended runtime contract have not been independently identified in this pass. Therefore neither option should be guessed into production.
+
+## Residual coordinate: validity is not provenance
+
+The strict parser now rejects malformed/non-finite input and enforces the repository-derived `S∈[0,0.25]` domain. That only establishes syntactic and domain validity. A supplied `GREAT_SCALE_S` value is still environment input, not proof that S was derived from a live topology observation or signed by an authoritative producer. The unset default `S=0` is a documented fallback, not a live topology attestation.
+
+Consequently:
+- Keep parser/domain checks as a boundary guard.
+- Do not describe `residualInput.valid` as provenance or topology verification.
+- Production authorization must remain independently blocked until live topology provenance and the production supply-chain/identity gates are verified.
+- Procurement readiness must not be represented as production authorization.
+
+## Verification performed in this continuation
+
+- Re-fetched both open draft PRs and their changed-file lists.
+- Confirmed PR #31 is currently reported non-mergeable; PR #33 is reported mergeable. This metadata is not a protocol compatibility proof.
+- Compared the PR patches for the shared authorization and evidence-console files.
+- Recreated the fetched residual parser and cone predicate in an isolated Node.js 22 harness and ran the seven parser/domain tests plus the cone-predicate characterization test: **8/8 passed**; syntax checks passed. This is isolated-source verification, not a clean checkout or full repository run.
+- The latest focused Actions job remains failed with no visible steps or retrievable logs. The combined commit status also reports Vercel failure due to a deployment build-rate limit and Snyk success; neither result substitutes for the required test suite.
+
+## Required reconciliation sequence
+
+1. Declare one versioned public status contract, including gate namespace, runtime model, source timestamps, canonical digest bytes, signature algorithm, source identity, key ID, and key rotation policy.
+2. Keep procurement E0–E6 and production G0–G6 semantically distinct. If the production consumer requires G0–G6, the producer must actually evaluate those production gates.
+3. Port PR #31's shared supply-chain authorization path into a consolidated branch only after the status-contract collision is resolved; preserve fail-closed Cosign verification, immutable image digest, same-revision binding, freshness, and no-skip checks.
+4. Bind the residual coordinate to an authenticated topology observation or explicitly label it diagnostic/operator supplied; never infer provenance from numeric range alone.
+5. Run the exact consolidated checkout: syntax checks, `node --test test/evidence-console.test.mjs test/gate-namespaces.test.mjs test/residual-input.test.mjs`, full `npm test`, and negative integration cases.
+6. Restore observable hosted CI and verify the exact candidate SHA. Then verify live status/schema/signature against the actual deployed producer.
+7. Only after every independent predicate is satisfied may release authorization be reconsidered.
+
+Decision: do not merge PR #31 and #33 unchanged; do not promote E0–E6 to G0–G6; do not enable production. **Production remains HOLD.**
+
+
+## CLXCI-A — executable non-interchangeability regression added
+
+Added a regression to Control Plane `test/evidence-console.test.mjs` that builds and signs the actual E0–E6 procurement document, submits it to the G0–G6 public production consumer validator, and asserts rejection for runtime mismatch, missing source-issued freshness fields, and absent expected gate structure. This codifies the safe boundary rather than adapting E0–E6 into apparent G0–G6 authority.
+
+Commit: `0bf4ca304682d55681a26b063a0917a4bc4b3f4d` on PR #33's branch. The test has been added to the existing focused workflow's already-covered test path, but it has **not yet executed in hosted CI**. The previous 8/8 isolated parser harness does not include this new cross-contract regression. Full repository tests remain unverified.
+
+
+## CLXCI-B — signature bytes are incompatible even if field names are adapted
+
+The mismatch also exists at the cryptographic boundary:
+- `lib/evidence-status-document.mjs` computes a canonical JSON payload string and signs its UTF-8 bytes with Ed25519.
+- `lib/evidence-console.mjs` computes a SHA-256 hex digest and verifies the Ed25519 signature over the decoded 32-byte digest (`Buffer.from(digest, 'hex')`).
+
+Those are different signed messages. Copying or renaming `digest/keyId/signature` into `sourceEvidenceDigest/sourceKeyId/sourceSignature` cannot make the signature valid. A compatible protocol must specify one exact signed byte sequence, canonicalization rules, digest encoding, signature encoding, key identity, and producer key ID, then use the same rules in producer and consumer.
+
+Added a regression to PR #33's `test/evidence-console.test.mjs` that constructs a consumer-shaped status signed using the producer's canonical-JSON-byte convention and asserts the consumer's raw-digest verifier rejects it with `signature_verification_failed`. Commit: `6ec69a286c0674f486026b5c981835203493c04e`. A local Node syntax check passed for the added test fragment; the actual repository test has not executed because hosted Actions still fails before visible steps. Do not treat this as a runtime test pass.
+
+
+### CLXCI-B isolated cryptographic reproduction
+
+A local Node.js 22 cryptographic reproduction signed a 436-byte canonical JSON payload and then attempted to verify that Ed25519 signature over the 32-byte SHA-256 digest. Verification correctly returned `false`; a signature created over the raw digest verified as `true`. This directly confirms the signed-message mismatch. It is a focused crypto reproduction, not execution of the repository test file or full suite.
+
+
+## CLXCII — a producer can manufacture READY procurement checks from a tautological cone predicate
+
+A further source-level audit found that `buildEvidenceStatusDocument()` defaulted all seven E0–E6 checks to `READY` whenever `residual.coneOk` was true. But `coneCompliant(S)` is only `CONE + S >= CONE - epsilon`, so for every valid `S∈[0,0.25]` this predicate is true and provides no procurement-specific evidence. A missing check result could therefore be rendered as seven READY checks. This was a stronger local finding than the prior producer/consumer mismatch.
+
+### Mitigation committed to PR #33
+
+- Missing `contractChecks` now defaults every E0–E6 item to `HOLD`; cone compliance alone cannot create READY procurement evidence.
+- Producer input validates `S∈[0,0.25]`, finite `tau∈[0,1]`, and a positive TTL no greater than five minutes.
+- Evidence authority is fixed to `local`; metadata cannot override protected contract fields, gate arrays, namespace, or production-claim fields.
+- Producer verification checks E-gate status values, residual domain, and consistency of `logCoord=4S`, `n=8−4S`, `psi=CONE+S`, and the cone constant.
+- Added regressions for default-HOLD behavior, invalid S/tau/TTL, metadata field injection, invalid E-gate statuses, signed out-of-domain residuals, and signed but inconsistent derived coordinates.
+
+Commits on Control Plane PR #33:
+- `baa7927717b37e4fb25ce314b39ee53a042c88bb` — default-HOLD and strict input/TTL guards.
+- `03c0ff2877c6310c8ead6b96dca6269d7f1c80ff` — protected metadata/authority fields.
+- `9b11ca61a66d632a3a0fd677cc2cf658b4dbe8e1` — verification of residual domain/coordinate consistency.
+- `80888f067d05a2d81f4763f95503d22fbbf984c0` and `c2f9f8b11b2429f7c5e6654eb21fd34628d3074a` — regression coverage.
+
+### Verification status
+
+Latest PR head is `c2f9f8b11b2429f7c5e6654eb21fd34628d3074a`. Focused Actions run `40444539329` and Plane CI run `40444539310` both report failure. The focused job again has no visible steps or logs, so no repository test pass is claimed. The workflow does include `test/evidence-console.test.mjs`, which now contains the new regressions. The earlier 8/8 isolated residual harness is not evidence for these new changes.
+
+### Remaining boundary
+
+This mitigation prevents false-ready defaults and hardens the local E0–E6 producer. It does **not** connect that producer to the G0–G6 production consumer. The producer still signs canonical JSON UTF-8 bytes while the consumer verifies the raw digest bytes, and their schemas/gates are semantically different. No adapter is warranted. Production remains HOLD until the actual production gate evaluator, source identity, signing contract, live endpoint, and exact-head CI are independently verified.
+
+
+### Offline policy-harness rerun (separate from CLXCII source changes)
+
+The locally available, isolated prior policy harnesses were rerun in Node.js v22.16.0:
+- Mainline gate namespace harness: 11/11 tests passed.
+- PR #31 evidence authorization harness: 19/19 assertions passed.
+- PR #31 supply-chain evidence harness: 12/12 assertions passed.
+- PR #31 entrypoint/manifest source-contract harness: 10/10 assertions passed.
+
+These harnesses use compact/offline reproductions or a prior source snapshot. They do **not** import the latest PR #33 `evidence-status-document.mjs` and therefore do not validate the CLXCII producer changes or newly added repository tests. Hosted Actions for the latest exact head still fails with no visible steps/logs.

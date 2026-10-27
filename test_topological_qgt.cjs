@@ -96,6 +96,16 @@ testCase('quadrature diagnostics are sensitive to sampling-grid alignment near t
   assert.ok(stable.gridAlignmentAreaDiscrepancy <= stable.quadratureTolerance);
 });
 
+testCase('topological acceptance fails closed when bounded refinement did not converge', () => {
+  const underResolved = qiWuZhangGlobalGeometry(-2.49, 6, 3);
+  assert.strictEqual(underResolved.quadratureConverged, false);
+  assert.ok(underResolved.metricAreaQuadratureError > underResolved.quadratureTolerance);
+  assert.ok(underResolved.metricAreaQuadratureSafetyEstimate <= underResolved.quadratureTolerance,
+    'counterexample requires the empirical estimate to pass while the observed difference fails');
+  assert.strictEqual(underResolved.topologicalMappingValid, false);
+  assert.strictEqual(underResolved.acceptedPsiTopological, null);
+});
+
 testCase('metric-area excess measures minority-sign curvature cancellation in converged phases', () => {
   for (const m of [-1, 1, 3]) {
     const d = qiWuZhangGlobalGeometry(m, 40);
@@ -108,7 +118,7 @@ testCase('metric-area excess measures minority-sign curvature cancellation in co
   }
 });
 
-testCase('Richardson-style quadrature estimates are exposed and bounded on stable phases', () => {
+testCase('Richardson-style quadrature estimates are exposed as empirical diagnostics', () => {
   for (const m of [-1, 1, 3]) {
     const d = qiWuZhangGlobalGeometry(m, 40);
     assert.strictEqual(d.quadratureConverged, true);
