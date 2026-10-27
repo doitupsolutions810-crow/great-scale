@@ -11,6 +11,21 @@ const FIXED = 4.5;
 const RESIDUAL_PARTITION = Object.freeze([4, 3, 1]);
 const DUAL_ATLAS = Object.freeze({ 4: 'Watch', 3: 'Observer', 1: 'Forward' });
 
+const MIN_RESIDUAL_COORDINATE = 0;
+const MAX_RESIDUAL_COORDINATE = 0.25;
+
+/**
+ * Validate the supported topology-derived residual domain S=(1-tau^2)/4,
+ * tau in [0,1]. This is distinct from coneCompliant(), which only checks
+ * the algebraic lower bound and is not a finiteness/domain validator.
+ */
+function isValidResidualCoordinate(S) {
+  return typeof S === 'number' &&
+    Number.isFinite(S) &&
+    S >= MIN_RESIDUAL_COORDINATE &&
+    S <= MAX_RESIDUAL_COORDINATE;
+}
+
 function heat(h) {
   const x = Math.max(0, Math.min(1, h));
   return x * (1 - x);
@@ -80,6 +95,7 @@ module.exports = {
   logCoordinate,
   psi,
   coneCompliant,
+  isValidResidualCoordinate,
   atlasRole,
   fromTopologicalSaturation,
   softContract,
