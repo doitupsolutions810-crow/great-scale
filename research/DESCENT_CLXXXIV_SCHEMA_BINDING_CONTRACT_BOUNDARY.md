@@ -194,3 +194,11 @@ Added test/producer-evidence-contract.test.mjs with five regression cases: valid
 GitHub Actions continues to report the Plane CI job as failed, but the connector exposes neither step summaries nor downloadable job logs for these runs. The exact failing command is therefore still unknown. Source re-fetch confirms the latest head contains the verifier, dual-endpoint probe, and tests; this is not equivalent to executing those tests. The producer README also states that its scaffold has not been deployed and its prior production alias returned 404, so live source verification remains unproven.
 
 Release remains HOLD / NO-GO pending actionable exact-head CI evidence, a clean full suite, approved key configuration, and a live response from both producer endpoints.
+
+## Descent CLXXXIX — authority label and fallback reason must agree
+
+The final gate review found one more authorization ambiguity in the exported procurement helper: a recognized degraded status plus explicit local opt-in could authorize fallback even when the same evidence object still claimed authority = public. The probe's normal invalid-document path labels accepted fallback as local, but the exported helper must not rely on callers preserving that consistency.
+
+The helper now requires all three local-fallback facts simultaneously: explicit local opt-in, an enumerated observed degraded status, and authority = local. A regression assertion denies the inconsistent combination status = invalid, authority = public, trustContractVerified = false even with local opt-in. This makes the fallback decision a coherent state rather than a status-only heuristic.
+
+The Control Plane PR head is now 2098bfa1aca0e7e925bfd1b6e58f0ad68b307c5c. Its hosted Plane CI job again reports failure without step summaries or downloadable logs; downstream container validation is skipped. This does not identify the failing command and does not count as a test result for the new assertion. Release remains HOLD / NO-GO.
