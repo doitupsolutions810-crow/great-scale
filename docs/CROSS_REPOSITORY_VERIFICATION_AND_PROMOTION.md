@@ -297,3 +297,9 @@ The Great Scale → Control Plane interface remains `proposed-not-verified`. The
 ### G6 policy digest/version reconciliation
 
 The Control Plane's G0-G6 G6 domain hardening is now versioned as gate policy **1.0.1**. The executable gate policy, canonical policy manifest and acceptance schema's `gatePolicyVersion` must agree, and the digest changes with the G6 wording. Policy 1.0.1 requires `S` to be finite and within the topology-derived domain `[0, 0.25]`, in addition to source/build binding, freshness, and the configured cone predicate. This prevents the verifier's stronger runtime behavior from drifting silently away from the versioned policy digest. The producer is still not verified live and production remains HOLD.
+
+### Composite release identity across the G6 source receipt and G0-G6 target
+
+The pinned G6 receipt schema has two different artifact roles: `artifact.digest` is the immutable **Great Scale model artifact**; the Control Plane G0-G6 attestation's own `artifact.digest` identifies the **target production artifact**. They must remain distinct and separately verified. The receipt's `source.commitSha` is the Great Scale model revision and must equal its measurement workflow's `execution.headSha`; it is not the Control Plane source SHA.
+
+The current Control Plane verifier requires `residual.buildId === attestation.buildId`. Therefore schema v1's receipt `buildId` must be a **shared composite release ID** that binds the Great Scale model run/artifact and the Control Plane target build, not either repository's unrelated auto-generated build number. The registry now encodes that requirement. If the release process cannot supply a common ID, v1 is insufficient and must be replaced by a versioned mapping with distinct `sourceBuildId` and `acceptanceBuildId` fields. Do not promote an edge by simply copying one repository's build ID into the other repository's record.
