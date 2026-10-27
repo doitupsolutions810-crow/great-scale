@@ -60,3 +60,22 @@ Current evidence establishes static shape checks only; (X) and (H) remain unveri
 
 
 Latest retry for control-plane head `58712965e93a2c4cc63113553db14faafd49dab0`: run `40439627571`, attempt 2, again completed as failure with no steps and no job log URL (`runner_id` unavailable through this job response). The retry was explicitly requested after the orphaned test fixture was removed; it still did not expose executable verification. The environment/runner fault remains an unresolved blocker, not evidence of test success or a source-level test failure.
+
+
+## CLXXX follow-up — the producer exists, but it is the wrong authority domain
+
+A deeper repository-tree inspection located `lib/evidence-status-document.mjs` and `status/evidence-status.mjs` on the control-plane candidate. This narrows the earlier producer gap: there is a real local evidence-document producer, but it is explicitly a **procurement / E0–E6** producer, not a G0–G6 production-status endpoint.
+
+Its wire contract is incompatible with the new consumer contract:
+
+- Producer fields: `schema`, `generatedAt`, `expiresAt`, `contractChecks`, `namespaces`, `digest`, `keyId`, `signature`.
+- Consumer requires: `sourceGeneratedAt`, `sourceExpiresAt`, `gates`, `sourceIdentity`, `sourceKeyId`, `sourceEvidenceDigest`, `sourceSignature` and a production-ready G0–G6 gate set.
+- Producer digest is SHA-256 of canonical JSON body and its Ed25519 signature covers the canonical JSON payload bytes.
+- Consumer digest is SHA-256 of canonicalized status with digest/signature fields omitted, then Ed25519 verifies the 32 digest bytes.
+- Producer explicitly reports `productionClaimed: false` from its verifier and documents that it does not claim production authorization.
+
+This is not merely a missing endpoint URL. It is a deliberate trust-domain boundary and a cryptographic protocol mismatch. Relabeling E0–E6 checks or copying field names would be an unsafe bridge. Keep procurement evidence and production authorization separate. A future production producer needs its own explicit G0–G6 contract and signing profile, with independently pinned identity/key and an end-to-end integration test.
+
+A regression test was added in control-plane commit `3004707d31b4928c58a6fa3ca8b02981aa9b810a`: a signed E0–E6 producer document must be rejected by the production consumer and cannot yield public authority. This test is committed but not runtime-verified because hosted CI continues to fail without exposing executed steps or logs.
+
+Updated rule: `A_public = V ∧ T ∧ C ∧ F ∧ K ∧ D ∧ S ∧ G ∧ I ∧ X ∧ H ∧ P`, where (P) means the signed payload came from the explicitly authorized producer/domain (not merely a producer that can sign something). The current local producer establishes procurement evidence only; (P) for production remains false/unverified. Production HOLD remains mandatory.
