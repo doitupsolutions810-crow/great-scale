@@ -233,3 +233,23 @@ The Control Plane probe's notes could say local authority was accepted when the 
 Mitigation staged on Control Plane PR #34: probe notes now distinguish fallback eligibility from authorization; regression assertions cover disabled fallback and trust-failure diagnostics; a new probe-level test checks that the status and `/api/v1/evidence/schema` endpoints are both fetched and that the verifier receives the matching pair. Current Control Plane head: `cad38273c6f2f38651f277a6297feca998122f01`.
 
 Verification remains incomplete. Exact-head CI run `40444030236` failed its main job and skipped downstream container checks. The job-log endpoint returned `BlobNotFound`, and local checkout is blocked by DNS failure resolving `github.com`. Source inspection confirms the assertions are committed, but the JavaScript suite has not been shown to pass. Release remains HOLD / NO-GO pending a successful exact-head suite and live verification using independently pinned production key material.
+
+## Descent CXCII — source-contract attestation was being treated as procurement evidence
+
+The deepest current finding is semantic: the producer's `E0-E6` status is explicitly a self-attestation that the contract endpoint can attest its own identity, key configuration, freshness, schema, digest, signature, and read-only behavior. The producer code explicitly says these checks are **not** production acceptance gates `G0-G6`. Yet the consumer's procurement gate previously treated `status=ok + authority=public + trustContractVerified=true` as sufficient public evidence authorization. This conflated verification that a source contract is authentic with verification that the required production-acceptance evidence exists.
+
+### Mitigation staged
+
+- Split `publicContractOk` from `publicOk` in the procurement gate.
+- A verified source contract is now reported as contract-valid but remains on HOLD unless a separate `procurementEvidenceVerified=true` signal exists.
+- Added regression assertions that contract-only verification is denied and that the gate explains the missing production-acceptance evidence.
+- Added a positive policy-model case for a contract plus separately verified acceptance-evidence signal. The current probe does not emit that signal, so the system intentionally remains fail-closed until the separate acceptance artifact and verifier are implemented and wired.
+- Corrected the trust-failure probe note to match the regression assertion and corrected the gate note so invalid evidence cannot be described as procurement-ready.
+
+Control Plane PR #34 source changes are staged on `fix/procurement-gate-evidence-contract-binding`; the latest source changes include commits `3ff6a640`, `437c2411`, `fee33ab3`, `1b5a111d`, and `72c78264`.
+
+### Verification state and release decision
+
+Exact-head CI runs for earlier heads failed the main verification job and skipped downstream container checks; the log endpoint returned `BlobNotFound`, preventing identification of the failing step. The current head must run CI again. The JavaScript suite has not been executed successfully in a clean environment, and no separate production-acceptance artifact or live signed endpoint has been verified. The new gate therefore intentionally blocks procurement on source-contract proof alone.
+
+**HOLD / NO-GO remains mandatory.** The final unconnected dependency is not merely network reachability: it is the missing authenticated production-acceptance evidence object, its verifier, and its connection to the procurement decision. Do not merge, deploy, or enable procurement until this dependency is implemented and tested against the exact PR head.
