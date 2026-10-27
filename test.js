@@ -82,6 +82,21 @@ test('DescentEngine converges', () => {
   assert.ok(eng.snapshot().nearFixed);
 });
 
+test('DescentEngine canonicalizes equivalent circle representatives before descent', () => {
+  const a = new DescentEngine({ start: 1, k: 0.5 }).tick();
+  const b = new DescentEngine({ start: 10, k: 0.5 }).tick();
+  assert.ok(Math.abs(a.x - b.x) < 1e-12, `x: ${a.x} != ${b.x}`);
+  assert.ok(Math.abs(a.S - b.S) < 1e-12, `S: ${a.S} != ${b.S}`);
+  assert.ok(a.S >= 0 && a.S <= 0.25);
+});
+
+test('DescentEngine heat remains bounded for negative and multi-turn representatives', () => {
+  for (const start of [-17, -8, -1, 0, 1, 8, 9, 10, 19]) {
+    const rec = new DescentEngine({ start, k: 0.5 }).tick();
+    assert.ok(Number.isFinite(rec.S) && rec.S >= 0 && rec.S <= 0.25, `start=${start}, S=${rec.S}`);
+  }
+});
+
 test('stateAt: Ψ = CONE + S never below CONE', () => {
   for (const t of [0, 0.5, 1, 2, 3.14, 10]) {
     const s = stateAt(t);
