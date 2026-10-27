@@ -41,3 +41,8 @@ npm run all
 Live UI: https://great-scale.vercel.app
 
 See LATTICE_BRIDGE.md for control-plane integration.
+
+
+## Cross-repository operation/evidence contract
+
+The proposed shared rules for stable operation IDs, durable intent/receipt evidence, indeterminate outcomes, revision binding, and promotion gates are documented in [Operation and Evidence Contract v1](docs/OPERATION_EVIDENCE_CONTRACT_V1.md). The registry is public-only; the complete account inventory belongs in an access-controlled repository.
