@@ -172,3 +172,6 @@ CLXC — algebraic limitation of the cone predicate: with `psi(S)=CONE+S`, `cone
 
 
 CLXXXIX latest candidate follow-up: Control Plane PR #33 advanced to `021946b2efaf0bf892e97aede069a26b70164e7b`, with a new commit testing the cone predicate against the strict residual boundary. GitHub now reports PR #33 `mergeable: false`; PR #31 is also `mergeable: false`. Exact-head runs `40443174244` (focused evidence tests) and `40443174177` (Plane CI) failed without exposed steps/logs. This blocks integration and still does not prove a test failure or pass. The isolated JavaScript residual tests passed 7/7 on a copied runtime harness; the Great Scale policy model also passed in isolation. Production remains HOLD.
+
+
+CLXC isolated verification update: after adding the cone-predicate characterization test, the isolated Node.js harness passed **8/8 tests** and parser/test syntax checks. This still is not a clean-checkout full-suite result. Latest hosted Actions run for PR #33 head `654d38437fe06591f30b5fcc881fac699fa11588` failed with `steps: null` and no logs; hosted execution remains unverified.
