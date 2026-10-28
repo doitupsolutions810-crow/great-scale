@@ -1,0 +1,10 @@
+{
+  "system":"Great Scale","rung":"XCII","title":"Robust Value of Information Under Model Uncertainty",
+  "decision_utilities":[[1.0,-1.0],[-1.0,1.0]],
+  "prior":[0.5,0.5],"perfect_measurement_likelihoods":[[1.0,0.0],[0.0,1.0]],
+  "models_positive":[{"cost":0.2,"evsi":1.0,"net_value":0.8},{"cost":0.4,"evsi":1.0,"net_value":0.6}],
+  "positive_set_worst_case_net_value":0.6,"positive_set_recommendation":"MEASURE",
+  "expanded_model_set":[{"cost":0.2,"evsi":1.0,"net_value":0.8},{"cost":1.1,"evsi":1.0,"net_value":-0.1}],
+  "expanded_set_worst_case_net_value":-0.1,"expanded_set_recommendation":"NOT_ROBUSTLY_WORTH_MEASURING",
+  "status":"illustrative_model_not_empirical_validation"
+}
