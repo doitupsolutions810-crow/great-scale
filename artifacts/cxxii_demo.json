@@ -1,0 +1,11 @@
+{
+  "rung": "CXXII",
+  "title": "Partial Identification Under Unknown Selection",
+  "status": "implementation_added_tests_authored_not_yet_executed",
+  "synthetic_only": true,
+  "probability_range_default": [0.2, 0.8],
+  "scope": "Sensitivity interval for selected-sample weighted mean, not a full-population guarantee",
+  "metrics": ["lower", "upper", "width", "n_observed", "target_inside_bounds"],
+  "assumptions": ["nonnegative cluster contrasts", "positive bounded inclusion probabilities"],
+  "next": "Extend to signed contrasts and full-population bounds under explicit missingness assumptions."
+}
