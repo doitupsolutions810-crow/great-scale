@@ -1,0 +1,17 @@
+{
+  "rung": "CXXXVIII",
+  "title": "Dynamic Programming with Verified Bounds",
+  "population": 100,
+  "observed_sum": 10,
+  "missing_units": 12,
+  "allowed_strata_per_unit": ["A", "B"],
+  "strata": {
+    "A": {"lower": 0.0, "upper": 0.2},
+    "B": {"lower": 0.4, "upper": 1.0}
+  },
+  "assignment_count": 4096,
+  "distinct_count_vectors": 13,
+  "expected_bounds": {"lower": 0.10, "upper": 0.22},
+  "evidence_type": "synthetic deterministic test design",
+  "repository_tests_executed": false
+}
