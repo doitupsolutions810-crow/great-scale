@@ -1,0 +1,36 @@
+{
+  "rung": "CXIV",
+  "title": "The Three-Boundary Theorem of Consistency",
+  "claim": "Complete pairwise consistency among supplied checkpoints does not imply global consistency unless population completeness is independently justified.",
+  "supplied_set": [
+    "checkpoint-a",
+    "checkpoint-b"
+  ],
+  "pair_coverage": {
+    "observed_pairs": 1,
+    "expected_pairs": 1,
+    "complete_for_supplied_set": true
+  },
+  "population_scope": {
+    "relevant_population": "UNKNOWN",
+    "completeness_evidence": "UNKNOWN"
+  },
+  "trust_scope": {
+    "trusted_signatures_verified": "required by comparator",
+    "signer_independence": "NOT_ESTABLISHED"
+  },
+  "safe_conclusion": "CONSISTENT_FOR_SUPPLIED_SET_ONLY",
+  "counterexample_worlds": [
+    {
+      "name": "W1",
+      "population": "supplied set only",
+      "global_consistency": true
+    },
+    {
+      "name": "W2",
+      "population": "supplied set plus an unseen conflicting checkpoint",
+      "global_consistency": false
+    }
+  ],
+  "status": "formal logical result under stated definitions; no empirical global-completeness claim"
+}

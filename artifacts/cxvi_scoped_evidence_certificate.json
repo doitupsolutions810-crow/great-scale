@@ -1,0 +1,31 @@
+{
+  "rung": "CXVI",
+  "title": "Scoped Evidence Certificate",
+  "schema": "great-scale-scoped-evidence-certificate-v1",
+  "example": {
+    "state_equivalence": "MATCH",
+    "lineage_relation": "INCOMPARABLE",
+    "population": {
+      "observed_count": 2,
+      "declared_count": 3,
+      "scope_complete": false
+    },
+    "authenticity": {
+      "status": "VERIFIED",
+      "distinct_signers": 2,
+      "signer_threshold": 2,
+      "trust_basis": "synthetic upstream verification"
+    },
+    "evidence_ids": [
+      "checkpoint-a",
+      "checkpoint-b"
+    ],
+    "assumptions": [
+      "synthetic illustration only"
+    ],
+    "disposition": "UNRESOLVED",
+    "claim_scope": "declared population only; no claim about unseen records or unstated trust assumptions"
+  },
+  "precedence_rule": "observed state mismatch or FORK => CONFLICT_WITHIN_OBSERVED_EVIDENCE even if population incomplete",
+  "status": "synthetic example; not a live attestation"
+}
