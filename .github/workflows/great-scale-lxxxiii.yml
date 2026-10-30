@@ -1,0 +1,17 @@
+name: Great Scale LXXXIII
+on:
+  push:
+    branches: [feat/lxxxiii-provenance-closure]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest -v test_orientation test_observation tests.test_adaptive_stopping tests.test_calibration_validity tests.test_provenance_closure
+        env:
+          PYTHONPATH: .
