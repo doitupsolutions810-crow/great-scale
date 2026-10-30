@@ -1,11 +1,9 @@
 {
   "name": "great-scale",
-  "version": "0.4.2",
-  "description": "Test environment — three embeddings of one state. Geometry lab + involution discrete layer.",
+  "version": "0.2.1",
+  "type": "module",
   "scripts": {
-    "test": "node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs",
-    "descent": "python3 test_descent.py",
-    "all": "npm test && python3 test_descent.py"
-  },
-  "license": "UNLICENSED"
+    "test:golden": "node public/golden_loader.js",
+    "test": "npm run test:golden"
+  }
 }
