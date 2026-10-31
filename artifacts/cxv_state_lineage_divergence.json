@@ -1,0 +1,28 @@
+{
+  "rung": "CXV",
+  "title": "State Equality Is Not Lineage Equality",
+  "scenario": {
+    "checkpoint_a": {
+      "log_id": "registry-log",
+      "size": 2,
+      "head_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "previous_checkpoint_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "checkpoint_b": {
+      "log_id": "registry-log",
+      "size": 2,
+      "head_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "previous_checkpoint_hash": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  },
+  "comparison": {
+    "same_log": true,
+    "same_size": true,
+    "same_head_hash": true,
+    "same_predecessor": false,
+    "expected_relation": "INCOMPARABLE",
+    "reason": "State summaries match, but immediate lineage claims differ."
+  },
+  "safe_conclusion": "SAME_STATE_SUMMARY_BUT_LINEAGE_UNRESOLVED",
+  "status": "synthetic regression fixture; not an observed production conflict"
+}
