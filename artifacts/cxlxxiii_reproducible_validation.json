@@ -1,0 +1,19 @@
+{
+  "rung": "CXLXXIII",
+  "title": "Reproducible Validation Boundary",
+  "finding": "Mathematical invariants require a traceable specification-to-implementation-to-test evidence chain.",
+  "integration": [
+    "remove duplicate TERMINAL sentinel declaration",
+    "add terminal identity regression tests",
+    "preserve typed observation distinctions"
+  ],
+  "tests_authored": [
+    "terminal marker behavior",
+    "None state label distinct from terminal marker",
+    "Boolean and integer observations distinct"
+  ],
+  "validation_status": "authored_not_executed",
+  "prior_ci": "multiple failed workflow runs; job logs unavailable from inspected endpoint",
+  "ci_root_cause": "undetermined",
+  "scope_limit": "does not prove all CI failures are caused by the duplicate declaration or that CI is now passing"
+}
