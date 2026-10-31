@@ -1,0 +1,8 @@
+{
+  "title": "Great Scale CV — External Anchor Witness",
+  "schema": "great-scale-external-anchor-v1",
+  "signature_algorithm": "Ed25519",
+  "trace_commitment": "SHA-256 over canonical JSON trace",
+  "checks": ["signature verification", "trace commitment equality", "sequence continuity", "previous-anchor continuity"],
+  "limitations": ["witness independence is operational", "no trusted timestamp by default", "no statistical-null validation", "no network publication service included"]
+}
