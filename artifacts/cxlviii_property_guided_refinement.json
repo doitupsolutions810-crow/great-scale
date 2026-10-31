@@ -1,0 +1,11 @@
+{
+  "rung": "CXLVIII",
+  "title": "Property-Guided Quotient Refinement",
+  "status": "implementation_authored_tests_not_yet_executed",
+  "input": "A partition and required Boolean state properties",
+  "state_signature": "sigma(s) = (P1(s), ..., Pm(s))",
+  "operation": "Split each input block by joint property signature; never merge across input blocks.",
+  "guarantee": "Every output block is constant for each requested property and the result is the coarsest such refinement of the input partition.",
+  "limitation": "Transition congruence is not re-established by property splitting alone; a joint fixed-point algorithm is needed.",
+  "tests_authored": 6
+}

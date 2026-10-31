@@ -1,0 +1,15 @@
+{
+  "rung": "CXLXVIII",
+  "title": "Canonical IDs as Primary Keys",
+  "status": "implementation_and_tests_authored_execution_unverified",
+  "core_map": "state label -> canonical ID -> normalized transitions -> quotient partition",
+  "invariant": "Every state and action is keyed by canonical encoding; successor references resolve only to existing canonical state IDs.",
+  "counterexample_addressed": ["True", "1"],
+  "tests_authored": 5,
+  "limitations": [
+    "Not yet a drop-in migration of the older certificate API.",
+    "Observation/property payload equality semantics require a documented normalization contract.",
+    "Tests have not been independently executed."
+  ],
+  "next_rung": "CXLXIX: differential equivalence testing between canonical-ID quotient and legacy quotient on generated collision-free models."
+}
