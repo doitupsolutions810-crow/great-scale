@@ -1,0 +1,15 @@
+{
+  "rung": "CXII",
+  "example": {
+    "verified_observer_count": 3,
+    "declared_domains": [
+      "cloud-a",
+      "cloud-b"
+    ],
+    "minimum_observers": 3,
+    "minimum_domains": 2,
+    "expected": "DIVERSITY_THRESHOLD_MET"
+  },
+  "status": "illustrative; not live witness data",
+  "limitation": "Domain labels do not prove actual independence."
+}

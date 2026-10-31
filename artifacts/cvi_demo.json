@@ -1,0 +1,20 @@
+{
+  "rung": "CVI",
+  "schema": "great-scale-threshold-checkpoint-v1",
+  "illustrative_policy": {
+    "trusted_witnesses": [
+      "witness-a",
+      "witness-b",
+      "witness-c"
+    ],
+    "threshold": 2
+  },
+  "statement_example": {
+    "schema": "great-scale-threshold-checkpoint-v1",
+    "sequence": 8,
+    "previous_anchor": "prior-anchor-7",
+    "trace_commitment": "illustrative-sha256-hex-digest"
+  },
+  "expected_rule": "accept if at least 2 distinct trusted witness signatures verify over the exact canonical statement",
+  "status": "illustrative schema only; digest and signatures are not live attestations"
+}
