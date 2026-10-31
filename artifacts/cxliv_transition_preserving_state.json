@@ -1,0 +1,13 @@
+{
+  "rung": "CXLIV",
+  "title": "Transition-Preserving State",
+  "status": "implementation-authored-tests-not-executed",
+  "claim": "For deterministic finite systems, a compressed key preserves observations, enabled-action availability, terminal behavior, and successor keys for merged states.",
+  "conditions": [
+    "same key implies same observation",
+    "same key implies same enabled-action set",
+    "same key and shared enabled action imply same successor key",
+    "terminal behavior agrees"
+  ],
+  "scope": "Exhaustive only over the finite states and actions supplied to the audit; not a probabilistic bisimulation proof."
+}

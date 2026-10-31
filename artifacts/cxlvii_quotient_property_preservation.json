@@ -1,0 +1,21 @@
+{
+  "rung": "CXLVII",
+  "title": "Quotient Correctness and Property Preservation",
+  "status": "model_specified_tests_authored_not_executed",
+  "criterion": "K(s) = K(t) implies P(s) = P(t) for every pair in each quotient class",
+  "synthetic_case": {
+    "blocks": [["safe", "unsafe"], ["other"]],
+    "property": "is_unsafe",
+    "values": {"safe": false, "unsafe": true, "other": false},
+    "expected_preserved": false,
+    "counterexample": ["safe", "unsafe"]
+  },
+  "positive_case": {
+    "blocks": [["s0", "s1"], ["s2"]],
+    "observation": {"s0": "red", "s1": "red", "s2": "blue"},
+    "property": "observation equals red",
+    "expected_preserved": true
+  },
+  "interpretation": "Quotient validity is property-relative: a stable behavioral quotient may still erase a state property not constant within its classes.",
+  "scope": "Finite state-property invariance only; no arbitrary temporal-property or real-world validation claim."
+}
