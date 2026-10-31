@@ -1,6 +1,6 @@
 'use strict';
 
-const { CONE, heat } = require('..//public/scale.cjs);
+const { CONE, heat } = require('../public/scale.cjs');
 
 const TWO_PI = 2 * Math.PI;
 const EPS = 1e-12;
@@ -115,15 +115,16 @@ function qiWuZhangLocalIntegrals(m, gridSize, offset = 0.5) {
 }
 
 /**
- * Bounded refinement with grid-origin sensitivity checks and a rigorous
- * a-posteriori error bound.
+ * Bounded refinement with grid-origin sensitivity checks and empirical
+ * Richardson-style error estimates.
  *
- * The FHS plaquette integrand is C^2 on the Brillouin zone wherever the gap
- * is open. A midpoint Riemann sum on spacing h therefore carries an absolute
- * error bounded by (BZ area) * max|Hessian| * h^2 / 8. The unknown max Hessian
- * is estimated from the observed Richardson difference D via D/3, then scaled
- * by a safety factor of 2. The resulting bound is rigorous conditional on
- * the gap-open hypothesis, which is enforced by the RangeError guards.
+ * The estimate D/3 follows the usual second-order midpoint asymptotic model;
+ * multiplying it by two is a heuristic safety factor, not a theorem bounding
+ * the unknown maximum Hessian. In addition, the metric-area integrand contains
+ * an absolute value of curvature and is not globally C^2 across sign changes.
+ * These estimates can support numerical diagnostics, but they are NOT a
+ * rigorous quadrature certificate and must NOT be used alone for production G6.
+ * A separate trusted interval/analytic certificate is required for G6.
  */
 function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   if (!Number.isFinite(m)) throw new TypeError('Mass parameter m must be finite.');
@@ -190,12 +191,15 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     if (quadratureConverged) break;
   }
 
-  // Rigorous a-posteriori bounds: Richardson estimate /3, safety factor 2.
-  // These bound the true quadrature error whenever the gap is open.
-  const rigorousCurvatureErrorBound = 2 * curvatureRichardsonErrorEstimate;
-  const rigorousMetricAreaErrorBound = 2 * metricAreaRichardsonErrorEstimate;
-  const rigorousBoundFinite = Number.isFinite(rigorousCurvatureErrorBound) &&
-    Number.isFinite(rigorousMetricAreaErrorBound);
+  // These are explicitly empirical Richardson estimates, not certified upper bounds.
+  const curvatureErrorEstimateWithSafetyFactor = 2 * curvatureRichardsonErrorEstimate;
+  const metricAreaErrorEstimateWithSafetyFactor = 2 * metricAreaRichardsonErrorEstimate;
+  const errorEstimatesFinite = Number.isFinite(curvatureErrorEstimateWithSafetyFactor) &&
+    Number.isFinite(metricAreaErrorEstimateWithSafetyFactor);
+  const errorBoundMethod = 'richardson-asymptotic-estimate-only';
+  // Numerical mapping validity is diagnostic. G6 eligibility requires a separate
+  // independently verified interval/analytic error-bound certificate.
+  const modelG6CertificationEligible = false;
 
   const topologicalFloor = Math.abs(chernNumber);
   const metricAreaExcess = currentMidpoint.metricAreaBudget - topologicalFloor;
@@ -227,10 +231,11 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
   const curvatureOrientationVarianceFromBudgets = 4 * curvatureMixingIndex;
   const curvatureOrientationVarianceResidual = Math.abs(curvatureOrientationVariance - curvatureOrientationVarianceFromBudgets);
 
-  // Acceptance now requires the rigorous bound, not only the heuristic flag.
-  const topologicalMappingValid = rigorousBoundFinite &&
-    rigorousCurvatureErrorBound <= quadratureTolerance &&
-    rigorousMetricAreaErrorBound <= quadratureTolerance &&
+  // This is a numerical-consistency decision based on empirical estimates;
+  // it is not a production-grade error-bound certification.
+  const topologicalMappingValid = errorEstimatesFinite &&
+    curvatureErrorEstimateWithSafetyFactor <= quadratureTolerance &&
+    metricAreaErrorEstimateWithSafetyFactor <= quadratureTolerance &&
     chernIntegerResidual <= 1e-6 &&
     curvatureChernResidual <= quadratureTolerance &&
     curvatureCancellationIdentityResidual <= 2 * quadratureTolerance &&
@@ -256,8 +261,9 @@ function qiWuZhangGlobalGeometry(m, gridSize = 80, maxRefinements = 3) {
     curvatureOrientationVariance, curvatureOrientationVarianceFromBudgets, curvatureOrientationVarianceResidual,
     acceptedPsiTopological: topologicalMappingValid ? psiTopological : null,
     topologicalMappingValid,
-    // Rigorous a-posteriori bounds (new in this commit).
-    rigorousCurvatureErrorBound, rigorousMetricAreaErrorBound, rigorousBoundFinite,
+    // Empirical estimates only; not rigorous error bounds.
+    curvatureErrorEstimateWithSafetyFactor, metricAreaErrorEstimateWithSafetyFactor,
+    errorEstimatesFinite, errorBoundMethod, modelG6CertificationEligible,
     // Prior diagnostics retained as non-gating telemetry.
     baseMetricAreaBudget: initial.metricAreaBudget,
     refinedIntegratedCurvature: currentMidpoint.integratedCurvature,

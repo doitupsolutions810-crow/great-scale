@@ -1,0 +1,530 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Great Scale G6 Residual Measurement v1",
+  "description": "A source/build-bound numerical measurement receipt for G6. Schema validity does not prove signature authenticity, cross-field binding, execution, live observation, numerical-certificate validity, or production authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "issuer",
+    "keyId",
+    "environment",
+    "generatedAt",
+    "expiresAt",
+    "source",
+    "execution",
+    "artifact",
+    "model",
+    "measurement",
+    "digest",
+    "signature",
+    "measuredAt",
+    "canonicalization",
+    "signatureAlgorithm",
+    "measurementBuildId",
+    "targetBuildId",
+    "target",
+    "targetArtifact",
+    "numericalCertification"
+  ],
+  "properties": {
+    "schema": {
+      "const": "great-scale.g6-residual-measurement/v1"
+    },
+    "issuer": {
+      "const": "great-scale-g6-residual-measurer"
+    },
+    "keyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "environment": {
+      "const": "production"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commitSha"
+      ],
+      "properties": {
+        "repository": {
+          "const": "doitupsolutions810-crow/great-scale"
+        },
+        "commitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$",
+          "description": "Exact Great Scale model source revision exercised by the named workflow run; must equal execution.headSha and is distinct from the Control Plane target source revision."
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "runAttempt",
+        "runUrl",
+        "headSha",
+        "conclusion",
+        "startedAt",
+        "completedAt"
+      ],
+      "properties": {
+        "runId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runAttempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://github\\.com/doitupsolutions810-crow/great-scale/actions/runs/[1-9][0-9]*$"
+        },
+        "headSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "conclusion": {
+          "const": "success"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "digest"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "SHA-256 digest of the immutable Great Scale model artifact used to compute this measurement. It is distinct from the Control Plane production acceptance artifact digest."
+        }
+      },
+      "description": "Immutable Great Scale model/measurement artifact. Its digest is distinct from targetArtifact.digest, which binds the intended Control Plane acceptance release."
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "parameters",
+        "inputDigest",
+        "modelG6CertificationEligible"
+      ],
+      "properties": {
+        "id": {
+          "const": "qi-wu-zhang-two-band"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "m",
+            "gridSize",
+            "maxRefinements"
+          ],
+          "properties": {
+            "m": {
+              "type": "number",
+              "not": {
+                "enum": [
+                  -2,
+                  0,
+                  2
+                ]
+              }
+            },
+            "gridSize": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 4096
+            },
+            "maxRefinements": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        },
+        "inputDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "modelG6CertificationEligible": {
+          "const": false,
+          "description": "Must be copied from the QGT model output. The model is never eligible to certify its own G6 result; only the separate numericalCertification with an independently pinned key and verified error proof may qualify the measurement."
+        }
+      },
+      "description": "Model identity, parameters and input digest. modelG6CertificationEligible is required to be false: raw numerical model output cannot self-certify production G6."
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chernNumber",
+        "rawChernNumber",
+        "chernIntegerResidual",
+        "integratedCurvature",
+        "absoluteCurvatureBudget",
+        "positiveCurvatureBudget",
+        "negativeCurvatureBudget",
+        "curvatureCancellationBudget",
+        "metricAreaBudget",
+        "topologicalFloor",
+        "metricAreaExcess",
+        "topologicalSaturationRaw",
+        "topologicalSaturation",
+        "signedTopologicalPolarization",
+        "STopological",
+        "psiTopological",
+        "acceptedPsiTopological",
+        "curvatureOrientationEntropyResidual",
+        "curvatureChernResidual",
+        "curvatureCancellationIdentityResidual",
+        "curvatureOrientationVarianceResidual",
+        "gridAlignmentCurvatureDiscrepancy",
+        "gridAlignmentAreaDiscrepancy",
+        "quadratureTolerance",
+        "quadratureConverged",
+        "topologicalMappingValid",
+        "refinementCount",
+        "refinedGridSize",
+        "curvatureErrorEstimateWithSafetyFactor",
+        "metricAreaErrorEstimateWithSafetyFactor",
+        "errorEstimatesFinite",
+        "errorBoundMethod"
+      ],
+      "properties": {
+        "chernNumber": {
+          "type": "integer"
+        },
+        "rawChernNumber": {
+          "type": "number"
+        },
+        "chernIntegerResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "integratedCurvature": {
+          "type": "number"
+        },
+        "absoluteCurvatureBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "positiveCurvatureBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "negativeCurvatureBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureCancellationBudget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metricAreaBudget": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "topologicalFloor": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metricAreaExcess": {
+          "type": "number"
+        },
+        "topologicalSaturationRaw": {
+          "type": "number"
+        },
+        "topologicalSaturation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "signedTopologicalPolarization": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "STopological": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.25
+        },
+        "psiTopological": {
+          "type": "number",
+          "minimum": 0
+        },
+        "acceptedPsiTopological": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureOrientationEntropyResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureChernResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureCancellationIdentityResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "curvatureOrientationVarianceResidual": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gridAlignmentCurvatureDiscrepancy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gridAlignmentAreaDiscrepancy": {
+          "type": "number",
+          "minimum": 0
+        },
+        "quadratureTolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "quadratureConverged": {
+          "const": true
+        },
+        "topologicalMappingValid": {
+          "const": true
+        },
+        "refinementCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "refinedGridSize": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 131072
+        },
+        "curvatureErrorEstimateWithSafetyFactor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Twice the Richardson D/3 estimate; empirical only and not a certified upper bound."
+        },
+        "metricAreaErrorEstimateWithSafetyFactor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Twice the Richardson D/3 estimate; empirical only and not a certified upper bound."
+        },
+        "errorEstimatesFinite": {
+          "const": true,
+          "description": "The empirical Richardson estimates are finite; this does not certify their error-bound status."
+        },
+        "errorBoundMethod": {
+          "const": "richardson-asymptotic-estimate-only",
+          "description": "Explicitly labels the model-side Richardson estimate as empirical rather than rigorous."
+        }
+      },
+      "description": "QWZ model diagnostics, including empirical Richardson error estimates. The estimate fields do not establish a rigorous quadrature bound; a separate trusted numericalCertification object is required for G6 promotion."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase SHA-256 hex of the canonical body after removing digest and signature."
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]{86}==$",
+      "description": "Base64 Ed25519 signature over the same canonical body used for digest, after removing digest and signature."
+    },
+    "measuredAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Time at which the numerical measurement was observed; maps to residual.measuredAt in the Control Plane G0-G6 attestation."
+    },
+    "canonicalization": {
+      "const": "great-scale.canonical-json/v1",
+      "description": "UTF-8 JSON serialization with recursively lexicographically sorted object keys, preserved array order, JSON.stringify primitive encoding, and no insignificant whitespace."
+    },
+    "signatureAlgorithm": {
+      "const": "Ed25519",
+      "description": "The signature is verified against a deployment-pinned public key identified by keyId; the payload cannot choose its trust anchor."
+    },
+    "measurementBuildId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Build identity of the Great Scale measurement producer/model execution. This identifies the measurement side only and must not be assumed equal to the target Control Plane acceptance build ID."
+    },
+    "targetBuildId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9._:-]+$",
+      "description": "Exact Control Plane release build ID that this measurement is intended to support. It must equal the final G0-G6 production acceptance attestation buildId and downstream residual.buildId."
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commitSha"
+      ],
+      "properties": {
+        "repository": {
+          "const": "doitupsolutions810-crow/living-intermediate-control-plane"
+        },
+        "commitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        }
+      },
+      "description": "Exact consumer source revision that will consume this G6 measurement; must match the source identity in the final G0-G6 acceptance attestation."
+    },
+    "targetArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "digest"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "Digest of the target Control Plane acceptance/release artifact; must match the final G0-G6 attestation artifact.digest."
+        }
+      },
+      "description": "Target release artifact. This digest is separate from artifact.digest, which identifies the Great Scale model/measurement artifact."
+    },
+    "numericalCertification": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Independent numerical error certificate. The outer trusted producer must verify certificateSignature under a separately pinned numerical-certificate key, recompute/check proofDigest against evidenceUrl, enforce timestamp freshness, bind sourceCommitSha/modelInputDigest/measurementDigest to the receipt, and check both certified upper bounds against measurement.quadratureTolerance. The verified flag and schema shape alone are not proof.",
+      "required": [
+        "method",
+        "verifierId",
+        "sourceCommitSha",
+        "modelInputDigest",
+        "curvatureErrorUpperBound",
+        "metricAreaErrorUpperBound",
+        "evidenceUrl",
+        "proofDigest",
+        "verified",
+        "certificateKeyId",
+        "certificateSignature",
+        "generatedAt",
+        "expiresAt",
+        "measurementDigest"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "interval-enclosure-v1",
+            "analytic-derivative-bound-v1"
+          ]
+        },
+        "verifierId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sourceCommitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "modelInputDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "curvatureErrorUpperBound": {
+          "type": "number",
+          "minimum": 0
+        },
+        "metricAreaErrorUpperBound": {
+          "type": "number",
+          "minimum": 0
+        },
+        "evidenceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "proofDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "verified": {
+          "const": true
+        },
+        "certificateKeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "description": "Key ID for the independent numerical-certificate signer; it must match a separately deployment-pinned trust anchor."
+        },
+        "certificateSignature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==$",
+          "description": "Ed25519 signature over the canonical numericalCertification object with certificateSignature omitted; verify under the independently pinned certificate public key, not the outer receipt key."
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "measurementDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 digest of the canonical measurement object; the certificate must be bound to the exact QGT output rather than merely its source revision or parameters."
+        }
+      }
+    }
+  }
+}

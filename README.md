@@ -41,3 +41,15 @@ npm run all
 Live UI: https://great-scale.vercel.app
 
 See LATTICE_BRIDGE.md for control-plane integration.
+
+
+## Cross-repository operation/evidence contract
+
+The proposed shared rules for stable operation IDs, durable intent/receipt evidence, indeterminate outcomes, revision binding, and promotion gates are documented in [Operation and Evidence Contract v1](docs/OPERATION_EVIDENCE_CONTRACT_V1.md). The registry is public-only; the complete account inventory belongs in an access-controlled repository.
+
+
+## G6 residual measurement receipt — contract only
+
+The proposed source/build-bound G6 measurement receipt shape is defined by [v1 schema](contracts/g6-residual-measurement/v1.schema.json). It includes an exact Great Scale source revision and successful run identity, artifact/model/input digests, measurement time, QGT/topological diagnostics and error/convergence bounds, the [0, 0.25] topology-derived residual range, canonical SHA-256 digest semantics, and an Ed25519 signature contract. The intended downstream mapping is measurement.STopological → residual.S, measuredAt → residual.measuredAt, issuer → residual.sourceId, targetBuildId → residual.buildId, target.repository/commitSha → the final G0-G6 attestation source identity, and targetArtifact.digest → the final G0-G6 attestation artifact.digest. measurementBuildId identifies the Great Scale measurement build and must remain distinct from targetBuildId.
+
+The schema is **not** a deployed endpoint or trusted producer. A producer must independently fetch/verify the real workflow and artifact, enforce source/head/build binding and freshness, recompute the digest, verify the signature under a separately pinned key, and confirm numerical convergence and mapping invariants. The current Vercel configuration remains static-only. The schema-specific contract tests run under npm test, but hosted Actions has not executed steps on this PR candidate; no live G6 receipt or production authority is established.

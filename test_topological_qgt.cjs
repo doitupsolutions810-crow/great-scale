@@ -108,12 +108,16 @@ testCase('metric-area excess measures minority-sign curvature cancellation in co
   }
 });
 
-testCase('Richardson-style quadrature estimates are exposed and bounded on stable phases', () => {
+testCase('Richardson-style estimates are empirical diagnostics, not G6 error-bound certificates', () => {
   for (const m of [-1, 1, 3]) {
     const d = qiWuZhangGlobalGeometry(m, 40);
     assert.strictEqual(d.quadratureConverged, true);
     assert.ok(Number.isFinite(d.metricAreaRichardsonErrorEstimate));
     assert.ok(Number.isFinite(d.curvatureRichardsonErrorEstimate));
+    assert.equal(d.errorBoundMethod, 'richardson-asymptotic-estimate-only');
+    assert.equal(d.errorEstimatesFinite, true);
+    assert.equal(d.modelG6CertificationEligible, false,
+      'numerical mapping validity is not an independent rigorous G6 certificate');
     close(d.metricAreaRichardsonErrorEstimate, d.metricAreaQuadratureError / 3, 1e-12);
     close(d.curvatureRichardsonErrorEstimate, d.curvatureQuadratureError / 3, 1e-12);
     const orderWindow = value => value !== null && value >= 1.5 && value <= 2.5;
