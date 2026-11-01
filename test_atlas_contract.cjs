@@ -10,7 +10,7 @@ const checks = [
   ['four role council exists', ['Algebraist','Topologist','Numerical Analyst','Skeptic / Falsifier'].every((s) => html.includes(s))],
   ['debate modes exist', ['balanced','hostile','proof'].every((s) => html.includes('data-mode="' + s + '"'))],
   ['session export exists', html.includes('great-scale-atlas-session.json') && html.includes('JSON.stringify')],
-  ['local-only LLM boundary is explicit', html.includes('Not a live LLM run') || html.includes('not a live external LLM responses')),
+  ['local-only LLM boundary is explicit', html.includes('Not a live LLM run') || html.includes('not a live external LLM responses'),
   ['evidence and authority are separated', html.includes('Model output ≠ empirical proof ≠ production authorization.')],
   ['public research UI excludes private Control12 repo name', !html.includes('control12-lattice-ops')],
   ['accessible canvas label exists', html.includes('aria-label="Interactive endomorphism geometry plot"')],
