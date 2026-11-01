@@ -43,7 +43,7 @@ The candidate invariant is not that W is a new physical law. It is a software/re
 
 ## Cross-repository architecture readback
 
-The current inventory lists 35 repositories accessible to the connected GitHub account at the time of inspection, with a mix of public and private visibility. This atlas intentionally lists only selected public repositories; private repository names are not copied into the public Great Scale tree.
+The current inventory lists 38 repositories accessible to the connected GitHub account at the time of inspection, with a mix of public and private visibility. This atlas intentionally lists only selected public repositories; private repository names are not copied into the public Great Scale tree.
 
 Integration-critical source readbacks reviewed for this build:
 
@@ -90,3 +90,19 @@ Required before production:
 4. connect the live agent backend using authenticated, method-scoped capabilities;
 5. independently verify signed source/run/artifact receipts;
 6. keep the promotion gate HOLD until the producer and consumer contracts match and end-to-end tests pass.
+
+
+## Repository-scale audit snapshot — 2026-11-01
+
+The connected GitHub account exposed 38 repository records. README access was attempted across the inventory; some repositories are empty or have no root README. The latest commit metadata was read for all 38 repositories, and the pull-request API was enumerated across the inventory. The API returned 275 pull-request records in total for this snapshot; Great Scale returned 125 PR records across two pages (121 open and 4 closed in the retrieved set). This covers PR metadata, not the complete diff/review discussion for every PR or the full historical commit graph of every repository.
+
+The Great Scale branch API returned 130 branches across two pages. Every returned branch object reported protected=false; a direct read of main confirmed protected=false. The repository's current CI workflow is configured for push and workflow_dispatch, not pull_request. The latest inspected main commit is 2a87e3262e2106fc3ae58abf157335d1a44e8783 (2026-10-30), which changes CI to target a self-hosted runner labelled Great-Scale. The connector did not expose an inspectable Actions run for the atlas head; Vercel reported a successful preview status, which verifies deployment build status only, not the Node/Python test suite.
+
+### System-level realization: the source graph is part of the experiment
+
+A research claim cannot be tracked solely by its formula or its PR title. With many active branches and stacked PRs, the claim's actual meaning depends on the exact base SHA, head SHA, merge-base, changed paths, dependencies, and test evidence. Therefore, the mature Atlas should represent two coupled graphs:
+
+- Mathematical graph: domains, maps, compositions, quotient relations, invariants, counterexamples and proof obligations.
+- Source/evidence graph: repository, branch, commit, merge-base, PR, workflow run, runner, command, result artifact, signer and authorization scope.
+
+The join between these graphs must be revision-bound. A proof or test on one branch does not automatically validate another branch; a Vercel success does not imply the mathematical or test contract passed. Main branch protection and a PR-triggered test path are high-priority governance improvements, but this Atlas PR does not change branch settings or CI triggers.
