@@ -16,7 +16,7 @@ const checks = [
   ['accessible canvas label exists', html.includes('aria-label="Interactive endomorphism geometry plot"')],
   ['live AVRONE bridge panel exists', html.includes('id="liveBridge"') && html.includes('id="liveRunBtn"')],
   ['live bridge pins a full commit and sends no browser token', html.includes('commit_sha:$(') && html.includes("fetch('/api/research/debate'") && !html.includes('localStorage.setItem(\'avrone-admin-token\'')],
-  ['receipt is surfaced as an explicit verification boundary', html.includes('result_digest_sha256') && html.includes('agent conclusions remain unverified')],
+  ['receipt is surfaced as an explicit verification boundary', html.includes('result_digest_sha256') && html.includes('evidence_digest_sha256') && html.includes('agent conclusions remain unverified')],
   ['stored receipt retrieval uses same-origin credentials', html.includes('credentials:\'same-origin\'') && html.includes('/api/research/receipts/') === false]
 ];
 for (const [name, ok] of checks) {
