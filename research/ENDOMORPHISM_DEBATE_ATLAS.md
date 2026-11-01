@@ -121,7 +121,7 @@ can run the live council from a same-origin AVRONE host at `/static/atlas.html`.
 - `GET /api/research/receipts/{run_id}` retrieves the stored receipt through the same local/admin
   access policy as other privileged run routes.
 - The receipt binds repository, exact commit SHA, run ID, claim, run mode, requested rounds, and
-  SHA-256 of the recorded result. It is an integrity record, not a digital signature, theorem, or
+  SHA-256 of the recorded result, plus an evidence digest over the source identity, claim, mode, round count, and result digest. These are integrity records, not a digital signature, theorem, or
   independent validation of the model output.
 - The browser never stores or sends an admin token. Local loopback access works under the
   default policy; remote deployments must use the existing authenticated path or a properly
@@ -136,6 +136,6 @@ can run the live council from a same-origin AVRONE host at `/static/atlas.html`.
 
 ### Ingestion and receipt refinement
 
-The AVRONE draft now fetches the GitHub commit object and a bounded set of repository-relative text files at the exact SHA before dispatch. By default it requests the Atlas HTML, this research contract, the Atlas contract test, and `package.json`; callers may provide up to five paths. File contents are bounded to 30,000 characters total and each fetched item records its Git blob SHA and truncation status. The receipt includes those source excerpts and the complete recorded council result in the SHA-256 digest envelope, subject to a 2 MB result cap. No fetched file is executed.
+The AVRONE draft now fetches the GitHub commit object and a bounded set of repository-relative text files at the exact SHA before dispatch. By default it requests the Atlas HTML, this research contract, the Atlas contract test, and `package.json`; callers may provide up to five paths. File contents are bounded to 30,000 characters total and each fetched item records its Git blob SHA and truncation status. The receipt includes those source excerpts and the complete recorded council result in a 2 MB-capped result envelope. One digest binds the complete result; a second evidence digest binds source identity, claim, mode, rounds, and the result digest. No fetched file is executed.
 
 A server-side `GITHUB_TOKEN` may be configured for authenticated GitHub API access when required; it must remain in the server environment and never be sent to the browser. Use a least-privilege token and keep the default local/admin access boundary. Exact commit lookup or source fetch failures fail closed.
