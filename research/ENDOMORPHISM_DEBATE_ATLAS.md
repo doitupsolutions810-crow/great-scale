@@ -106,3 +106,29 @@ A research claim cannot be tracked solely by its formula or its PR title. With m
 - Source/evidence graph: repository, branch, commit, merge-base, PR, workflow run, runner, command, result artifact, signer and authorization scope.
 
 The join between these graphs must be revision-bound. A proof or test on one branch does not automatically validate another branch; a Vercel success does not imply the mathematical or test contract passed. Main branch protection and a PR-triggered test path are high-priority governance improvements, but this Atlas PR does not change branch settings or CI triggers.
+
+
+## Live AVRONE bridge implementation — 2026-11-01
+
+The companion AVRONE implementation is being proposed separately in branch
+`feat/great-scale-live-research-bridge-20261101`. When reviewed and deployed, the Atlas
+can run the live council from a same-origin AVRONE host at `/static/atlas.html`.
+
+- `POST /api/research/debate` validates the repository/commit format, resolves the exact
+  full SHA through the public GitHub commit API, and refuses an unavailable or mismatched source.
+- The endpoint runs AVRONE's existing multi-agent `deep` path with four reviewers and 1–3
+  bounded rounds, then records a JSON receipt under the configured AVRONE data directory.
+- `GET /api/research/receipts/{run_id}` retrieves the stored receipt through the same local/admin
+  access policy as other privileged run routes.
+- The receipt binds repository, exact commit SHA, run ID, claim, run mode, requested rounds, and
+  SHA-256 of the recorded result. It is an integrity record, not a digital signature, theorem, or
+  independent validation of the model output.
+- The browser never stores or sends an admin token. Local loopback access works under the
+  default policy; remote deployments must use the existing authenticated path or a properly
+  configured same-origin authentication proxy. Do not set `AVRONE_PUBLIC_ACCESS=all` just to
+  make the panel work.
+- GitHub commit identity is checked server-side. The endpoint does not execute repository code
+  or claim to have run the repository test suite. Agent output must say when source files were
+  not actually retrieved or tests were not executed.
+- Verification remains pending until the AVRONE PR's CI and integration tests pass on its exact
+  head SHA and a real deployment demonstrates a successful authenticated run plus receipt retrieval.
