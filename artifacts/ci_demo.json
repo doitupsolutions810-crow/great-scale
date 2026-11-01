@@ -1,0 +1,24 @@
+{
+  "rung": "CI",
+  "title": "Anytime-Valid Evidence for a One-Sided Composite Null",
+  "assumptions": {
+    "observation_model": "iid Bernoulli",
+    "null": "q <= q0",
+    "q0": 0.6,
+    "alternative_probabilities": [
+      0.8,
+      0.9
+    ],
+    "weights": [
+      0.5,
+      0.5
+    ],
+    "observations": [
+      1,
+      0,
+      1
+    ],
+    "alpha": 0.05
+  },
+  "scope": "sequentially valid for the one-sided Bernoulli null only; not arbitrary dependence or two-sided nulls"
+}

@@ -1,0 +1,32 @@
+{
+  "rung": "CVII",
+  "schema": "great-scale-threshold-checkpoint-v1",
+  "illustrative_policy": {
+    "signature_threshold": 3,
+    "minimum_fault_domains": 2,
+    "witnesses": {
+      "witness-a": "cloud-a",
+      "witness-b": "cloud-a",
+      "witness-c": "cloud-b",
+      "witness-d": "cloud-c"
+    }
+  },
+  "cases": [
+    {
+      "valid_signatures": 3,
+      "represented_domains": 3,
+      "expected": "accept"
+    },
+    {
+      "valid_signatures": 3,
+      "represented_domains": 2,
+      "expected": "accept only when minimum_fault_domains <= 2"
+    },
+    {
+      "valid_signatures": 3,
+      "represented_domains": 1,
+      "expected": "reject when minimum_fault_domains >= 2"
+    }
+  ],
+  "status": "illustrative policy; not a live attestation"
+}
