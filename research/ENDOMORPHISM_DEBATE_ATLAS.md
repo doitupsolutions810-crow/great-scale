@@ -132,3 +132,10 @@ can run the live council from a same-origin AVRONE host at `/static/atlas.html`.
   not actually retrieved or tests were not executed.
 - Verification remains pending until the AVRONE PR's CI and integration tests pass on its exact
   head SHA and a real deployment demonstrates a successful authenticated run plus receipt retrieval.
+
+
+### Ingestion and receipt refinement
+
+The AVRONE draft now fetches the GitHub commit object and a bounded set of repository-relative text files at the exact SHA before dispatch. By default it requests the Atlas HTML, this research contract, the Atlas contract test, and `package.json`; callers may provide up to five paths. File contents are bounded to 30,000 characters total and each fetched item records its Git blob SHA and truncation status. The receipt includes those source excerpts and the complete recorded council result in the SHA-256 digest envelope, subject to a 2 MB result cap. No fetched file is executed.
+
+A server-side `GITHUB_TOKEN` may be configured for authenticated GitHub API access when required; it must remain in the server environment and never be sent to the browser. Use a least-privilege token and keep the default local/admin access boundary. Exact commit lookup or source fetch failures fail closed.
