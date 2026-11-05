@@ -134,6 +134,18 @@ def main():
     checks.append(("channels agree only at fixed point: softMap(4.5)==soft_contract(4.5)",
                    abs(soft_map(4.5) - soft_contract(4.5, 0.5)) < 1e-9))
 
+    # GS-XCV: quotient fiber constancy does not imply topological continuity.
+    # The canonicalized values at x=0 and x=9 agree, but the left-hand
+    # limit as x approaches 9 is separated from the seam value on S^1_9.
+    eps = 1e-6
+    seam_value = soft_contract(0.0, 0.5)
+    left_value = soft_contract(9.0 - eps, 0.5)
+    seam_gap = mod_dist(left_value, seam_value)
+    checks.append(("quotient seam left-limit approaches 6.75",
+                   abs(left_value - 6.75) < 1e-6))
+    checks.append(("quotient seam is discontinuous for k=0.5 (gap approaches 4.5)",
+                   abs(seam_gap - 4.5) < 1e-6 and seam_gap > 4.49))
+
     for name, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  {name}")
 
