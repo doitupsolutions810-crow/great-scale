@@ -117,12 +117,14 @@ export class DescentEngine {
   }
 
   tick() {
-    this.x = softContract(this.x, this.k);
+    // The involution lives on R/9Z: canonicalize before interval dynamics.
+    const canonicalX = ((this.x % 9) + 9) % 9;
+    this.x = softContract(canonicalX, this.k);
     this.t += 1;
     const rec = {
       t: this.t,
       x: this.x,
-      S: heat(this.x / 9),
+      S: heat((((this.x % 9) + 9) % 9) / 9),
       residual: stressResidual(this.x),
       nearFixed: Math.abs(this.x - FIXED) < 0.05,
       involution: involution(this.x),
