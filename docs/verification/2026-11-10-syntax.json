@@ -1,0 +1,17 @@
+{
+  "schema": "avrone.verification.v1",
+  "date": "2026-11-10",
+  "repository": "https://github.com/doitupsolutions810-crow/great-scale",
+  "base_commit": "74cad04cf43746e098b8af50af9c811da6b313a4",
+  "command": "npm test",
+  "exit_code": 0,
+  "passed": {
+    "core": 20,
+    "quantum_geometry": 14,
+    "topological_qgt": 23
+  },
+  "scope": "Existing repository Node test suite after syntax repair; no deployment.",
+  "changed_sources_sha256": {
+    "research/topological-qgt.cjs": "c5cfbc76a1600ea03d25e6e56e31f9febd6e696c9ff490e086a89d3c1c5d74b1"
+  }
+}
