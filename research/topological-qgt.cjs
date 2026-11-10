@@ -1,6 +1,6 @@
 'use strict';
 
-const { CONE, heat } = require('..//public/scale.cjs);
+const { CONE, heat } = require('../public/scale.cjs');
 
 const TWO_PI = 2 * Math.PI;
 const EPS = 1e-12;
