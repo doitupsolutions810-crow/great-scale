@@ -24,6 +24,20 @@ from typing import List, Tuple
 PHI = (1 + math.sqrt(5)) / 2
 CONE = PHI ** -2
 FIXED = 4.5
+WALK_K = 0.55
+WALK_NOISE = 1.5
+WALK_STEPS = 50
+WALK_TOL = 1e-12
+
+
+def walk_error_bound(steps: int) -> float:
+    """Finite-step tracking bound for this battery's seam-free forced recurrence.
+
+    The first step gives |e[1]| <= 4.5*k; B < 4.5*(1-k) keeps
+    later disturbed inputs in [0,9). See the reviewer derivation.
+    """
+    return (FIXED * WALK_K ** steps
+            + WALK_K * WALK_NOISE * (1 - WALK_K ** (steps - 1)) / (1 - WALK_K))
 
 
 def heat(h: float) -> float:
@@ -149,13 +163,44 @@ def run() -> Tuple[int, int, List[str]]:
                     check(abs(left - prod) < 1e-11,
                           f"F-assoc a={a} b={b} c={c} x={x}")
 
-    # G. FIXED neighborhood after random modular walks
+    # G. Bounded tracking under persistent forcing, not convergence to FIXED.
+    check(0 < WALK_K < 1, "G-contractive-gain")
+    check(WALK_NOISE < FIXED * (1 - WALK_K), "G-positive-seam-margin")
     for i in range(100):
         x = random.uniform(0, 9)
-        for _ in range(50):
-            x = ((x + random.uniform(-1.5, 1.5)) % 9)
-            x = soft_contract(x, 0.55)
-        check(abs(x - FIXED) < 1.0, f"G-walk near i={i}")
+        for step in range(1, WALK_STEPS + 1):
+            disturbed = x + random.uniform(-WALK_NOISE, WALK_NOISE)
+            if step > 1:
+                check(0 <= disturbed < 9, f"G-no-seam i={i} step={step}")
+            x = soft_contract(disturbed % 9, WALK_K)
+            check(abs(x - FIXED) <= walk_error_bound(step) + WALK_TOL,
+                  f"G-bound i={i} step={step}")
+
+    # Negative forcing from x[0]=B attains the global bound at every step.
+    lower_walk = WALK_NOISE
+    for step in range(1, WALK_STEPS + 1):
+        lower_walk = soft_contract(lower_walk - WALK_NOISE, WALK_K)
+        check(abs(FIXED - lower_walk - walk_error_bound(step)) <= WALK_TOL,
+              f"G-worst-negative {step}")
+    check(abs(lower_walk - FIXED) > 1, "G-old-unit-bound-counterexample")
+
+    # Approach the open positive endpoint with a known initial gap.
+    upper_gap = 1e-8
+    upper_walk = 9 - WALK_NOISE - upper_gap
+    for step in range(1, WALK_STEPS + 1):
+        upper_walk = soft_contract(upper_walk + WALK_NOISE, WALK_K)
+        expected = walk_error_bound(step) - WALK_K ** step * upper_gap
+        check(abs(upper_walk - FIXED - expected) <= WALK_TOL,
+              f"G-worst-positive {step}")
+
+    # Zero forcing recovers contraction, including wrapped initial states.
+    for start in [-18, -4.5, 0, 1.5, 4.5, 9, 1e6]:
+        x = start
+        initial_error = ((start % 9) + 9) % 9 - FIXED
+        for step in range(1, WALK_STEPS + 1):
+            x = soft_contract(x, WALK_K)
+            check(abs(x - FIXED - WALK_K ** step * initial_error) <= WALK_TOL,
+                  f"G-zero-noise {start} {step}")
 
     # H. Phase-heat-descent three-way coupling
     for i in range(80):
@@ -204,12 +249,7 @@ def main() -> int:
         print("Sample failures:")
         for f in fails[:30]:
             print("  FAIL ", f)
-    if failed <= 15 and passed >= 3000:
-        print("Ridge-edge measure coherent.")
-        return 0
-    if failed == 0:
-        return 0
-    return 1
+    return 0 if failed == 0 else 1
 
 
 if __name__ == "__main__":

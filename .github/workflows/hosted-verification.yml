@@ -1,0 +1,48 @@
+name: Hosted verification
+
+on:
+  push:
+    paths:
+      - 'public/**'
+      - 'research/**'
+      - 'test*'
+      - 'package*.json'
+      - '.github/workflows/hosted-verification.yml'
+  pull_request:
+    paths:
+      - 'public/**'
+      - 'research/**'
+      - 'test*'
+      - 'package*.json'
+      - '.github/workflows/hosted-verification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} and Python 3.12
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # The existing suites use only Node and Python standard libraries.
+      - name: Run the existing Node test command
+        run: npm test
+      - name: Run the existing descent test
+        run: python3 test_descent.py
+      - name: Verify the bounded-noise ridge contract in JavaScript
+        run: node test_edge_volume_v057.js
+      - name: Verify the bounded-noise ridge contract in Python
+        run: python3 test_edge_volume_v057.py

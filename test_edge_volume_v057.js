@@ -18,6 +18,19 @@ function check(cond, name) {
 }
 function close(a, b, t = 1e-10) { return Math.abs(a - b) <= t; }
 
+// For x[n+1] = C_k(x[n] + u[n]), |u[n]| <= B. The first
+// canonicalization gives |e[1]| <= 4.5*k. Because B < 4.5*(1-k),
+// all later disturbed inputs are inside [0,9), so e[n+1]=k*e[n]+k*u[n].
+// See docs/verification/2026-11-11-noisy-contraction.md for the finite-step bound.
+const WALK_K = 0.55;
+const WALK_NOISE = 1.5;
+const WALK_STEPS = 50;
+const WALK_TOL = 1e-12;
+function walkErrorBound(steps) {
+  return FIXED * WALK_K ** steps
+    + WALK_K * WALK_NOISE * (1 - WALK_K ** (steps - 1)) / (1 - WALK_K);
+}
+
 let seed = 20261110 + 57;
 function rnd() {
   seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -94,14 +107,46 @@ for (const a of [0.3, 0.5, 0.7]) {
   }
 }
 
-// G. Random modular walks
+// G. Bounded tracking under persistent forcing, not convergence to FIXED.
+check(WALK_K > 0 && WALK_K < 1, 'G-contractive-gain');
+check(WALK_NOISE < FIXED * (1 - WALK_K), 'G-positive-seam-margin');
 for (let i = 0; i < 80; i++) {
   let x = rnd() * 9;
-  for (let j = 0; j < 50; j++) {
-    x = ((x + (rnd() - 0.5) * 3) % 9 + 9) % 9;
-    x = softContract(x, 0.55);
+  for (let j = 0; j < WALK_STEPS; j++) {
+    const disturbed = x + (rnd() - 0.5) * 2 * WALK_NOISE;
+    if (j > 0) check(disturbed >= 0 && disturbed < 9, `G-no-seam i=${i} step=${j}`);
+    x = ((disturbed % 9) + 9) % 9;
+    x = softContract(x, WALK_K);
+    check(Math.abs(x - FIXED) <= walkErrorBound(j + 1) + WALK_TOL,
+      `G-bound i=${i} step=${j + 1}`);
   }
-  check(Math.abs(x - FIXED) < 1.0, `G-walk i=${i}`);
+}
+
+// Constant negative forcing from x[0]=B attains the global bound at every step.
+let lowerWalk = WALK_NOISE;
+for (let step = 1; step <= WALK_STEPS; step++) {
+  lowerWalk = softContract(lowerWalk - WALK_NOISE, WALK_K);
+  check(close(FIXED - lowerWalk, walkErrorBound(step), WALK_TOL), `G-worst-negative ${step}`);
+}
+check(Math.abs(lowerWalk - FIXED) > 1, 'G-old-unit-bound-counterexample');
+
+// The positive endpoint is open; approach it from below and retain the exact gap.
+const upperGap = 1e-8;
+let upperWalk = 9 - WALK_NOISE - upperGap;
+for (let step = 1; step <= WALK_STEPS; step++) {
+  upperWalk = softContract(upperWalk + WALK_NOISE, WALK_K);
+  check(close(upperWalk - FIXED, walkErrorBound(step) - WALK_K ** step * upperGap, WALK_TOL),
+    `G-worst-positive ${step}`);
+}
+
+// Zero forcing returns the usual closed-form contraction, including wrapped starts.
+for (const start of [-18, -4.5, 0, 1.5, 4.5, 9, 1e6]) {
+  let x = start;
+  const initialError = ((start % 9) + 9) % 9 - FIXED;
+  for (let step = 1; step <= WALK_STEPS; step++) {
+    x = softContract(x, WALK_K);
+    check(close(x - FIXED, WALK_K ** step * initialError, WALK_TOL), `G-zero-noise ${start} ${step}`);
+  }
 }
 
 // H. Three-way phase-heat-descent
@@ -151,9 +196,5 @@ console.log(`\n=== ${passed}/${total} passed  (${failed} failed) ===`);
 if (fails.length) {
   console.log('Sample failures:');
   fails.slice(0, 20).forEach(f => console.log('  FAIL  ' + f));
-}
-if (failed <= 15 && passed >= 2500) {
-  console.log('Ridge-edge measure coherent.');
-  process.exit(0);
 }
 process.exit(failed === 0 ? 0 : 1);
