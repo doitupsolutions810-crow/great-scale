@@ -1,0 +1,14 @@
+{
+  "system": "Great Scale",
+  "rung": "XCI",
+  "title": "Active Measurement and the Value of Information",
+  "units": {"information_gain": "nats", "utility": "arbitrary model utility units"},
+  "prior": [0.5, 0.5],
+  "perfect_measurement_likelihoods": [[1.0, 0.0], [0.0, 1.0]],
+  "utilities_decision_by_state": [[1.0, -1.0], [-1.0, 1.0]],
+  "examples": [
+    {"measurement_cost": 0.2, "information_gain_nats": 0.6931471805599453, "evsi": 1.0, "net_value": 0.8, "recommendation": "MEASURE"},
+    {"measurement_cost": 1.1, "information_gain_nats": 0.6931471805599453, "evsi": 1.0, "net_value": -0.1, "recommendation": "DO_NOT_MEASURE"}
+  ],
+  "status": "illustrative_model_not_empirical_validation"
+}
