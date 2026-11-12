@@ -1,0 +1,17 @@
+{
+  "great_scale_rung": "XCVII",
+  "title": "Sequential Validation, Repeated Tuning, and the Cost of Looking",
+  "assumptions": {
+    "independent_look_formula": "Each of K null tests is independent and has the same per-test false-positive probability.",
+    "alpha_per_test": 0.05,
+    "number_of_looks": 20
+  },
+  "calculation": {
+    "formula": "1 - (1 - alpha_per_test)^number_of_looks",
+    "familywise_false_positive_probability": 0.6415140775914581,
+    "percent": 64.15140775914581,
+    "bonferroni_per_test_alpha_for_familywise_0_05": 0.0025
+  },
+  "finding": "A test set becomes training information the moment its results influence another model decision.",
+  "qualification": "The exact repeated-look formula assumes independent tests. Bonferroni provides a dependence-robust familywise bound when each test is individually valid at its adjusted level. These calculations do not alone quantify all machine-learning selection bias."
+}
