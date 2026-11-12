@@ -1,0 +1,20 @@
+{
+  "rung": "CXLII",
+  "title": "Coarsest Outcome-Preserving Partition",
+  "criterion": "K(a)=K(b) implies O(a)=O(b); coarsest when outcome-equivalent assignments are not split",
+  "worked_results": {
+    "heterogeneous_count_key": {
+      "candidate_states": 1,
+      "outcome_classes": 2,
+      "sufficient": false
+    },
+    "homogeneous_three_unit_count_key": {
+      "candidate_states": 4,
+      "outcome_classes": 4,
+      "sufficient": true,
+      "coarsest_for_signature": true
+    }
+  },
+  "tests": {"authored": 4, "executed": false},
+  "scope": "Finite exhaustive audit for the declared assignment domain and outcome signature."
+}
