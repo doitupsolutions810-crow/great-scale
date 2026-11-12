@@ -1,0 +1,19 @@
+{
+  "rung": "CXIII",
+  "example": {
+    "observers": [
+      "A",
+      "B"
+    ],
+    "trials": 20,
+    "observed_joint_failure_rate": 0.4,
+    "individual_failure_rates": [
+      0.4,
+      0.4
+    ],
+    "independence_benchmark": 0.16,
+    "excess_joint_failure": 0.24
+  },
+  "status": "illustrative synthetic numbers only",
+  "warning": "Not empirical Great Scale measurements or proof of causal dependence."
+}
