@@ -1,0 +1,18 @@
+{
+  "schema": "great-scale-cxvii-demo-v1",
+  "evidence_class": "synthetic test fixture, not empirical evidence",
+  "construction": {
+    "large_cluster": {
+      "n": 100,
+      "pattern": "25 repeats of all four paired binary outcomes",
+      "within_cluster_excess": 0
+    },
+    "small_cluster": {
+      "n": 4,
+      "pattern": "two (0,0) and two (1,1)",
+      "within_cluster_excess": 0.25
+    }
+  },
+  "expected_equal_cluster_weighted_mean_excess": 0.125,
+  "purpose": "Demonstrate that equal-cluster and pooled trial-weighted estimands can differ."
+}
