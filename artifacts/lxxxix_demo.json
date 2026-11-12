@@ -1,0 +1,13 @@
+{
+  "great_scale_rung": "LXXXIX",
+  "title": "Distribution Shift, Evidence Expiration, and the Boundary of Transfer",
+  "status": "illustrative_design_not_empirical_validation",
+  "loss_bound_M": 1.0,
+  "historical_risk_upper_r": 0.05,
+  "total_variation_upper_delta": 0.1,
+  "deployment_risk_upper_bound": 0.15,
+  "maximum_acceptable_risk": 0.12,
+  "disposition": "TRANSFER_NOT_CERTIFIED",
+  "interpretation": "The bound does not certify the risk limit; it does not prove actual risk exceeds the limit.",
+  "tests_executed": false
+}
