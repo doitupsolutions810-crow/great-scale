@@ -1,0 +1,12 @@
+{
+  "great_scale_rung": "XC",
+  "title": "Observability Limits, Indistinguishable Worlds, and the Limits of Detection",
+  "status": "illustrative_design_not_empirical_validation",
+  "false_positive_rate_alpha": 0.05,
+  "total_variation_upper_delta": 0.0,
+  "detection_power_upper_bound": 0.05,
+  "required_power": 0.9,
+  "disposition": "POWER_REQUIREMENT_IMPOSSIBLE_UNDER_BOUND",
+  "interpretation": "With identical observation distributions, the detector cannot distinguish the change from baseline using these observations alone.",
+  "tests_executed": false
+}
