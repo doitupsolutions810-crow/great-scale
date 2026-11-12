@@ -1,0 +1,14 @@
+{
+  "rung": "CXLXV",
+  "title": "Integrated Typed Identity and Differential Fuzzing",
+  "encoding_version": "gs-typed-v1",
+  "certificate_schema": "gs-quotient-cert-v2",
+  "test_cases": 5,
+  "scope": "exhaustive two-state deterministic models over enumerated observation/transition choices",
+  "limits": [
+    "supported labels only",
+    "state labels must be hashable",
+    "bounded testing is not universal proof"
+  ],
+  "status": "tests authored; execution pending"
+}

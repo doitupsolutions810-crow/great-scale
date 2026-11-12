@@ -1,0 +1,21 @@
+{
+  "rung": "CXLXIII",
+  "title": "Adversarial Certificate Testing",
+  "status": "implementation_and_tests_authored",
+  "mathematical_claim": "Finite partition refinement terminates after at most |S|-1 strict refinement rounds; a quotient preserves observations, required properties, enabled actions, and successor blocks.",
+  "adversarial_cases": [
+    "state repr collision",
+    "action repr collision",
+    "tampered state-to-block mapping",
+    "changed transition behavior",
+    "over-split partition",
+    "independent reference partition comparison"
+  ],
+  "profound_finding": "A certificate is only as unambiguous as its identity encoding; when identity is ambiguous, fail closed rather than silently accepting a quotient.",
+  "limitations": [
+    "Not a cryptographic proof",
+    "Tests require execution in repository CI to claim a pass",
+    "repr collision rejection is a guard, not a canonical serialization standard"
+  ],
+  "next_rung": "CXLXIV — Canonical Typed Encoding and Differential Fuzzing"
+}
