@@ -1,0 +1,16 @@
+{
+  "great_scale": "LXXXIII",
+  "title": "Provenance Closure and Dependency Revocation",
+  "synthetic_graph": {
+    "calibration": [],
+    "measurement": ["calibration"],
+    "forecast": ["measurement"],
+    "independent_check": []
+  },
+  "on_calibration_failure": {
+    "invalid": ["calibration"],
+    "stale_requires_revalidation": ["measurement", "forecast"],
+    "unchanged": ["independent_check"]
+  },
+  "note": "Synthetic dependency example, not empirical evidence."
+}
