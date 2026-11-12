@@ -1,0 +1,69 @@
+{
+  "rung": "CXII",
+  "title": "Consistency Under Partial Observation",
+  "schema": "great-scale-partial-observation-v1",
+  "relation_domain": [
+    "SAME",
+    "ORDERED",
+    "FORK",
+    "INCOMPARABLE"
+  ],
+  "classification_rules": [
+    {
+      "condition": "any observed pair is FORK",
+      "result": "FORK"
+    },
+    {
+      "condition": "no observed fork and some pair is unobserved",
+      "result": "PARTIAL_EVIDENCE"
+    },
+    {
+      "condition": "all pairs observed and at least one is INCOMPARABLE",
+      "result": "INCOMPARABLE"
+    },
+    {
+      "condition": "all pairs observed and all are SAME or ORDERED",
+      "result": "CONSISTENT"
+    }
+  ],
+  "cases": [
+    {
+      "observed_pairs": 1,
+      "expected_pairs": 3,
+      "observed_fork": false,
+      "expected": "PARTIAL_EVIDENCE"
+    },
+    {
+      "observed_pairs": 1,
+      "expected_pairs": 3,
+      "observed_fork": true,
+      "expected": "FORK"
+    },
+    {
+      "observed_pairs": 3,
+      "expected_pairs": 3,
+      "relations": [
+        "SAME",
+        "ORDERED",
+        "ORDERED"
+      ],
+      "expected": "CONSISTENT"
+    },
+    {
+      "observed_pairs": 3,
+      "expected_pairs": 3,
+      "relations": [
+        "SAME",
+        "INCOMPARABLE",
+        "ORDERED"
+      ],
+      "expected": "INCOMPARABLE"
+    }
+  ],
+  "status": "implementation and tests added; remote test status pending",
+  "limitations": [
+    "missing comparisons are unknown, not agreement",
+    "only supplied checkpoints are classified",
+    "no trusted time or global completeness"
+  ]
+}
