@@ -1,0 +1,10 @@
+{
+  "rung": "CXLXI",
+  "title": "Canonical Quotient Repair",
+  "status": "implementation-authored-tests-not-executed",
+  "core_question": "Does the cached quotient equal the coarsest quotient computed from the current model?",
+  "key_finding": "A cache needs a current-model certificate; prior validity does not imply present canonicality.",
+  "formal_scope": "Finite deterministic transition systems with observations and Boolean property vectors",
+  "test_cases": ["merge equivalent states", "detect stale over-split cache", "matching cache needs no repair", "split after behavior change", "reject invalid successor", "partition comparison independent of block order"],
+  "limitations": ["Tests authored but not yet executed", "Distinct labels with colliding repr strings should be normalized", "Formal model result, not physical validation"]
+}
