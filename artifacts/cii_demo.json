@@ -1,0 +1,15 @@
+{
+  "title": "Great Scale CII — Conditional-Mean E-Process",
+  "assumptions": {
+    "observations": [1, 1, 0],
+    "null_upper_bound": 0.5,
+    "betting_fractions": [1.0],
+    "weights": [1.0],
+    "alpha": 0.05,
+    "conditional_mean_null": "E[X_t | F_(t-1)] <= 0.5 for every t"
+  },
+  "e_values": [1.0, 1.5, 2.25, 1.125],
+  "threshold": 20.0,
+  "threshold_crossed": false,
+  "interpretation": "Illustrative calculation under the stated conditional-mean null; not empirical validation of that assumption."
+}
