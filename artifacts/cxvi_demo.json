@@ -1,0 +1,17 @@
+{
+  "schema": "great-scale-cxvi-demo-v1",
+  "evidence_class": "synthetic illustration only",
+  "cluster_sizes": [
+    4,
+    4,
+    8,
+    8
+  ],
+  "assumed_icc_scenarios": [
+    0,
+    0.2,
+    1
+  ],
+  "expected_invariant": "effective sample size approximation is non-increasing as assumed ICC increases",
+  "warning": "Illustrative design-effect sensitivity, not empirical evidence and not a calibrated confidence interval."
+}
