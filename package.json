@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node test.js && node test_quantum_geometry.js && node test_topological_qgt.cjs",
     "descent": "python3 test_descent.py",
-    "all": "npm test && python3 test_descent.py"
+    "all": "npm test && python3 test_descent.py && python3 test_evidence_triad.py && python3 test_effect_evidence_boundary.py"
   },
   "license": "UNLICENSED"
 }
