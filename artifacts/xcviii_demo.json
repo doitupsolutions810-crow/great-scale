@@ -1,0 +1,15 @@
+{
+  "great_scale_rung": "XCVIII",
+  "title": "Sequential Stopping and the Cost of Looking",
+  "model": "Independent Bernoulli observations; simple null p0=0.5; fixed alternative p1=0.8",
+  "alpha": 0.05,
+  "evidence_threshold": 20,
+  "multipliers": {"success": 1.6, "failure": 0.4},
+  "examples": {
+    "three_consecutive_successes_e_value": 4.096,
+    "eight_consecutive_successes_e_value": 42.94967296
+  },
+  "theorem": "For a nonnegative likelihood-ratio martingale E_n with E_0=1 under the null, Ville's inequality gives P(sup_n E_n >= 1/alpha) <= alpha.",
+  "finding": "The stopping rule is part of the statistical model: repeated observation is defensible only when the evidence process and stopping boundary are designed together.",
+  "limitations": ["Independent Bernoulli sampling is assumed.", "Fixed simple alternative is used.", "Not a generic ML quality test.", "Event audits only inspect recorded data."]
+}
