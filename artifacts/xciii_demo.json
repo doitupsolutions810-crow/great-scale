@@ -1,0 +1,9 @@
+{
+  "system":"Great Scale",
+  "rung":"XCIII",
+  "title":"Model-Set Adequacy and Missing Alternatives",
+  "checklist_fields":["decision_scope_defined","alternatives_searched","failure_modes_reviewed","data_sources_documented","independent_review_completed"],
+  "example_1":{"in_set_worst_case_value":0.6,"omitted_mass_upper_bound":0.1,"omitted_model_value_lower_bound":-1.0,"adjusted_lower_bound":0.44,"recommendation":"MEASURE_UNDER_STATED_BOUND"},
+  "example_2":{"in_set_worst_case_value":0.2,"omitted_mass_upper_bound":0.5,"omitted_model_value_lower_bound":-1.0,"adjusted_lower_bound":-0.4,"recommendation":"NOT_CERTIFIED_BY_BOUND"},
+  "status":"illustrative_model_not_empirical_validation"
+}
