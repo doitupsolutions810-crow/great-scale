@@ -1,0 +1,39 @@
+{
+  "system": "Great Scale CXXIX",
+  "title": "Held-Out Margin Transfer",
+  "seed": 20261029,
+  "repetitions_per_scenario": 5000,
+  "observed_count": 120,
+  "auxiliary_count": 12,
+  "results": [
+    {
+      "scenario": "original",
+      "true_mean": 0.04375,
+      "margin_005_containment": 0.945,
+      "margin_005_mean_width": 0.20673,
+      "margin_01_containment": 1
+    },
+    {
+      "scenario": "rarer_extremes",
+      "true_mean": 0.0125,
+      "margin_005_containment": 1,
+      "margin_005_mean_width": 0.09218,
+      "margin_01_containment": 1
+    },
+    {
+      "scenario": "more_midrange",
+      "true_mean": 0.1,
+      "margin_005_containment": 0.9724,
+      "margin_005_mean_width": 0.307035,
+      "margin_01_containment": 0.9914
+    },
+    {
+      "scenario": "shifted_high",
+      "true_mean": 0.15,
+      "margin_005_containment": 0.9878,
+      "margin_005_mean_width": 0.401735,
+      "margin_01_containment": 0.9878
+    }
+  ],
+  "caveat": "Empirical results only; no universal or nominal coverage guarantee."
+}
