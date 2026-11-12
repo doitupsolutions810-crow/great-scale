@@ -1,0 +1,10 @@
+{
+  "rung":"CXLXII",
+  "title":"Independently Checked Quotient Certificate",
+  "status":"implementation-authored-tests-not-yet-confirmed",
+  "certificate_fields":["state_to_block","block_count","state_count"],
+  "verification_obligations":["state coverage and uniqueness","certificate consistency","observation/property homogeneity","enabled-action and successor-block congruence","canonical minimality"],
+  "key_finding":"An untrusted quotient producer can be checked by a smaller verifier; trust moves to the verifier and model semantics.",
+  "tests":["canonical accepted","over-split rejected","over-coarse rejected","tampered certificate rejected","incomplete partition rejected","invalid successor rejected"],
+  "scope":"Finite deterministic transition systems"
+}

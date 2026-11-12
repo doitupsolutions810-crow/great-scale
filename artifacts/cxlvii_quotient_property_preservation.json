@@ -1,0 +1,20 @@
+{
+  "rung": "CXLVII",
+  "title": "Quotient Correctness and Property Preservation",
+  "status": "implementation_authored_tests_not_yet_executed",
+  "claim": "A Boolean state property is well-defined on a quotient exactly when it is constant on every quotient block.",
+  "condition": "K(s) = K(t) implies P(s) = P(t)",
+  "positive_case": {
+    "blocks": [["a", "b"], ["c", "d"]],
+    "property_values_by_state": {"a": false, "b": false, "c": true, "d": true},
+    "preserved": true,
+    "quotient_values": [false, true]
+  },
+  "counterexample": {
+    "blocks": [["safe", "unsafe"]],
+    "property_values_by_state": {"safe": false, "unsafe": true},
+    "preserved": false,
+    "witness": ["safe", "unsafe"]
+  },
+  "scope_limit": "State-property preservation does not alone establish preservation of arbitrary temporal or path properties."
+}

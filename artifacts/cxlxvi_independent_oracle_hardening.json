@@ -1,0 +1,18 @@
+{
+  "rung": "CXLXVI",
+  "title": "Independent Oracle Hardening",
+  "oracle": "pairwise relation elimination / greatest fixed point",
+  "model_scope": "two states; binary observations; each action absent, terminal, or successor to either state",
+  "adversarial_mutations": [
+    "certificate state mapping",
+    "over-merged partition",
+    "successor edge",
+    "enabled action set"
+  ],
+  "status": "tests authored; execution pending",
+  "limits": [
+    "bounded state space",
+    "deterministic transition semantics",
+    "independent oracle still requires review"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "rung": "CXLIII",
+  "title": "Optimization-Preserving Compression",
+  "criterion": {
+    "feasibility": "K(a)=K(b) implies F(a)=F(b)",
+    "objective": "For feasible a,b, K(a)=K(b) implies J(a)=J(b)"
+  },
+  "tests": {"authored": 4, "executed": false},
+  "scope": "Finite assignment set and explicitly supplied feasibility/objective functions."
+}
