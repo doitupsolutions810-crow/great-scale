@@ -1,0 +1,11 @@
+{
+  "title": "Great Scale CIII — Predictable Adaptive Evidence",
+  "observations": [1, 0, 1],
+  "null_upper_bound": 0.5,
+  "strategy": "lambda(history) = 0.5 when history length is even, otherwise 1.0",
+  "weights": [1.0],
+  "e_values": [1.0, 1.25, 0.625, 0.78125],
+  "threshold_alpha_0_05": 20.0,
+  "threshold_crossed": false,
+  "note": "Illustrative computation under the stated conditional-mean null; not empirical validation."
+}

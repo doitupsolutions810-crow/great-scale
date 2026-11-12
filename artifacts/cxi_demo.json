@@ -1,0 +1,14 @@
+{
+  "rung": "CXI",
+  "status": "illustrative",
+  "example": {
+    "log_id": "registry",
+    "size": 4,
+    "head_hashes": [
+      "head-A",
+      "head-B"
+    ],
+    "expected": "FORK_DETECTED"
+  },
+  "warning": "Example contains placeholders, not live signed evidence."
+}
