@@ -1,0 +1,17 @@
+{
+  "rung": "CX",
+  "schema": "great-scale-observer-checkpoint-v1",
+  "example_comparison": {
+    "same_log": true,
+    "checkpoint_a": {
+      "size": 12,
+      "head_hash": "hash-A"
+    },
+    "checkpoint_b": {
+      "size": 12,
+      "head_hash": "hash-B"
+    },
+    "expected": "FORK"
+  },
+  "status": "illustrative only; hashes and signatures are not live attestations"
+}
