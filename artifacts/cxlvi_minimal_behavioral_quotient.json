@@ -1,0 +1,12 @@
+{
+  "rung": "CXLVI",
+  "title": "Minimal Behavioral Quotient",
+  "status": "implementation-authored-tests-not-executed",
+  "claim": "Partition refinement computes a coarsest stable behavioral partition for a supplied finite deterministic system.",
+  "metrics": {
+    "state_reduction": "N - Q",
+    "retained_fraction": "Q / N for N > 0",
+    "reduction_fraction": "(N - Q) / N for N > 0"
+  },
+  "scope": "Finite deterministic system with explicit observations, action availability, terminal behavior, and in-domain successors."
+}
