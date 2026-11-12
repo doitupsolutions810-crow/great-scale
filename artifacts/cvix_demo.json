@@ -1,0 +1,11 @@
+{
+  "rung": "CVIX",
+  "schema": "great-scale-registry-transition-v1",
+  "genesis_parent": "0000000000000000000000000000000000000000000000000000000000000000",
+  "rules": [
+    "authority signature over transition body",
+    "parent registry hash must match prior payload",
+    "version increments exactly by one"
+  ],
+  "status": "illustrative policy; no live authority signature or external append-only publication"
+}
