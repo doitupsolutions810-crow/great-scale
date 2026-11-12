@@ -1,0 +1,12 @@
+{
+  "rung": "CXXIII",
+  "title": "Full-Population Bounds with Missing Clusters",
+  "status": "implementation_added_tests_authored_not_yet_executed",
+  "synthetic_only": true,
+  "population_size": 200,
+  "contrast_range": [0.0, 0.25],
+  "known_target": 0.125,
+  "identification_formula": "(sum_observed + missing_count * bound) / population_size",
+  "tests": ["exhaustive completion enumeration", "complete-frame point identification", "25 seeded synthetic target-containment checks", "input validation"],
+  "limitations": ["not a confidence interval", "depends on valid outcome bounds and known population frame"]
+}
