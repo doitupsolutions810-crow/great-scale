@@ -2,16 +2,38 @@ name: ci
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
   test:
-    runs-on: [self-hosted, "Great-Scale"]
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm test
-      - run: python3 test_descent.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run JavaScript contract and regression suite
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee /tmp/great-scale-npm-test.log
+      - name: Run mathematical descent suite
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 test_descent.py 2>&1 | tee /tmp/great-scale-descent-test.log
+      - name: Preserve diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: great-scale-ci-logs
+          path: |
+            /tmp/great-scale-npm-test.log
+            /tmp/great-scale-descent-test.log
+          if-no-files-found: warn
+          retention-days: 14
