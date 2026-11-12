@@ -1,0 +1,11 @@
+{
+  "rung": "CXLXXIV",
+  "title": "Minimal Counterexample Contract",
+  "property": "F(C*) is true and removing any one element makes F false",
+  "algorithm": "deterministic greedy delta debugging over ordered sequences",
+  "guarantee": "1-minimal, not globally shortest",
+  "tests_authored": 3,
+  "validation_status": "authored_not_executed",
+  "prerequisite": "deterministic predicate that reproduces the failure",
+  "limitation": "flaky predicates invalidate reproducibility"
+}
